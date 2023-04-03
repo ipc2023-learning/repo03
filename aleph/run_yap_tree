@@ -1,0 +1,11 @@
+#!/usr/bin/yap -L --
+
+:- [aleph].
+:- read_all(argv(0)).
+:- set(clauselength, 10).
+:- set(lookahead, 1).
+:- set(evalfn,entropy).
+:- set(mingain, 0.01).
+:- set(prune_tree, false).
+:- set(confidence, 0.001).
+:- induce_tree.
