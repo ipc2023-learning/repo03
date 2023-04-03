@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:abcorrea/powerlifted.git
+	branch = master
+	commit = 968dadc35c9b34a638e05c7b6d71879d300c8c0d
+	parent = 7b4a468e22e1705a4f514cea66ba4b926784cb25
+	method = merge
+	cmdver = 0.4.3
