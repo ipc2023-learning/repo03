@@ -2,12 +2,19 @@
 
 The repo integrates the following three component repositories via git subtree:
 
-
 | LOCAL FOLDER | REMOTE NAME | REMOTE BRANCH | URL |
 | --- | --- | --- | --- |
 | fd-partial-grounding | fd-partial-grounding | ipc23 | gitlab.com/dgnad/downward-partial-grounding |
 | fd-symbolic | fd-symbolic | symbolic | gitlab.com/atorralba/fast-downward-symbolic-all-plans |
 | learning | gofai-learning | main | gitlab.com/atorralba/gofai-learning |
+
+To set up the remote hosts (needed to enable the pull commands below), run the following:
+
+`git remote add -f fd-partial-grounding git@gitlab.com:dgnad/downward-partial-grounding.git`
+
+`git remote add -f fd-symbolic git@gitlab.com:atorralba/fast-downward-symbolic-all-plans.git`
+
+`git remote add -f gofai-learning git@gitlab.com:atorralba/gofai-learning.git`
 
 
 ## Pulling from one of the component repos:
