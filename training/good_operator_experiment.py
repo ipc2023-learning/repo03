@@ -26,14 +26,14 @@ class MockCachedRevision:
     build_options: List[str]
 
 
-def run_step_good_operators(path_exp, name, planner, config, ENV, SUITE, fetch_everything=False, build_options = [], driver_options = ["--overall-time-limit", "10"], extra_resources = []):
+def run_step_good_operators(path_exp, planner, config, ENV, SUITE, fetch_everything=False, build_options = [], driver_options = ["--overall-time-limit", "10"], extra_resources = []):
     # path_exp = f'{self.path}/exp-good-operators-{name}'
     # exp = GoodOperatorsExperiment (path_exp, resources_path=f"{self.path}/results", extra_resources=extra_resources)
 
-    exp = Experiment(environment=ENV)
+    exp = Experiment(path=path_exp, environment=ENV)
 
     rev = "ipc2023-classical"
-    cached_rev = MockCachedRevision(name=name, repo=planner, local_rev='default', global_rev=None, build_options=build_options)
+    cached_rev = MockCachedRevision(name='good_operators", repo=planner, local_rev='default', global_rev=None, build_options=build_options)
 
     PLANNER = Path (planner)
 

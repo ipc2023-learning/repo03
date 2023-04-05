@@ -45,9 +45,6 @@ def main():
     INSTANCES_SMAC = f"{TRAINING_DIR}/instances-smac"
     REPO_PARTIAL_GROUNDING = f"{ROOT}/fd-partial-grounding"
 
-
-
-
     if os.path.exists(TRAINING_DIR):
         shutil.rmtree(TRAINING_DIR)
     os.mkdir(TRAINING_DIR)
@@ -67,7 +64,7 @@ def main():
     ENV = LocalEnvironment(processes=args.cpus)
     SUITE_TRAINING = suites.build_suite(TRAINING_DIR, ['instances-training'])
 
-    run_step_good_operators('results', "unit_cost", REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
+    run_step_good_operators(f'{TRAINING_DIR}/exp-good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
 
 
