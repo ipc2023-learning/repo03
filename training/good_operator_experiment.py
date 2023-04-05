@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import List
 from pathlib import Path
 
+import process_lab_dir
 
 @dataclass
 class MockCachedRevision:
@@ -27,13 +28,10 @@ class MockCachedRevision:
 
 
 def run_step_good_operators(path_exp, planner, config, ENV, SUITE, fetch_everything=False, build_options = [], driver_options = ["--overall-time-limit", "10"], extra_resources = []):
-    # path_exp = f'{self.path}/exp-good-operators-{name}'
-    # exp = GoodOperatorsExperiment (path_exp, resources_path=f"{self.path}/results", extra_resources=extra_resources)
-
-    exp = Experiment(path=path_exp, environment=ENV)
+    exp = Experiment(path=path_exp+ "-res", environment=ENV)
 
     rev = "ipc2023-classical"
-    cached_rev = MockCachedRevision(name='good_operators", repo=planner, local_rev='default', global_rev=None, build_options=build_options)
+    cached_rev = MockCachedRevision(name='good_operators', repo=planner, local_rev='default', global_rev=None, build_options=build_options)
 
     PLANNER = Path (planner)
 
@@ -60,9 +58,12 @@ def run_step_good_operators(path_exp, planner, config, ENV, SUITE, fetch_everyth
 
     exp.add_step("build", exp.build)
     exp.add_step("start", exp.start_runs)
-    exp.add_fetcher(name="fetch")
 
     ENV.run_steps(exp.steps)
+
+    process_lab_dir.process_lab_dir(path_exp+ "-res", path_exp)
+
+
 
 
     #     exp.add_algorithm(f"good-operators-{name}", planner, revision, config, build_options, driver_options)
