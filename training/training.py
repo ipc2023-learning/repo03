@@ -53,44 +53,20 @@ class TrainingExperiment(Experiment):
             exit()
         self.subexperiment[name] = exp
 
-    def add_default_steps(self, repo_good_operators, repo_partial_grounding):
-
-        VERSION_GOOD_OPERATORS = "b0ad6fe730c08127b55f7b595f7f0bc3febdd9d7"
-        self.add_step_good_operators("unit-cost", repo_good_operators, VERSION_GOOD_OPERATORS,
-                                     ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"],
-                                     fetch_everything=True,)
-
-        self.add_step_useful_facts(repo_partial_grounding)
+    # def add_default_steps(self, repo_good_operators, repo_partial_grounding):
 
 
-        for name, multiplier_useless, multiplier_semiuseful in [('both', '10000', '10000'),
-                                                                ('semi', '10000', '1'),
-                                                                ('gradual', '10000', '100')]:
-            self.add_step_good_operators(f"useful-facts-{name}", repo_good_operators, VERSION_GOOD_OPERATORS,
-                                         ['--preprocess-options', '--cost-useful-facts', 'relaxed_facts', '--multiplier-cost-semiuseful-facts', multiplier_semiuseful, '--multiplier-cost-useless-facts', multiplier_useless, '--search-options', '--search', "sbd(store_operators_in_optimal_plan=true)"],
-                                         extra_resources = ["relaxed_facts"])
+        # self.add_step_useful_facts(repo_partial_grounding)
 
 
-        self.add_report(AbsoluteReport(attributes=['cost', 'coverage', 'num_good_operators', 'plan_length']))
+        # for name, multiplier_useless, multiplier_semiuseful in [('both', '10000', '10000'),
+        #                                                         ('semi', '10000', '1'),
+        #                                                         ('gradual', '10000', '100')]:
+        #     self.add_step_good_operators(f"useful-facts-{name}", repo_good_operators, VERSION_GOOD_OPERATORS,
+        #                                  ['--preprocess-options', '--cost-useful-facts', 'relaxed_facts', '--multiplier-cost-semiuseful-facts', multiplier_semiuseful, '--multiplier-cost-useless-facts', multiplier_useless, '--search-options', '--search', "sbd(store_operators_in_optimal_plan=true)"],
+        #                                  extra_resources = ["relaxed_facts"])
 
 
-    def add_step_good_operators(self, name, planner, revision, config, fetch_everything=False, build_options = [], driver_options = ["--overall-time-limit", "10"], extra_resources = []):
-        path_exp = f'{self.path}/exp-good-operators-{name}'
-        exp = GoodOperatorsExperiment (path_exp, resources_path=f"{self.path}/results", extra_resources=extra_resources)
-
-        exp.add_algorithm(f"good-operators-{name}", planner, revision, config, build_options, driver_options)
-        exp.add_suite (self.benchmark_folder, self.instances)
-        exp.add_parser(exp.EXITCODE_PARSER)
-        exp.add_parser(exp.TRANSLATOR_PARSER)
-        exp.add_parser(exp.SINGLE_SEARCH_PARSER)
-        exp.add_parser(exp.PLANNER_PARSER)
-        exp.add_parser("parsers/goodops-parser.py")
-
-        self.add_substep(f"build-good-operators-{name}", exp, exp.build)
-        self.add_substep(f"start-good-operators-{name}", exp, exp.start_runs)
-        self.add_step(f"fetch-good-operators-{name}", self.fetch_good_operators, path_exp, name, fetch_everything)
-
-        self.add_fetcher(path_exp, name=f"fetch-goodops{name}-properties",merge=None if  fetch_everything else True)
 
 
     def add_step_useful_facts(self, repo_partial_grounding, TIME_LIMIT=1800, MEMORY_LIMIT=3000):

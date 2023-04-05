@@ -12,9 +12,10 @@ from lab.calls.call import Call
 from lab.environments import  LocalEnvironment
 
 sys.path.append(f'{os.path.dirname(__file__)}/training')
-from training import TrainingExperiment
+import training
+from good_operator_experiment import run_step_good_operators
 
-
+from downward import suites
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -40,8 +41,12 @@ def main():
 
     REPO_GOOD_OPERATORS = f"{ROOT}/fd-symbolic"
     REPO_LEARNING = f"{ROOT}/learning"
-    BENCHMARKS_DIR = f"{TRAINING_DIR}/instances"
+    BENCHMARKS_DIR = f"{TRAINING_DIR}/instances-training"
+    INSTANCES_SMAC = f"{TRAINING_DIR}/instances-smac"
     REPO_PARTIAL_GROUNDING = f"{ROOT}/fd-partial-grounding"
+
+
+
 
     if os.path.exists(TRAINING_DIR):
         shutil.rmtree(TRAINING_DIR)
@@ -50,17 +55,20 @@ def main():
     # Copy all input benchmarks to the directory
     os.mkdir(BENCHMARKS_DIR)
     shutil.copy(args.domain, BENCHMARKS_DIR)
+
+    os.mkdir(INSTANCES_SMAC)
+    shutil.copy(args.domain, INSTANCES_SMAC)
+
     for problem in args.problem:
+        # TODO Split instances in some way and only put some on instances smac
         shutil.copy(problem, BENCHMARKS_DIR)
+        shutil.copy(problem, INSTANCES_SMAC)
 
     ENV = LocalEnvironment(processes=args.cpus)
+    SUITE_TRAINING = suites.build_suite(TRAINING_DIR, ['instances-training'])
 
-    exp = TrainingExperiment(TRAINING_DIR, environment=ENV, instances = ["instances"])
-    exp.add_default_steps(REPO_GOOD_OPERATORS, REPO_PARTIAL_GROUNDING)
+    run_step_good_operators('results', "unit_cost", REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
-    exp.execute_all_steps()
-
-    training_set = []
 
 
         # print("Preprocessing", problem)
