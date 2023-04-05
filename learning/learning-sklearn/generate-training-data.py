@@ -2,12 +2,16 @@
 
 from __future__ import print_function
 
+import sys
 import os
+
+sys.path.append(f'{os.path.dirname(__file__)}/../translate')
+
 import numpy as np
 
 from collections import defaultdict
-from rule_training_evaluator import *
-import lisp_parser
+from rule_evaluator.rule_training_evaluator import *
+from translate import lisp_parser
 import shutil
 import bz2
 
@@ -42,16 +46,16 @@ def parse_pddl_file(type, filename):
 if __name__ == "__main__":
     import argparse
     import os
-    
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument("runs_folder", help="path to task pddl file")
     argparser.add_argument("training_rules", type=argparse.FileType('r'), help="File that contains the rules used to generate training data by gen-subdominization-training")
-    argparser.add_argument("store_training_data", help="Directory to store the training data by gen-subdominization-training")    
-    argparser.add_argument("--debug-info", help="Include action name in the file", action="store_true")    
-    argparser.add_argument("--instances-relevant-rules", type=int, help="Number of instances for relevant rules", default=0)    
-    argparser.add_argument("--op-file", default="sas_plan", help="File to store the training data by gen-subdominization-training")    
+    argparser.add_argument("store_training_data", help="Directory to store the training data by gen-subdominization-training")
+    argparser.add_argument("--debug-info", help="Include action name in the file", action="store_true")
+    argparser.add_argument("--instances-relevant-rules", type=int, help="Number of instances for relevant rules", default=0)
+    argparser.add_argument("--op-file", default="sas_plan", help="File to store the training data by gen-subdominization-training")
     argparser.add_argument("--num-test-instances", type=int,default=0, help="Number of instances reserved for the testing set")
-    argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)    
+    argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)
 
 
     options = argparser.parse_args()
@@ -88,24 +92,24 @@ if __name__ == "__main__":
             task_pddl = parse_pddl_file("task", task_filename)
 
             task = parsing_functions.parse_task(domain_pddl, task_pddl)
-            training_re.init_task(task, options.max_training_examples)        
+            training_re.init_task(task, options.max_training_examples)
             # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
-            
+
             all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators.bz2")
 
             with bz2.open(all_operators_filename, "rt") as actions:
                 # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
                 for action in actions:
-                    training_re.evaluate(action.strip())                
+                    training_re.evaluate(action.strip())
 
             # for action in actions:
-            #     training_re.evaluate(action)                
+            #     training_re.evaluate(action)
 
-        training_re.print_statistics()  
+        training_re.print_statistics()
 
         relevant_rules = sorted(training_re.get_relevant_rules())
 
-      
+
         print ("Relevant rules: ", len(relevant_rules))
     else:
         relevant_rules = sorted([l for l in options.training_rules.readlines()])
@@ -126,7 +130,7 @@ if __name__ == "__main__":
     np.random.seed(2018)
     testing_instances = np.random.choice(all_instances, int(options.num_test_instances), replace=False)
 
-    for task_run in all_instances:        
+    for task_run in all_instances:
         print ("Processing ", task_run)
         is_test_instance = task_run in testing_instances
         domain_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "domain.pddl")
@@ -137,13 +141,13 @@ if __name__ == "__main__":
         task_pddl = parse_pddl_file("task", task_filename)
 
         all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators.bz2")
-           
+
         task = parsing_functions.parse_task(domain_pddl, task_pddl)
-    
+
         re = RulesEvaluator(relevant_rules, task)
 
         #relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
-        
+
         with open(plan_filename) as plan_file:
             plan = set(map (lambda x : tuple(x.replace("\n", "").replace(")", "").replace("(", "").split(" ")), plan_file.readlines()))
             skip_schemas_training = [schema for schema, examples in training_lines.items() if len(examples) >= options.max_training_examples]
@@ -156,15 +160,15 @@ if __name__ == "__main__":
                         continue
                     if is_test_instance and schema in skip_schemas_testing:
                         continue
-                    
-                    
+
+
                     arguments = list(map(lambda x: x.strip(), arguments.strip()[:-1].split(",")))
-                   
+
                     is_in_plan = 1 if  tuple([schema] + arguments) in plan else 0
-                   
+
                     eval = re.evaluate(schema, arguments)
                     #print( ",".join(map (str, [action.name] + eval + [is_in_plan])) )
-                
+
                     new_line = ",".join(map (str, eval + [is_in_plan]))
                     if options.debug_info:
                         new_line = ",".join([task_run, action, new_line])
@@ -173,12 +177,12 @@ if __name__ == "__main__":
                         testing_lines [schema].append(new_line)
                     else:
                         training_lines [schema].append(new_line)
-    
+
     if testing_lines:
         os.makedirs('{}/training'.format(options.store_training_data))
 
         shutil.move ('{}/relevant_rules'.format(options.store_training_data), '{}/training/relevant_rules'.format(options.store_training_data))
-        
+
         for schema in sorted(training_lines, key=lambda x : (x.count(";"), x)):
             output_file = open('{}/training/{}.csv'.format(options.store_training_data, schema), 'w')
             for line in training_lines[schema]:
@@ -199,5 +203,5 @@ if __name__ == "__main__":
             output_file.close()
 
 
-                           
+
     #print ("Only 0/1 rules: ", len(re.get_only_0_rules()), len(re.get_only_1_rules()), len(re.get_all_rules()))
