@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 
 import sys
 import os
@@ -24,7 +24,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import RANSACRegressor
 from sklearn.model_selection import train_test_split
-from sklearn import metrics 
+from sklearn import metrics
 from sklearn.metrics import classification_report
 
 from sklearn.kernel_ridge import KernelRidge
@@ -51,35 +51,35 @@ from sklearn.metrics import make_scorer
 import argparse
 from collections import defaultdict
 
-import helpers
+from learning import helpers
 
 
 
 
 
 class FeatureSelector():
-    
+
     def __init__(self, dataset, modelType, njobs=1):
         '''
         Constructor take parameters:
         isBalanced, Boolean for balance the target of prediction in training phase
-        modelType = 'LRCV', 'LG', 'RF' , 'SVMCV','NBB', 'NBG'. 'DT'; 
-                       Logistic Regression, 
-                       Logistic Regression with Cross Validation, 
-                       Random Forest, 
+        modelType = 'LRCV', 'LG', 'RF' , 'SVMCV','NBB', 'NBG'. 'DT';
+                       Logistic Regression,
+                       Logistic Regression with Cross Validation,
+                       Random Forest,
                        Support Vector MAchine with CV grid search,
                        Naive Bayes classifier with Bernoulli estimator
-                       Naive Bayes classifier with Gaussian estimator 
-                       DT is decision Tree 
+                       Naive Bayes classifier with Gaussian estimator
+                       DT is decision Tree
         you ahve to give:
                   'training_file' that is a CSV file containing in each line the feature vectors (validation of rules), and the las column the target to be predicted
-                  
+
         njobs, to paralellice the training phase, default njobs=-1 to get the availables cores
         testSize, is to define the size of test set. Default value calculates the test set random, with a 5% of the training set.
         '''
-        
+
         self.selector_type = modelType
-        
+
         # print dataset.shape
         # separate in features an target
         X, y = dataset.iloc[:,:-1], list(dataset.iloc[:, -1])
@@ -95,7 +95,7 @@ class FeatureSelector():
 
         #self.X_std = scaler.fit_transform(X)
         self.X_std = X
-        
+
         if (modelType == 'LOGR'):
             # Create decision tree classifer object
             clf = LogisticRegression(random_state=0, class_weight=None)
@@ -139,7 +139,7 @@ class FeatureSelector():
                     'gamma': [0.025, 1.0, 1.25, 1.5, 1.75, 2.0],
                     'coef0': [2, 5, 9],
                     'class_weight': [None]}
-            
+
             clf = GridSearchCV(SVC(probability=True),
                                params,
                                cv=3,
@@ -182,16 +182,16 @@ class FeatureSelector():
             self.model = clf.fit(self.X_std, y)
         elif (modelType=='DTGD_RG'):
             clf = GridSearchCV(tree.DecisionTreeRegressor(random_state=0),
-                                param_grid={'min_samples_split': range(2, 10)}, 
-                                scoring=make_scorer(r2_score), 
-                                cv=5, 
+                                param_grid={'min_samples_split': range(2, 10)},
+                                scoring=make_scorer(r2_score),
+                                cv=5,
                                 refit=True)
             self.model = clf.fit(self.X_std, y)
         elif (modelType == 'RF_RG'):
             clf = RandomForestRegressor(n_jobs=1)
             self.model  = clf.fit(self.X_std, y)
         elif (modelType == 'RFGD_RG'):
-            param_grid = { 
+            param_grid = {
             "n_estimators"      : [10,20,30],
             "max_features"      : ["auto", "sqrt", "log2"],
             "min_samples_split" : [2,4,8],
@@ -210,7 +210,7 @@ class FeatureSelector():
                 'gamma':[0.025, 1.0, 1.25, 1.5, 1.75, 2.0],
                 'coef0':[2, 5, 9],
                 }
-            
+
             clf = GridSearchCV(SVR(), params, cv=3,
                    scoring='roc_auc',n_jobs=1)
             self.model =clf.fit(self.X_std , y)
@@ -226,17 +226,17 @@ class FeatureSelector():
                 'gamma':[0.025, 1.0, 1.25, 1.5, 1.75, 2.0],
                 'coef0':[2, 5, 9],
                 }
-            
-            clf = GridSearchCV(KernelRidge(), param_grid=params, 
+
+            clf = GridSearchCV(KernelRidge(), param_grid=params,
                    cv=3,
                    scoring='roc_auc')
             self.model =clf.fit(self.X_std , y)
         elif (modelType=='KRN_RG'):
-            clf = KernelRidge()     
+            clf = KernelRidge()
             self.model =clf.fit(self.X_std , y)
         else:
             SyntaxError("Error in modelType = 'LRCV', 'LG', 'RF', 'SVM', 'SVMCV', 'NBB', 'NBG' , 'DT'; \nLogistic Regression, Logistic Regression with Cross Validation, \nRandom Forest or Support Vector Machine with CV, \n DT  is decision Tree ")
-            
+
     def get_feature_ranking(self):
         if (self.selector_type in ["LOGR", "LOGRCV", "SVR", "SVC"]):
             return self.model.coef_.tolist()[0]
@@ -252,8 +252,8 @@ class FeatureSelector():
             print("no such selector specified: %s" % self.selector_type)
             exit(1)
 
-       
-        
+
+
 def get_lineage(tree, feature_names):
      left      = tree.tree_.children_left
      right     = tree.tree_.children_right
@@ -261,9 +261,9 @@ def get_lineage(tree, feature_names):
      features  = [feature_names[i] for i in tree.tree_.feature]
 
      # get ids of child nodes
-     idx = np.argwhere(left == -1)[:,0]     
+     idx = np.argwhere(left == -1)[:,0]
 
-     def recurse(left, right, child, lineage=None):          
+     def recurse(left, right, child, lineage=None):
           if lineage is None:
                lineage = [child]
           if child in left:
@@ -284,8 +284,8 @@ def get_lineage(tree, feature_names):
      for child in idx:
           for node in recurse(left, right, child):
                print(node)
-               
-               
+
+
 def get_code(tree, feature_names):
         left      = tree.tree_.children_left
         right     = tree.tree_.children_right
@@ -306,55 +306,55 @@ def get_code(tree, feature_names):
                         print(n_tabs * "\t" + "return " + str(value[node]))
 
         recurse(left, right, threshold, features, 0, 0)
-        
-            
+
+
 def read_relevant_rules(relevant_rules_file):
     with open(relevant_rules_file) as f:
         rules = defaultdict(list)
         for line in f.readlines():
             action_name = line.split(" ", maxsplit=1)[0]
-            rules[action_name].append(line.replace("\n", ""))                
+            rules[action_name].append(line.replace("\n", ""))
     return rules
 
 
 def main():
     argparser = argparse.ArgumentParser()
-    
+
     argparser.add_argument("--training-folder", type=str, required=True, help="path to training set files (must be *.csv, where last column is the class, also need relevant_rules file)")
     argparser.add_argument("--selector-type", type=str, required=True, help="the type of the learning model: can be one of 'LRCV', 'LG', 'RF' , 'SVMCV','NBB', 'NBG', 'DT'")
     argparser.add_argument("--keep-duplicate-features", action="store_true", required=False, help="elimination and aggregation of duplicate feature vectors, default is eliminate")
     argparser.add_argument("--mean-over-duplicates", action="store_true", required=False, help="aggregating eliminated duplicate feature vectors by taking max or mean (default is max)")
-    
+
     args = argparser.parse_args()
-    
+
     # copy relevant_rules files to model_folder
     relevant_rules_file = os.path.join(args.training_folder, "relevant_rules")
     if (not os.path.isfile(relevant_rules_file)):
         print("WARNING: no \"relevant_rules\" file in training folder")
         sys.exit(1)
-    
+
     relevant_rules = read_relevant_rules(relevant_rules_file)
     useful_rules = defaultdict(list)
-    
+
     usefulness = defaultdict(list)
-    
+
     for file in os.listdir(args.training_folder):
         curr_file = os.path.join(args.training_folder, file)
         if (os.path.isfile(curr_file) and (file.endswith(".csv.bz2") or file.endswith(".csv"))):
             action_schema = file[:-8] if file.endswith(".csv.bz2") else file[:-4]
             print("handling action schema %s" % action_schema)
-            
+
             dataset = helpers.get_dataset_from_csv(curr_file, args.keep_duplicate_features, not args.mean_over_duplicates)
-                
+
             selector = FeatureSelector(dataset, args.selector_type)
-            
+
             usefulness[action_schema] = sorted([(rank, i) for i, rank in enumerate(selector.get_feature_ranking())])
             usefulness[action_schema].reverse()
-            
+
             max_eval = usefulness[action_schema][0][0]
             fifth_eval = usefulness[action_schema][4][0] if len(usefulness[action_schema]) >= 5 else usefulness[action_schema][-1][0]
             num_useful_rules = 0
-            
+
             for rank, i in usefulness[action_schema]:
                 print("%0.2f \t %s" % (rank, relevant_rules[action_schema][i]), end="")
                 if (rank >= 0.01 and (rank > max_eval / 10 or num_useful_rules < 5)):# or rank > fifth_eval / 2)):
@@ -363,9 +363,9 @@ def main():
                     print(" is useful")
                 else:
                     print()
-            
+
             print()
-    
+
     usefulness_file = os.path.join(args.training_folder, "rule_usefulness_" + args.selector_type.lower())
     write = True
     if (os.path.isfile(usefulness_file)):
@@ -378,7 +378,7 @@ def main():
             for schema in usefulness:
                 for rank, i in usefulness[schema]:
                     f.write(str(round(rank, 4)) + "\t" + relevant_rules[schema][i] + "\n")
-    
+
     useful_rules_file = os.path.join(args.training_folder, "useful_rules_" + args.selector_type.lower())
     write = True
     if (os.path.isfile(useful_rules_file)):
@@ -391,10 +391,10 @@ def main():
             for schema in useful_rules:
                 for rule in useful_rules[schema]:
                     f.write(rule + "\n")
-    
-    
-    
-            
+
+
+
+
 
 if __name__ == "__main__":
     main()

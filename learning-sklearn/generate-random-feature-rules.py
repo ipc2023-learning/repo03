@@ -3,6 +3,11 @@
 
 from __future__ import print_function
 
+import sys
+import os
+
+sys.path.append(f'{os.path.dirname(__file__)}/../translate')
+
 from collections import defaultdict
 import itertools
 
@@ -10,7 +15,7 @@ from pddl_parser import parsing_functions
 from pddl_parser import lisp_parser
 import argparse
 import copy
-import os
+
 import pddl
 
 try:

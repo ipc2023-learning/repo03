@@ -23,7 +23,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import RANSACRegressor
 from sklearn.model_selection import train_test_split
-from sklearn import metrics 
+from sklearn import metrics
 from sklearn.metrics import classification_report
 
 from sklearn.kernel_ridge import KernelRidge
@@ -45,34 +45,34 @@ from sklearn.metrics import classification_report
 import pickle
 from random import *
 from sklearn.metrics import r2_score
-from sklearn.metrics import make_scorer 
+from sklearn.metrics import make_scorer
 
 randBinList = lambda n: [randint(0,1) for b in range(1,n+1)]
 
 
-import helpers
+from learning import helpers
 
 
 
 
 
 class LearnRules():
-    
+
     def __init__(self, isBalanced=False, modelType='LRCV', training_file ='', njobs=1, testSize=0.00000001, remove_duplicate_features=True, take_max_for_duplicates=True):
         '''
         Constructor take parameters:
         isBalanced, Boolean for balance the target of prediction in training phase
-        modelType = 'LRCV', 'LG', 'RF' , 'SVMCV','NBB', 'NBG'. 'DT'; 
-                       Logistic Regression, 
-                       Logistic Regression with Cross Validation, 
-                       Random Forest, 
+        modelType = 'LRCV', 'LG', 'RF' , 'SVMCV','NBB', 'NBG'. 'DT';
+                       Logistic Regression,
+                       Logistic Regression with Cross Validation,
+                       Random Forest,
                        Support Vector MAchine with CV grid search,
                        Naive Bayes classifier with Bernoulli estimator
-                       Naive Bayes classifier with Gaussian estimator 
-                       DT is decision Tree 
+                       Naive Bayes classifier with Gaussian estimator
+                       DT is decision Tree
         you ahve to give:
                   'training_file' that is a CSV file containing in each line the feature vectors (validation of rules), and the las column the target to be predicted
-                  
+
         njobs, to paralellice the training phase, default njobs=-1 to get the availables cores
         testSize, is to define the size of test set. Default value calculates the test set random, with a 5% of the training set.
         '''
@@ -81,35 +81,35 @@ class LearnRules():
         self.isBalanced = isBalanced
         self.remove_duplicate_features = remove_duplicate_features
         self.take_max_for_duplicates = take_max_for_duplicates
-        
+
         self.is_classifier = False
-        
+
         self.is_empty = True
-        
+
         if (training_file !='') :
-            
+
             dataset = helpers.get_dataset_from_csv(training_file, not remove_duplicate_features, take_max_for_duplicates)
-            
+
             if (dataset is None):
                 return
-                
+
             self.is_empty = False # we actually train the model
-            
+
             # print dataset.shape
             # separate in features an target
             X, y = dataset.iloc[:,:-1], list(dataset.iloc[:, -1])
-    
+
             # if we want to separate into train and test sets
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=0)
-    
+
             X=X_train
             y=y_train
-    
+
             # Standarize features
             scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
-    
+
             X_std = scaler.fit_transform(X)
-            
+
             if (modelType=='LOGR'):
                 # Create decision tree classifer object
                 clf = LogisticRegression(random_state=0,
@@ -160,7 +160,7 @@ class LearnRules():
                         'gamma': [0.025, 1.0, 1.25, 1.5, 1.75, 2.0],
                         'coef0': [2, 5, 9],
                         'class_weight': ['balanced' if self.isBalanced else None]}
-                
+
                 clf = GridSearchCV(SVC(probability=True),
                                    params,
                                    cv=3,
@@ -208,16 +208,16 @@ class LearnRules():
                 self.model = clf.fit(X_std, y)
             elif (modelType=='DTGD_RG'):
                 clf = GridSearchCV(tree.DecisionTreeRegressor(random_state=0),
-                                    param_grid={'min_samples_split': range(2, 10)}, 
-                                    scoring=make_scorer(r2_score), 
-                                    cv=5, 
+                                    param_grid={'min_samples_split': range(2, 10)},
+                                    scoring=make_scorer(r2_score),
+                                    cv=5,
                                     refit=True)
                 self.model = clf.fit(X_std, y)
             elif (modelType == 'RF_RG'):
                 clf = RandomForestRegressor()
                 self.model  = clf.fit(X_std, y)
             elif (modelType == 'RFGD_RG'):
-                param_grid = { 
+                param_grid = {
                 "n_estimators"      : [10,20,30],
                 "max_features"      : ["auto", "sqrt", "log2"],
                 "min_samples_split" : [2,4,8],
@@ -236,7 +236,7 @@ class LearnRules():
                     'gamma':[0.025, 1.0, 1.25, 1.5, 1.75, 2.0],
                     'coef0':[2, 5, 9],
                     }
-                
+
                 clf = GridSearchCV(SVR(), params, cv=3,
                        scoring='roc_auc',n_jobs=njobs)
                 self.model =clf.fit(X_std , y)
@@ -252,33 +252,33 @@ class LearnRules():
                     'gamma':[0.025, 1.0, 1.25, 1.5, 1.75, 2.0],
                     'coef0':[2, 5, 9],
                     }
-                
-                clf = GridSearchCV(KernelRidge(), param_grid=params, 
+
+                clf = GridSearchCV(KernelRidge(), param_grid=params,
                        cv=3,
                        scoring='roc_auc')
                 self.model =clf.fit(X_std , y)
                 #print self.model.predict_proba(self.X_test)
             elif (modelType=='KRN_RG'):
-                clf = KernelRidge()     
+                clf = KernelRidge()
                 self.model =clf.fit(X_std , y)
-                #print self.model.predict_proba(self.X_test) 
+                #print self.model.predict_proba(self.X_test)
             else:
                 SyntaxError("Error in modelType = 'LRCV', 'LG', 'RF', 'SVM', 'SVMCV', 'NBB', 'NBG' , 'DT'; \nLogistic Regression, Logistic Regression with Cross Validation, \nRandom Forest or Support Vector Machine with CV, \n DT  is decision Tree ")
         else:
-            SystemError("fileTrain should not be empty.")  
+            SystemError("fileTrain should not be empty.")
 
     def returnProbClasesList(self, X_t):
         return self.model.predict_proba(X_t)
- 
+
     def returnProbClasesOne(self,x_t):
         if self.model.probability:
             return self.model.predict_proba([x_t])
         else:
             return None
-            
+
     def returnClassesList(self,X_t):
         return self.model.predict(X_t)
- 
+
     def returnClassesOne(self,x_t):
         return self.model.predict([x_t])
 
@@ -287,7 +287,7 @@ class LearnRules():
         y_predClass= self.model.predict(X_test)
         print(classification_report(list(y_test), y_predClass))
         print(confusion_matrix(y_test, y_predClass))
-        
+
         if self.modelType.startswith('LR'):
             print("Coefficin matrix")
             print(self.model.coef_)
@@ -301,22 +301,22 @@ class LearnRules():
     @staticmethod
     def getModelFromDisk(fileModel):
         '''
-           parameter 'fileModel' previously created and saved to disk, o 
+           parameter 'fileModel' previously created and saved to disk, o
         '''
-        return pickle.load(open(fileModel, 'rb')) 
+        return pickle.load(open(fileModel, 'rb'))
 
 def main():
     strUsage= "Mode 1: python learn.py <MODELTYPE> <FILETRAIN> <FILESAVE> -> train a <MODELTYPE> model from <FILENAME> and  save to <FILESAVE>\n"
     strUsage +="[MODELTYPE]-> train or load a model, with MODELTYPE= LRCV or  LR or RF \n Where LR = Logistic Reg\n LRCV = Log. Reg with CrossValidation\n RF = Random Fores\n Default value MODELTYPE = LRCV\nSVM = Support Vector Machine (SVC)\nSVMCV = Support Vector Machine with CV grid search\nNBB=Naive Bayes classifier with Bernoulli estimator\nNBG=Naive Bayes classifier with Gaussian estimator\n DT  is decision Tree "
     strUsage +="Mode 2: python learn.py  <FILEMODEL> <FILETEST> -> returns the probabilities in SDOUT one 'line prob class 0', 'proba class 1'\n"
- 
+
     if len(sys.argv) == 1:
         print(strUsage)
         tl = randBinList(94)
 #        print tl
-#        files = open("testfile.txt","w")  
-#        files.write((",".join(''.join(str    (e) for e in tl)))+"\n") 
-        
+#        files = open("testfile.txt","w")
+#        files.write((",".join(''.join(str    (e) for e in tl)))+"\n")
+
     elif len(sys.argv) == 3:
         fileLoadIn= sys.argv[1]
         fileTest=sys.argv[2]
@@ -327,18 +327,18 @@ def main():
         y_pred= lernModel.returnProbClasesList(Xtest)
         #print y_pred
         #str_scv=''
-   
+
         for line in y_pred:
             print(str(line[0])+","+str(line[1]))
 
-         
+
         lernModel.printStats()
         print(lernModel.returnProbClasesList(lernModel.X_test))
-        
+
     elif len(sys.argv) <=5 :
         fileIn= sys.argv[2]
-        modType = sys.argv[1]      
-        
+        modType = sys.argv[1]
+
         if len(sys.argv)==4:
             lernModel=LearnRules(training_file=fileIn, modelType=modType, njobs=4)
             lernModel.saveToDisk(sys.argv[3])
@@ -346,11 +346,11 @@ def main():
             balanced = sys.argv[4]
             lernModel=LearnRules(training_file=fileIn, modelType=modType, njobs=4,isBalanced=balanced=='balanced')
             lernModel.saveToDisk(sys.argv[3])
-    
+
     else:
         print(strUsage)
         SystemExit("Bad Parameters\n"+strUsage)
-            
+
 
 if __name__ == "__main__":
     main()
