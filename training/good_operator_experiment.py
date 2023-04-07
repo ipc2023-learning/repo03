@@ -1,3 +1,4 @@
+import shutil
 
 from lab import environments, tools
 from lab.experiment import Experiment, get_default_data_dir, Run
@@ -28,7 +29,7 @@ class MockCachedRevision:
 
 
 def run_step_good_operators(path_exp, planner, config, ENV, SUITE, fetch_everything=False, build_options = [], driver_options = ["--overall-time-limit", "10"], extra_resources = []):
-    exp = Experiment(path=path_exp+ "-res", environment=ENV)
+    exp = Experiment(path=path_exp+ "-exp", environment=ENV)
 
     rev = "ipc2023-classical"
     cached_rev = MockCachedRevision(name='good_operators', repo=planner, local_rev='default', global_rev=None, build_options=build_options)
@@ -61,8 +62,8 @@ def run_step_good_operators(path_exp, planner, config, ENV, SUITE, fetch_everyth
 
     ENV.run_steps(exp.steps)
 
-    process_lab_dir.process_lab_dir(path_exp+ "-res", path_exp)
-
+    process_lab_dir.process_lab_dir(path_exp+ "-exp", path_exp)
+    shutil.rmtree(path_exp+ "-exp")
 
 
 

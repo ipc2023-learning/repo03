@@ -66,6 +66,19 @@ def main():
 
     run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
+    time_limit = 10
+    memory_limit = 10000
+
+    os.mkdir(f"{TRAINING_DIR}/partial-grounding-rules")
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-random-feature-rules.py', args.domain, '--runs', f'{TRAINING_DIR}/good-operators-unit', '--rule_size', '7', '--store_rules', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k', '--num_rules','10000'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+    # TODO: Check if rules have been correctly generated. Otherwise, re-generate with smaller size?
+
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k-filtered'], "filter-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+
+
+    # Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-random-feature-rules.py'],  time_limit=time_limit, mem_limit=memory_limit).wait()
+
+
 
 
         # print("Preprocessing", problem)
