@@ -25,12 +25,12 @@ In what follows, we describe the former option in detail. Aleph can be used very
 
 The learning phase consists of several steps. They require executing python scripts located in *src/subdominization-training*.
 
-**1. `./generate-random-feature-rules.py`**: Generate an initial set of features (each feature correspond to a rule).
+**1. `./generate-exhaustive-feature-rules.py`**: Generate an initial set of features (each feature correspond to a rule).
   It exhaustively generates many rules, and one can control the size by two parameters: (rule_size y num_rules).
   If the training runs are provided, it'll extract data from them to avoid rules that check predicates in the initial state or goal if they never appeared there. This is recommended to avoid unnecessary rules that would be entirely uninformative.
 
   Usage:
-  `./generate-random-feature-rules.py --store_rules <output_rule_file> --rule_size RULE_SIZE --num_rules NUM_RULES --runs <runs> <domain>`
+  `./generate-exhaustive-feature-rules.py --store_rules <output_rule_file> --rule_size RULE_SIZE --num_rules NUM_RULES --runs <runs> <domain>`
 
   Recommended values for `RULE_SIZE` is 10, so that the number of features is controlled by `NUM_RULES`: Higher-values (100k) will require much longer training times than lower values (1K), but also can provide more accuracy in the end.
 

@@ -3,9 +3,17 @@
 from __future__ import print_function
 
 from collections import defaultdict
+import bz2
+import sys
+import os
+
+sys.path.append(f'{os.path.dirname(__file__)}')
 from rule_training_evaluator import *
+
+sys.path.append(f'{os.path.dirname(__file__)}/../translate')
 import lisp_parser
-import bz2       
+import parsing_functions
+import instantiate
 
 try:
     # Python 3.x
@@ -14,8 +22,6 @@ except ImportError:
     # Python 2.x
     from codecs import open as file_open
 
-import parsing_functions
-import instantiate
 
 def parse_pddl_file(type, filename):
     try:
@@ -38,13 +44,13 @@ def parse_pddl_file(type, filename):
 if __name__ == "__main__":
     import argparse
     import os
-    
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument("runs_folder", help="path to task pddl file")
     argparser.add_argument("training_rules", type=argparse.FileType('r'), help="File that contains the rules used to generate training data by gen-subdominization-training")
-    argparser.add_argument("output", type=argparse.FileType('w'), help="Output file")    
-    argparser.add_argument("--instances-relevant-rules", type=int, help="Number of instances for relevant rules", default=1000)    
-    argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)    
+    argparser.add_argument("output", type=argparse.FileType('w'), help="Output file")
+    argparser.add_argument("--instances-relevant-rules", type=int, help="Number of instances for relevant rules", default=1000)
+    argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)
     options = argparser.parse_args()
 
     training_lines = defaultdict(list)
@@ -61,14 +67,14 @@ if __name__ == "__main__":
 
         print (i)
         i += 1
-        
-        
+
+
         domain_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "domain.pddl")
-        task_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "problem.pddl")        
+        task_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "problem.pddl")
         domain_pddl = parse_pddl_file("domain", domain_filename)
         task_pddl = parse_pddl_file("task", task_filename)
         task = parsing_functions.parse_task(domain_pddl, task_pddl)
-        
+
         training_re.init_task(task, options.max_training_examples)
 
         operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators.bz2")
@@ -76,12 +82,11 @@ if __name__ == "__main__":
         with bz2.BZ2File(operators_filename, "r") as actions:
             # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
             for action in actions:
-                training_re.evaluate(action.strip())                
+                training_re.evaluate(action.strip())
 
-    training_re.print_statistics()  
+    training_re.print_statistics()
 
     relevant_rules = training_re.get_relevant_rules()
     #print ("Relevant rules: ", len(relevant_rules))
 
     options.output.write("\n".join(map(lambda x : x.replace('\n', ''), relevant_rules)))
-
