@@ -8,7 +8,7 @@ import sys
 import os
 
 sys.path.append(f'{os.path.dirname(__file__)}')
-from rule_training_evaluator import *
+from rule_evaluator import *
 
 sys.path.append(f'{os.path.dirname(__file__)}/../translate')
 import lisp_parser
