@@ -88,6 +88,21 @@ def main():
           ], "generate-training-data-1", time_limit=time_limit, memory_limit=memory_limit).wait()
 
 
+
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/feature-selection.py', '--training-folder', f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-filtered', '--selector-type', 'DT'], "feature-selection", time_limit=time_limit, memory_limit=memory_limit).wait()
+
+    # Generate training data for all files of useful rules
+    useful_rules_files = [f for f in os.listdir( f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
+    for useful_rules_file in useful_rules_files:
+        Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py', \
+              f'{TRAINING_DIR}/good-operators-unit',\
+              f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-filtered/{useful_rules_file}',\
+              f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-{useful_rules_file}',\
+              '--op-file', 'good_operators',\
+              '--max-training-examples', '1000000' # '--num-test-instances TODO Set some test instances
+              ], "generate-training-data", time_limit=time_limit, memory_limit=memory_limit).wait()
+
+
     # Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-random-feature-rules.py'],  time_limit=time_limit, mem_limit=memory_limit).wait()
 
 
