@@ -11,8 +11,8 @@ sys.path.append(f'{os.path.dirname(__file__)}')
 from rule_evaluator import *
 
 sys.path.append(f'{os.path.dirname(__file__)}/../translate')
-import lisp_parser
-import parsing_functions
+import pddl_parser.lisp_parser as lisp_parser
+import pddl_parser.parsing_functions as parsing_functions
 import instantiate
 
 try:
