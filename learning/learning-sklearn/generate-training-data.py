@@ -5,13 +5,12 @@ from __future__ import print_function
 import sys
 import os
 
-sys.path.append(f'{os.path.dirname(__file__)}/../translate')
 
 import numpy as np
 
 from collections import defaultdict
-from rule_evaluator.rule_training_evaluator import *
-from translate import lisp_parser
+
+
 import shutil
 import bz2
 
@@ -22,7 +21,13 @@ except ImportError:
     # Python 2.x
     from codecs import open as file_open
 
-import parsing_functions
+sys.path.append(f'{os.path.dirname(__file__)}')
+from rule_evaluator.rule_evaluator import *
+from rule_evaluator.rule_training_evaluator import *
+
+sys.path.append(f'{os.path.dirname(__file__)}/../translate')
+from pddl_parser import lisp_parser
+from pddl_parser import parsing_functions
 import instantiate
 
 def parse_pddl_file(type, filename):
@@ -95,15 +100,17 @@ if __name__ == "__main__":
             training_re.init_task(task, options.max_training_examples)
             # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
 
-            all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators.bz2")
+            all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators")
 
-            with bz2.open(all_operators_filename, "rt") as actions:
-                # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
-                for action in actions:
-                    training_re.evaluate(action.strip())
+            if os.path.isfile(all_operators_filename):
+                with open(all_operators_filename, "r") as actions:
+                    for action in actions:
+                        training_re.evaluate(action.strip())
+            else:
+                with bz2.open(all_operators_filename + '.bz2', "rt") as actions:
+                    for action in actions:
+                        training_re.evaluate(action.strip())
 
-            # for action in actions:
-            #     training_re.evaluate(action)
 
         training_re.print_statistics()
 
@@ -140,7 +147,7 @@ if __name__ == "__main__":
         domain_pddl = parse_pddl_file("domain", domain_filename)
         task_pddl = parse_pddl_file("task", task_filename)
 
-        all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators.bz2")
+        all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators")
 
         task = parsing_functions.parse_task(domain_pddl, task_pddl)
 
@@ -152,9 +159,16 @@ if __name__ == "__main__":
             plan = set(map (lambda x : tuple(x.replace("\n", "").replace(")", "").replace("(", "").split(" ")), plan_file.readlines()))
             skip_schemas_training = [schema for schema, examples in training_lines.items() if len(examples) >= options.max_training_examples]
             skip_schemas_testing = [schema for schema, examples in testing_lines.items() if len(examples) >= options.max_training_examples]
-            with bz2.open(all_operators_filename, mode="rt") as actions:
-            # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
-                for action in actions:
+
+            all_operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators")
+            all_operators_content = []
+            if os.path.isfile(all_operators_filename):
+                with open(all_operators_filename, "r") as actions:
+                    all_operators_content = [action for action in actions]
+            else:
+                with bz2.open(all_operators_filename + '.bz2', "rt") as actions:
+                    all_operators_content = [action for action in actions]
+            for action in all_operators_content:
                     schema, arguments = action.split("(")
                     if not is_test_instance and schema in skip_schemas_training:
                         continue
