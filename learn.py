@@ -21,11 +21,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("domain", help="path to domain file")
     parser.add_argument("problem", nargs="+", help="path to problem file")
-
-    parser.add_argument("--path", default='./data', help="path to domain file")
-
+    parser.add_argument("--path", default='./data', help="path to store results")
     parser.add_argument("--cpus", type=int, default=1, help="number of cpus available")
-
     parser.add_argument("--total_time_limit", default=30, type=int, help="time limit")
     parser.add_argument("--total_memory_limit", default=7*1024, help="memory limit")
 
@@ -67,8 +64,6 @@ def main():
     run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
 
-
-
     #run_step_partial_grounding
     time_limit = 300
     memory_limit = 4*1024*1024
@@ -89,7 +84,11 @@ def main():
 
 
 
-    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/feature-selection.py', '--training-folder', f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-filtered', '--selector-type', 'DT'], "feature-selection", time_limit=time_limit, memory_limit=memory_limit).wait()
+    # TODO: Consider here more feature selection methods, possibly parameterized
+    feature_selection_methods = ["DT"]
+
+    for method in feature_selection_methods:
+        Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/feature-selection.py', '--training-folder', f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-filtered', '--selector-type', method], "feature-selection", time_limit=time_limit, memory_limit=memory_limit).wait()
 
     # Generate training data for all files of useful rules
     useful_rules_files = [f for f in os.listdir( f'{TRAINING_DIR}/partial-grounding-rules/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
@@ -103,30 +102,18 @@ def main():
               ], "generate-training-data", time_limit=time_limit, memory_limit=memory_limit).wait()
 
 
-    # Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-random-feature-rules.py'],  time_limit=time_limit, mem_limit=memory_limit).wait()
 
+    training_data_directories = [f for f in os.listdir( f'{TRAINING_DIR}/partial-grounding-rules/') if f.startswith('training-data')]
+    learning_methods = [("DT", ["--model-type", "DT"])]
+    for training_data_dir in training_data_directories:
+        for learning_method_name, learning_method_parameters in learning_methods:
 
-
-
-        # print("Preprocessing", problem)
-        # time_limit = 24 * 60 * 60 / len(args.problem)
-        # memory_limit = 7 * 1024
-        # Call([sys.executable, TRANSLATE, args.domain, problem], time_limit=time_limit, mem_limit=memory_limit).wait()
-        # if not os.path.exists("output.sas"):
-        #     continue
-        # Call([PREPROCESS], stdin="output.sas", time_limit=time_limit, mem_limit=memory_limit).wait()
-        # if not os.path.exists("output"):
-        #     continue
-
-        # os.remove("output.sas")
-        # problem_path = os.path.join(TRAINING_TASKS_DIR, "p{i:03d}.sas".format(i=len(training_set) + 1))
-        # shutil.move("output", problem_path)
-        # training_set.append(problem_path)
-
-    # print("Training set:", training_set)
-    # with open("instances.txt", "w") as f:
-    #     f.write("\n".join(training_set))
-
+            output_name = f'model_{training_data_dir}.replace("training-data-", "")_{learning_method_name}'
+            os.mkdir (f'{TRAINING_DIR}/partial-grounding-rules/{output_name}')
+            Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/train-model.py', \
+                  '--training-set-folder', f'{TRAINING_DIR}/partial-grounding-rules/{training_data_dir}',\
+                  '--model-folder', f'{TRAINING_DIR}/partial-grounding-rules/{output_name}',
+                  ] + learning_method_parameters, "train", time_limit=time_limit, memory_limit=memory_limit).wait()
 
 if __name__ == "__main__":
     main()
