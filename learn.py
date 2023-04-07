@@ -70,7 +70,7 @@ def main():
     memory_limit = 10000
 
     os.mkdir(f"{TRAINING_DIR}/partial-grounding-rules")
-    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-random-feature-rules.py', args.domain, '--runs', f'{TRAINING_DIR}/good-operators-unit', '--rule_size', '7', '--store_rules', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k', '--num_rules','10000'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', args.domain, '--runs', f'{TRAINING_DIR}/good-operators-unit', '--rule_size', '7', '--store_rules', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k', '--num_rules','10000'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
     # TODO: Check if rules have been correctly generated. Otherwise, re-generate with smaller size?
 
     Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k', f'{TRAINING_DIR}/partial-grounding-rules/rules-exhaustive-10k-filtered'], "filter-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
