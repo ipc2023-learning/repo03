@@ -8,7 +8,9 @@ import sys
 import os
 
 sys.path.append(f'{os.path.dirname(__file__)}')
-from rule_evaluator import *
+
+from rule_evaluator.rule_evaluator import *
+from rule_evaluator.rule_training_evaluator import *
 
 sys.path.append(f'{os.path.dirname(__file__)}/../translate')
 import pddl_parser.lisp_parser as lisp_parser
@@ -77,16 +79,22 @@ if __name__ == "__main__":
 
         training_re.init_task(task, options.max_training_examples)
 
-        operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators.bz2")
+        operators_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "all_operators")
 
-        with bz2.BZ2File(operators_filename, "r") as actions:
-            # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
-            for action in actions:
-                training_re.evaluate(action.strip())
+        if os.path.isfile(operators_filename):
+            with open(operators_filename, "r") as actions:
+                # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
+                for action in actions:
+                    training_re.evaluate(action.strip())
+        else:
+            with bz2.BZ2File(operators_filename + '.bz2', "r") as actions:
+                # relaxed_reachable, atoms, actions, axioms, _ = instantiate.explore(task)
+                for action in actions:
+                    training_re.evaluate(action.strip())
 
     training_re.print_statistics()
 
     relevant_rules = training_re.get_relevant_rules()
-    #print ("Relevant rules: ", len(relevant_rules))
+    print ("Relevant rules: ", len(relevant_rules))
 
     options.output.write("\n".join(map(lambda x : x.replace('\n', ''), relevant_rules)))
