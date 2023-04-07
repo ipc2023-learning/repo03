@@ -1,4 +1,4 @@
-from rule_evaluator import *
+from rule_evaluator.rule_evaluator import RuleEval
 
 from collections import defaultdict
 
@@ -38,7 +38,7 @@ class TrainingRule:
 
     def get_text(self):
         return self.rules_text[0]
-        
+
 class RuleTrainingEvaluator:
     def __init__(self, rules_text):
         self.rules = {}
@@ -49,16 +49,16 @@ class RuleTrainingEvaluator:
 
         for schema in rules_per_schema:
             self.rules[schema] = [TrainingRule(rules_per_schema[schema])]
-            
+
     def init_task (self, task, max_training_examples):
         for schema, rs in self.rules.items():
             for r in rs:
                 r.load(task, max_training_examples)
-            
+
     def evaluate(self, action):
         name, arguments = action.split("(")
         arguments = list(map(lambda x: x.strip(), arguments.strip()[:-1].split(",")))
-        
+
         if name in self.rules:
             new_rules = [rule.evaluate(arguments) for rule in self.rules[name]]
             self.rules[name] += [r for r in new_rules if r]
@@ -71,6 +71,8 @@ class RuleTrainingEvaluator:
 
     def print_statistics(self):
         for schema, rs in self.rules.items():
+            print (schema)
             for r in rs:
-                print(r.evaluation_result_count_0, r.evaluation_result_count_1, r.rules_text)
-
+                if r.evaluation_result_count_0 > 0 and r.evaluation_result_count_1 > 0:
+                    rule = r.rules_text[0].replace('\n','')
+                    print(f"{len(r.rules_text)} equivalent rules, eval false: {r.evaluation_result_count_0}, eval true: {r.evaluation_result_count_1}, {rule}")
