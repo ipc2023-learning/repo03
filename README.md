@@ -3,7 +3,19 @@
 This repository contains the learning scripts for learning partial grounding and pruning rules models.
 
 
+## Installation
 
+The dependency yap must be installed locally. To do so, follow the following instructions.
+
+cd yap
+mkdir build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=<installation_directory>
+make
+make install
+
+
+## Usage
 
 ### Training a model with sklearn
 The usage of learning algorithms 2. is divided in two phases:
@@ -99,6 +111,12 @@ The result of step 5. is a folder containing the *models* as well as the *releva
 # Dependencies
 
 The following dependencies are included.
+
+## Yap
+
+Taken from: https://github.com/vscosta/yap
+
+Yap is distributed under the   LGPL  licence terms. For details visit http://www.gnu.org/copyleft/lesser.html.
 
 ## Aleph
 

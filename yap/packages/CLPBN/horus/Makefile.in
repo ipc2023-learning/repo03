@@ -1,0 +1,246 @@
+#
+# default base directory for YAP installation
+# (EROOT for architecture-dependent files)
+#
+GCC = @GCC@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+ROOTDIR = $(prefix)
+EROOTDIR = @exec_prefix@
+abs_top_builddir = @abs_top_builddir@
+#
+# where the binary should be
+#
+BINDIR = $(EROOTDIR)/bin
+#
+# where YAP should look for libraries
+#
+LIBDIR=@libdir@
+YAPLIBDIR=@libdir@/Yap
+#
+#
+CC=@CC@
+CXX=@CXX@
+
+# normal
+CXXFLAGS= -std=c++0x @SHLIB_CXXFLAGS@ $(YAP_EXTRAS) $(DEFS) -D_YAP_NOT_INSTALLED_=1 -I$(srcdir) -I../../.. -I$(srcdir)/../../../include @CPPFLAGS@ -DNDEBUG
+
+# debug 
+#CXXFLAGS= -std=c++0x @SHLIB_CXXFLAGS@ $(YAP_EXTRAS) $(DEFS) -D_YAP_NOT_INSTALLED_=1 -I$(srcdir) -I../../.. -I$(srcdir)/../../../include @CPPFLAGS@ -g -O0 -Wextra
+
+
+#
+#
+# You shouldn't need to change what follows.
+#
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+SHELL=/bin/sh
+RANLIB=@RANLIB@
+srcdir=@srcdir@
+SO=@SO@
+#4.1VPATH=@srcdir@:@srcdir@/OPTYap
+CWD=$(PWD)
+
+utestsdir=@srcdir@/unit_tests
+
+MAIN_HEADERS = \
+	$(srcdir)/BayesBall.h \
+	$(srcdir)/BayesBallGraph.h \
+	$(srcdir)/BeliefProp.h \
+	$(srcdir)/ConstraintTree.h \
+	$(srcdir)/CountingBp.h \
+	$(srcdir)/ElimGraph.h \
+	$(srcdir)/Factor.h \
+	$(srcdir)/FactorGraph.h \
+	$(srcdir)/GenericFactor.h \
+	$(srcdir)/GroundSolver.h \
+	$(srcdir)/Histogram.h \
+	$(srcdir)/Horus.h \
+	$(srcdir)/Indexer.h \
+	$(srcdir)/LiftedBp.h \
+	$(srcdir)/LiftedKc.h \
+	$(srcdir)/LiftedOperations.h \
+	$(srcdir)/LiftedSolver.h \
+	$(srcdir)/LiftedUtils.h \
+	$(srcdir)/LiftedVe.h \
+	$(srcdir)/LiftedWCNF.h \
+	$(srcdir)/Parfactor.h \
+	$(srcdir)/ParfactorList.h \
+	$(srcdir)/ProbFormula.h \
+	$(srcdir)/TinySet.h \
+	$(srcdir)/Util.h \
+	$(srcdir)/Var.h \
+	$(srcdir)/VarElim.h \
+	$(srcdir)/WeightedBp.h
+
+UTESTS_HEADERS = \
+	$(utestsdir)/Common.h
+
+HEADERS = \
+	$(MAIN_HEADERS) \
+	$(UTESTS_HEADERS)
+
+MAIN_SOURCES = \
+	$(srcdir)/BayesBall.cpp \
+	$(srcdir)/BayesBallGraph.cpp \
+	$(srcdir)/BeliefProp.cpp \
+	$(srcdir)/ConstraintTree.cpp \
+	$(srcdir)/CountingBp.cpp \
+	$(srcdir)/ElimGraph.cpp \
+	$(srcdir)/Factor.cpp \
+	$(srcdir)/FactorGraph.cpp \
+	$(srcdir)/GenericFactor.cpp \
+	$(srcdir)/GroundSolver.cpp \
+	$(srcdir)/Histogram.cpp \
+	$(srcdir)/HorusCli.cpp \
+	$(srcdir)/HorusYap.cpp \
+	$(srcdir)/Indexer.cpp \
+	$(srcdir)/LiftedBp.cpp \
+	$(srcdir)/LiftedKc.cpp \
+	$(srcdir)/LiftedOperations.cpp \
+	$(srcdir)/LiftedUtils.cpp \
+	$(srcdir)/LiftedVe.cpp \
+	$(srcdir)/LiftedWCNF.cpp \
+	$(srcdir)/Parfactor.cpp \
+	$(srcdir)/ParfactorList.cpp \
+	$(srcdir)/ProbFormula.cpp \
+	$(srcdir)/Util.cpp \
+	$(srcdir)/Var.cpp \
+	$(srcdir)/VarElim.cpp \
+	$(srcdir)/WeightedBp.cpp
+
+UTESTS_SOURCES = \
+	$(utestsdir)/BeliefPropTest.cpp \
+	$(utestsdir)/Common.cpp	\
+	$(utestsdir)/CountingBpTest.cpp \
+	$(utestsdir)/FactorTest.cpp \
+	$(utestsdir)/VarElimTest.cpp \
+	$(utestsdir)/UnitTesting.cpp
+
+SOURCES = \
+	$(MAIN_SOURCES) \
+	$(UTESTS_SOURCES)
+
+OBJS = \
+	BayesBall.o \
+	BayesBallGraph.o \
+	BeliefProp.o \
+	ConstraintTree.o \
+	CountingBp.o \
+	ElimGraph.o \
+	Factor.o \
+	FactorGraph.o \
+	GenericFactor.o \
+	GroundSolver.o \
+	Histogram.o \
+	Indexer.o \
+	LiftedBp.o \
+	LiftedKc.o \
+	LiftedOperations.o \
+	LiftedUtils.o \
+	LiftedVe.o \
+	LiftedWCNF.o \
+	ProbFormula.o \
+	Parfactor.o \
+	ParfactorList.o \
+	Util.o \
+	Var.o \
+	VarElim.o \
+	WeightedBp.o
+
+LIB_OBJS = \
+	$(OBJS) \
+	HorusYap.o
+
+HCLI_OBJS = \
+	BayesBall.o \
+	BayesBallGraph.o \
+	BeliefProp.o \
+	CountingBp.o \
+	ElimGraph.o \
+	Factor.o \
+	FactorGraph.o \
+	GenericFactor.o \
+	GroundSolver.o \
+	HorusCli.o \
+	Indexer.o \
+	Util.o \
+	Var.o \
+	VarElim.o \
+	WeightedBp.o
+
+UTESTS_OBJS = \
+	$(OBJS) \
+	$(utestsdir)/BeliefPropTest.o \
+	$(utestsdir)/Common.o	\
+	$(utestsdir)/CountingBpTest.o \
+	$(utestsdir)/FactorTest.o \
+	$(utestsdir)/VarElimTest.o \
+	$(utestsdir)/UnitTesting.o
+
+
+SOBJS = horus.@SO@
+HCLI = hcli@EXEC_SUFFIX@
+UTESTING = $(srcdir)/run_tests
+
+
+all: $(SOBJS) $(HCLI)
+
+
+# Don't require $(UTESTING) by default as we
+# don't want a hard dependency on CppUnit
+with_tests: $(SOBJS) $(HCLI) $(UTESTING)
+
+
+@DO_SECOND_LD@$(SOBJS): $(LIB_OBJS)
+@DO_SECOND_LD@	@SHLIB_CXX_LD@ $(LDFLAGS) -o $@ $(LIB_OBJS) @EXTRA_LIBS_FOR_SWIDLLS@
+
+
+$(HCLI): $(HCLI_OBJS)
+	$(CXX) -o $@ $(HCLI_OBJS)
+
+
+$(UTESTING): $(UTESTS_OBJS)
+	$(CXX) -o $@ $(UTESTS_OBJS) -lcppunit
+
+
+# default rule
+%.o : $(srcdir)/%.cpp
+	$(CXX) -o $@ -c $(CXXFLAGS) $<
+
+
+install: all install-examples
+	$(INSTALL_PROGRAM) $(SOBJS) $(DESTDIR)$(YAPLIBDIR)
+	$(INSTALL_PROGRAM) $(HCLI)  $(DESTDIR)$(BINDIR)
+
+install-examples:
+
+clean:
+	rm -f $(SOBJS) $(HCLI) $(UTESTING) *.o *~ $(utestsdir)/*.o $(utestsdir)/*~
+
+distclean: clean
+	rm -f Makefile
+
+remove_dots:
+	rm -f *.dot *.png *.svg
+
+
+depend: $(SOURCES) $(HEADERS)
+	-@if test "$(GCC)" = yes; then\
+	  for F in $(SOURCES); do \
+	    D=`dirname $$F`; \
+	    B=`basename $$F .cpp`; \
+	    $(CXX) $(CXXFLAGS) -MM -MG -MT "$$D/$$B.o" -I$(srcdir)/../../../../H -I$(srcdir)/../../../../include $$F >> Makefile; \
+	  done; \
+	else\
+	  makedepend -- $(CXXFLAGS) -- -I$(srcdir)/../../../../H -I$(srcdir)/../../../../include $(SOURCES); \
+	fi
+
+
+.PHONY: default all install clean remove_dots depend
+
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+

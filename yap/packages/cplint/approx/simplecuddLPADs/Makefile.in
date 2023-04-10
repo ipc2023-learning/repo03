@@ -1,0 +1,57 @@
+#
+# default base directory for YAP installation
+# (EROOT for architecture-dependent files)
+#
+prefix = @prefix@
+ROOTDIR = $(prefix)
+EROOTDIR = ${prefix}
+#
+# where the binary should be
+#
+BINDIR = $(EROOTDIR)/bin
+#
+# where YAP should look for libraries
+#
+LIBDIR=@libdir@/Yap
+DESTDIR=$(BINDIR)
+#
+#
+CC=@CC@
+#
+#
+# You shouldn't need to change what follows.
+#
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+SHELL=/bin/sh
+RANLIB=@RANLIB@
+SHLIB_SUFFIX=@SO@
+CWD=$(PWD)
+srcdir=@srcdir@
+CPLINT_CPPFLAGS=@CPPFLAGS@ @CPLINT_CPPFLAGS@ -I@abs_top_builddir@
+CPLINT_LDFLAGS=@CPLINT_LDFLAGS@
+CPLINT_LIBS=@CPLINT_LIBS@
+CFLAGS=@CFLAGS@  $(YAP_EXTRAS) $(DEFS)
+
+#
+
+
+default:  LPADBDD
+
+LPADBDD: ProblogBDD.o simplecudd.o general.o
+	@echo Making ProblogBDD...
+	@echo Copyright T. Mantadelis, A. Kimmig, B. Gutmann and Katholieke Universiteit Leuven 2008
+	$(CC) $(CPLINT_LDFLAGS) ProblogBDD.o simplecudd.o general.o  $(CPLINT_LIBS)  @CUDD_LIBS@  -o LPADBDD
+
+%.o : $(srcdir)/%.c
+	$(CC)  $(CPLINT_CPPFLAGS)  -c $<
+
+clean:
+	rm -f *.o LPADBDD
+
+install: default
+	$(INSTALL_PROGRAM) LPADBDD $(DESTDIR)
+
+distclean: clean
+	rm -f Makefile

@@ -1,0 +1,51 @@
+
+This is a version of the school database, based on the PRM School example.
+
+There are the following main files:
+
+school_32.yap:   school with 32 professors, 64 courses and 256 students
+school_64.yap:   school with 64 professors, 128 courses and 1024 students
+school_128.yap:  school with 128 professors, 256 courses and 4096 students
+
+parschema.pfl:   the PFL schema
+
+tables:          CPTs
+
+=============================================================================
+
+professor_ability(p0,X).
+
+professor_popularity(p0,X).
+
+professor_ability(p0,X), professor_popularity(p0,h).
+
+professor_ability(p0,h), professor_popularity(p0,X).
+
+registration_grade(r0,X).
+
+registration_grade(r0,X), registration_course(r0,C), course_difficulty(C,h).
+
+registration_grade(r0,X), registration_course(r0,C), course_difficulty(C,h), registration_student(r0,S), student_intelligence(S,h).
+
+registration_grade(r0,X), registration_course(r0,C), course_difficulty(C,l), registration_student(r0,S), student_intelligence(S,h).
+
+registration_satisfaction(r0,X).
+
+registration_satisfaction(r0,X), registration_student(r0,S), student_intelligence(S,h).
+
+registration_satisfaction(r0,X), registration_grade(r0,a).
+
+registration_satisfaction(r0,X), registration_grade(r0,d).
+
+registration_satisfaction(r0,h), registration_grade(r0,X).
+
+course_rating(c0,X).
+
+course_rating(c0,h), course_difficulty(c0,X).
+
+course_difficulty(c0,X).
+
+rank(s0,X).
+
+rank(s0,X), student_intelligence(s0,h).
+
