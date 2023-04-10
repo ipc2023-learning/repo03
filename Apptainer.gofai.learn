@@ -1,6 +1,6 @@
 # Stage 1: Compile the planner
 Bootstrap: docker
-From: ubuntu:14.04
+From: ubuntu:kinetic
 Stage: build
 
 %files
@@ -8,29 +8,45 @@ Stage: build
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends g++ g++-multilib make libboost-dev
+    apt-get -y install --no-install-recommends cmake make g++ pypy3 automake
 
-    cd cedalion/src
-    ./build_all -j8
-    strip --strip-all preprocess/preprocess search/downward-release
+    rm -rf fd-symbolic/builds
+
+    cd fd-symbolic
+    pypy3 build.py
+    strip --strip-all builds/release64/bin/preprocess builds/release64/bin/downward
+    cd ..
+
+
+    mkdir yap
+    cd learning/yap
+    mkdir build
+    cd build
+
+    cmake .. -DCMAKE_INSTALL_PREFIX=/yap
+    make
+    make install
 
 
 # Stage 2: Run the planner
 Bootstrap: docker
-From: ubuntu:14.04
+From: ubuntu:kinetic
 Stage: run
 
 # Copy planner binary and required files from Stage 1.
 %files from build
-    cedalion/src/preprocess/preprocess
-    cedalion/src/search/downward-release
-    cedalion/src/translate
-    lab
-    preprocess-tasks.py
-    parameters
-    smac
-    tuning
-    wrapper
+
+    learn.py
+    training
+
+    fd-symbolic/builds/release/bin/
+    fd-symbolic/fast-downward.py
+    fd-symbolic/driver
+
+    learning/learning-aleph
+    learning/learning-sklearn
+    learning/aleph/aleph.pl
+    learning/translate
 
 %post
     apt-get update
