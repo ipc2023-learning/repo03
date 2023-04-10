@@ -53,8 +53,8 @@ def main():
     os.mkdir(BENCHMARKS_DIR)
     shutil.copy(args.domain, BENCHMARKS_DIR)
 
-    os.mkdir(INSTANCES_SMAC)
-    shutil.copy(args.domain, INSTANCES_SMAC)
+    # os.mkdir(INSTANCES_SMAC)
+    # shutil.copy(args.domain, INSTANCES_SMAC)
 
     for problem in args.problem:
         # TODO Split instances in some way and only put some on instances smac
@@ -66,7 +66,8 @@ def main():
 
     run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
-    run_step_good_operators(f'{TRAINING_DIR}/good-operators', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)
+    # Only do this if the domain has action cost:
+    # run_step_good_operators(f'{TRAINING_DIR}/good-operators', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
     #TODO: set time and memory limits
     #TODO: train also without good operators
