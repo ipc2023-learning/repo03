@@ -8,14 +8,15 @@ Stage: build
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends cmake make g++ pypy3 automake
+    apt-get -y install --no-install-recommends cmake make g++ pypy3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3
 
-    rm -rf fd-symbolic/builds
 
-    cd fd-symbolic
-    pypy3 build.py
-    strip --strip-all builds/release64/bin/preprocess builds/release64/bin/downward
-    cd ..
+    # TODO: Fix compilation error in newer g++
+    # rm -rf fd-symbolic/builds
+    # cd fd-symbolic
+    # pypy3 build.py
+    # strip --strip-all builds/release64/bin/preprocess builds/release64/bin/downward
+    # cd ..
 
 
     mkdir yap
@@ -26,6 +27,8 @@ Stage: build
     cmake .. -DCMAKE_INSTALL_PREFIX=/yap
     make
     make install
+
+    # TODO Install lab
 
 
 # Stage 2: Run the planner
