@@ -1,0 +1,39 @@
+:- ensure_loaded(library(pfl)).
+
+%:- set_solver(ve).
+%:- set_solver(hve).
+%:- set_solver(jt).
+%:- set_solver(bdd).
+%:- set_solver(bp).
+%:- set_solver(cbp).
+%:- set_solver(gibbs).
+%:- set_solver(lve).
+%:- set_solver(lkc).
+%:- set_solver(lbp).
+
+bayes cloudy ; cloudy_table ; [].
+
+bayes sprinkler, cloudy ; sprinkler_table ; [].
+
+bayes rain, cloudy ; rain_table ; [].
+
+bayes wet_grass, sprinkler, rain ; wet_grass_table ; [].
+
+cloudy_table(
+    [ 0.5,
+      0.5 ]).
+
+sprinkler_table(
+    [ 0.1, 0.5,
+      0.9, 0.5 ]).
+
+rain_table(
+    [ 0.8, 0.2,
+      0.2, 0.8 ]).
+
+wet_grass_table(
+    [ 0.99, 0.9, 0.9, 0.0,
+      0.01, 0.1, 0.1, 1.0 ]).
+
+% ?- wet_grass(X).
+

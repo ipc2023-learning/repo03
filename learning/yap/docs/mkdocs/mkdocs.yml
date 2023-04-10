@@ -1,0 +1,33 @@
+site_name: YAP Prolog Reference Manual
+site_url: https://www.dcc.fc.up.pt/
+use_directory_urls: true
+theme:
+  name: 'material'
+  features:
+    - navigation.instant
+    - navigation.trackbig
+    - navigation.sections
+    - navigation.expand
+    - navigation.tabs
+    - toc.integrate  
+    - header.autohide  
+    - logo: favicon.ico
+    - content.tooltips
+extra_javascript:
+    - javascripts/highlight.min.js
+plugins:
+  - search
+  - awesome-pages
+  - mkdocs-jupyter  
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - codehilite
+  - fenced_code
+

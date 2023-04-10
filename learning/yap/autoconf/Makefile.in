@@ -1,0 +1,867 @@
+
+# default base directory for YAP installation
+# (EROOT for architecture-dependent files)
+#
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+ROOTDIR = $(prefix)
+EROOTDIR = @exec_prefix@
+#
+# where the binary should be
+#
+BINDIR = $(EROOTDIR)/bin
+#
+# where YAP should look for binary libraries
+#
+LIBDIR=@libdir@
+YAPLIBDIR=@libdir@/Yap
+#
+# where YAP should look for architecture-independent Prolog libraries
+#
+DATAROOTDIR=@datarootdir@
+#
+SHAREDIR=$(DATAROOTDIR)
+#
+# where the includes should be stored
+#
+INCLUDEDIR=@includedir@/Yap
+#
+# where to store info files
+#
+INFODIR=$(DATAROOTDIR)/info
+#
+# where to store documentation files
+#
+DOCSDIR=$(SHAREDIR)/doc/yap
+
+#
+# Add this flag to YAP_EXTRAS if you need the extension:
+#	-DRATIONAL_TREES: allow unification and builtins over rational trees
+#       -DCOROUTINING: implement extra control primitives
+#       -DANALYST: low level profiler
+#	-DDEPTH_LIMIT: support depth-limits in Prolog execution
+#	-DLOW_LEVEL_TRACER: low level tracing
+#
+# very experimental stuff, you'll need to contact the developers
+# if you want to use this:
+#       -DYAPOR_COPY: or-parallelism with environment copying, in Muse style.
+#       -DYAPOR_SBA: or-parallelism with sparse binding arrays.
+#       -DYAPOR_COW: or-parallelism with copy-on-write.
+#       -DTABLING: support for tabling
+#
+#
+# check also optimisation options in INSTALL file.
+#
+YAP_EXTRAS=@YAP_EXTRAS@
+
+YAPSTARTUP=@SAVED_STATE_PREFIX@startup.yss
+
+#
+# Please do not add YAP_EXTRA flags here: if you do check the flags
+# for c_interface.c
+#
+CC=@CC@
+CXX=@CXX@
+MPI_CC=@MPI_CC@
+CPPFLAGS=@CPPFLAGS@  -I. -I$(srcdir)/H -I$(srcdir)/include  -I$(srcdir)/os -I$(srcdir)/OPTYap -I$(srcdir)/BEAM -I$(srcdir)/CXX
+EXECUTABLE_CFLAGS= @CFLAGS@ $(YAP_EXTRAS) $(DEFS) $(CPPFLAGS)
+CFLAGS=  @YAPLIB_CFLAGS@ $(YAP_EXTRAS) $(DEFS) $(CPPFLAGS)
+CXXFLAGS=  @SHLIB_CXXFLAGS@ $(YAP_EXTRAS) $(DEFS) $(CPPFLAGS)
+C_INTERF_FLAGS= @YAPLIB_CFLAGS@ $(YAP_EXTRAS) $(DEFS) $(CPPFLAGS) -Iinclude
+C_PARSER_FLAGS= @YAPLIB_CFLAGS@ $(YAP_EXTRAS) $(DEFS) $(CPPFLAGS)
+#
+#
+# You shouldn't need to change what follows.
+#
+ARCH=@ARCH@
+AWK=@AWK@
+CPP=@CPP@
+RC=@RC@
+RCFLAGS=@RCFLAGS@
+DEFS=@DEFS@ -D_YAP_NOT_INSTALLED_=1 -DDESTDIR=\"$(DESTDIR)\"
+LIBS=@LIBS@ @MYDDAS_LIBS@
+DLL_LIBS=@LIBS@ @EXTRA_LIBS_FOR_DLLS@
+LDFLAGS=@LDFLAGS@
+EXTRAYAPLIBS=@EXTRAYAPLIBS@
+LN_S=@LN_S@
+M4=@M4@
+GCC=@GCC@
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_INFO=@INSTALL_INFO@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+M4GENHDRS=@M4GENHDRS@
+M4GENABSMI=@M4GENABSMI@
+INDENT=@INDENT@
+SHELL=@SHELL@
+RANLIB=@RANLIB@
+AR=@AR@
+srcdir=@srcdir@
+abs_top_builddir=@abs_top_builddir@
+SO=@SO@
+MAKEINFO=makeinfo
+TEXI2DVI=texi2dvi
+TEXI2HTML=texi2html
+TEXI2PDF=texi2pdf
+YAPLIB=@YAPLIB@
+SONAMEFLAG=@SONAMEFLAG@
+#---------------
+JITFLAGS=@JITFLAGS@
+JITLD=@JITLD@
+JITLIBS=@JITLIBS@
+PAPILIB=@PAPILIB@
+
+VPATH=@srcdir@
+CWD=$(PWD)
+#
+VERSION=@YAP_VERSION@
+Y=@YAP_MAJOR_VERSION@
+DOC_VERSION=@DOC_VERSION@
+MYDDAS_VERSION=@MYDDAS_VERSION@
+#
+
+INTERFACE_HEADERS = \
+	$(IOLIB_HEADERS) \
+	include/c_interface.h \
+	include/clause_list.h \
+	include/dswiatoms.h \
+	include/udi.h \
+	include/YapDefs.h \
+	include/YapError.h \
+	include/YapInterface.h \
+	include/SWI-Prolog.h \
+	include/YapError.h \
+	H/TermExt.h \
+	H/YapTags.h \
+	H/Tags_32bits.h \
+	H/Tags_32Ops.h \
+	H/Tags_32LowTag.h \
+	H/Tags_64bits.h \
+	H/Tags_24bits.h \
+	H/YapCompoundTerm.h \
+	include/YapRegs.h \
+	H/YapTerm.h \
+	library/dialect/bprolog/fli/bprolog.h \
+	os/pl-thread.h \
+	os/SWI-Stream.h
+
+IOLIB_HEADERS= \
+    os/iopreds.h \
+    os/fmemopen.c\
+    os/yapio.h
+
+HEADERS = \
+	H/Atoms.h \
+	H/sshift.h \
+	H/Yap.h \
+	H/Yatom.h \
+	H/YapHeap.h \
+	H/Regs.h \
+	H/Yapproto.h \
+	H/absmi.h  \
+	H/alloc.h \
+	H/amidefs.h \
+	H/amiops.h \
+	H/arrays.h \
+	H/arith2.h \
+	H/attvar.h \
+    H/blobs.h \
+	H/clause.h \
+	H/YapCöompile.h \
+	H/corout.h \
+	H/dlmalloc.h \
+	H/dglobals.h \
+	H/dlocals.h \
+	H/dhstruct.h \
+	H/YapEval.h \
+	H/heapgc.h   \
+	H/hglobals.h \
+	H/hlocals.h \
+	H/hstruct.h \
+	H/iglobals.h \
+	H/ihstruct.h \
+	H/ilocals.h \
+	H/index.h \
+	H/inline-only.h \
+	H/iswiatoms.h \
+	H/qly.h \
+	H/rclause.h \
+	H/rglobals.h \
+	H/rlocals.h \
+	H/rheap.h \
+	H/rhstruct.h \
+	H/threads.h \
+	H/tracer.h \
+	H/trim_trail.h \
+	H/YapSignals.h \
+	H/YapText.h \
+	H/cut_c.h \
+	H/iatoms.h H/ratoms.h H/tatoms.h \
+	CXX/yapdb.hh \
+	CXX/yapi.hh \
+	BEAM/eam.h BEAM/eamamasm.h \
+	OPTYap/opt.config.h \
+	OPTYap/opt.proto.h OPTYap/opt.structs.h \
+	OPTYap/opt.macros.h OPTYap/or.macros.h \
+	OPTYap/or.sba_amiops.h OPTYap/or.sba_unify.h \
+	OPTYap/tab.structs.h OPTYap/locks_x86.h \
+	OPTYap/locks_sparc.h OPTYap/locks_mips.h \
+	OPTYap/locks_mips_funcs.h OPTYap/locks_alpha.h \
+	OPTYap/locks_alpha_funcs.h \
+	OPTYap/locks_pthread.h \
+	library/dialect/swi/fli/swi.h \
+	JIT/HPP/JIT.hpp \
+	JIT/HPP/JIT_Compiler.hpp \
+	JIT/HPP/jit_predicates.hpp
+
+IOLIB_SOURCES=  os/charsio.c \
+	os/chartypes.c\
+	os/console.c\
+	os/files.c\
+	os/fmemopen.c\
+	os/format.c\
+	os/iopreds.c\
+	os/mem.c\
+	os/pipes.c\
+	os/readline.c\
+	os/readterm.c\
+	os/readutil.c\
+	os/sockets.c\
+	os/streams.c\
+	os/sysbits.c\
+	os/writeterm.c\
+	os/ypsocks.c\
+	os/ypstdio.c
+
+
+C_SOURCES= \
+	#$(IOLIB_SOURCES) \
+	C/absmi.c C/adtdefs.c \
+	C/agc.c C/alloc.c \
+	C/args.c \
+	C/amasm.c C/analyst.c \
+	C/arith0.c C/arith1.c C/arith2.c \
+	C/atomic.c \
+	C/arrays.c \C/blobs.c \
+	C/attvar.c C/bb.c \
+	C/bignum.c \
+	C/c_interface.c C/cdmgr.c C/cmppreds.c \
+	C/clause_list.c \
+	C/compiler.c C/computils.c \
+	C/corout.c C/dbase.c C/dlmalloc.c \
+	C/errors.c \
+	C/eval.c C/exec.c \
+	C/exo.c \
+	C/exo_udi.c \
+	C/flags.c \
+	C/globals.c C/gmp_support.c \
+	C/gprof.c C/grow.c \
+	C/heapgc.c C/index.c	   \
+	C/init.c C/inlines.c	   \
+	C/iopreds.c C/depth_bound.c \
+	C/load_foreign.c \
+	C/load_dl.c C/load_dld.c C/load_none.c \
+	C/load_aout.c C/load_aix.c C/load_dll.c \
+	C/load_shl.c C/load_dyld.c \
+	C/mavar.c C/modules.c C/other.c       \
+	C/parser.c \
+	C/qlyr.c \
+	C/qlyw.c \
+	C/range.c \
+	C/save.c C/scanner.c C/signals.c \
+	C/sort.c C/stdpreds.c C/sysbits.c \
+	C/text.c \
+	C/threads.c \
+	C/tracer.c C/unify.c C/userpreds.c  \
+	C/udi.c \
+	C/utf8.c\
+	C/utilpreds.c C/write.c console/yap.c \
+	C/yap-args.c \
+	C/ypstdio.c \
+	BEAM/eam_am.c BEAM/eam_showcode.c \
+	BEAM/eamindex.c BEAM/eamamasm.c \
+	BEAM/eam_gc.c BEAM/eam_split.c \
+	OPTYap/or.memory.c OPTYap/opt.init.c \
+	OPTYap/opt.preds.c OPTYap/or.copy_engine.c \
+	OPTYap/or.cow_engine.c OPTYap/or.sba_engine.c \
+	OPTYap/or.thread_engine.c \
+	OPTYap/or.scheduler.c OPTYap/or.cut.c \
+	OPTYap/tab.tries.c OPTYap/tab.completion.c \
+	C/cut_c.c \
+	library/dialect/swi/fli/swi.c \
+	C/blobs.c \
+	# library/mpi/mpi.c library/mpi/mpe.c \
+	# library/lammpi/yap_mpi.c library/lamm1pi/hash.c library/lammpi/prologterms2c.c
+
+CXX_SOURCES = \
+	CXX/yapi.cpp \
+	JIT/JIT_Compiler.cpp
+
+PLCONS_SOURCES = \
+	console/LGPL/pl-nt.c \
+	console/LGPL/pl-ntcon.c \
+	console/LGPL/pl-ntconsole.c \
+	console/LGPL/pl-ntmain.c \
+	console/LGPL/yap.rc \
+	console/LGPL/manifest.xml
+
+PL_SOURCES= \
+	pl/absf.yap \
+	pl/arith.yap \
+	pl/arithpreds.yap \
+	pl/arrays.yap \
+	pl/attributes.yap \
+	pl/atoms.yap \
+	pl/boot.yap \
+	pl/callcount.yap\
+	pl/checker.yap pl/chtypes.yap \
+	pl/consult.yap \
+	pl/control.yap \
+	pl/corout.yap pl/debug.yap \
+	pl/dbload.yap \
+	pl/depth_bound.yap \
+	pl/dialect.yap \
+	pl/directives.yap \
+	pl/eam.yap \
+	pl/eval.yap \
+	pl/errors.yap	\
+	pl/flags.yap	\
+	pl/grammar.yap \
+	pl/ground.yap \
+	pl/hacks.yap \
+	pl/init.yap \
+	pl/listing.yap \
+	pl/lists.yap \
+	pl/messages.yap \
+	pl/load_foreign.yap \
+	pl/modules.yap \
+	pl/os.yap \
+	pl/preddecls.yap \
+	pl/preds.yap \
+	pl/profile.yap \
+	pl/protect.yap \
+	pl/qly.yap \
+	pl/save.yap \
+	pl/setof.yap \
+	pl/signals.yap \
+	pl/sort.yap \
+	pl/statistics.yap \
+	pl/strict_iso.yap \
+	pl/tabling.yap pl/threads.yap \
+	pl/udi.yap \
+	pl/undefined.yap \
+	pl/utils.yap \
+	pl/history.pl \
+	pl/swi.yap \
+	pl/yapor.yap pl/yio.yap
+
+# need these files to construct the initial saved state.
+SWI_LIB_SOURCES= \
+	swi/library/menu.pl \
+	swi/library/predopts.pl
+
+YAPDOCS=docs/yap.tex docs/chr.tex \
+	docs/clpr.tex docs/swi.tex
+
+IOLIB_OBJECTS=\
+	os/charsio.o \
+	os/chartypes.o\
+	os/console.o\
+	os/files.o\
+	os/fmemopen.o\
+	os/format.o\
+	os/iopreds.o\
+	os/mem.o\
+	os/pipes.o\
+	os/readline.o\
+	os/readterm.o\
+	os/readutil.o\
+	os/sockets.o\
+	os/streams.o\
+	os/sysbits.o\
+	os/writeterm.o\
+	os/ypsocks.o\
+	os/ypstdio.o
+
+ENGINE_OBJECTS = \
+	agc.o absmi.o adtdefs.o alloc.o amasm.o analyst.o arrays.o \
+	args.o \
+	arith0.o arith1.o arith2.o atomic.o attvar.o \
+	bignum.o bb.o \
+	cdmgr.o cmppreds.o compiler.o computils.o \
+	corout.o cut_c.o dbase.o dlmalloc.o errors.o eval.o \
+	exec.o exo.o exo_udi.o flags.o \
+	globals.o gmp_support.o gprof.o grow.o \
+	heapgc.o index.o init.o  inlines.o \
+	iopreds.o depth_bound.o mavar.o \
+	modules.o other.o   \
+	parser.o qlyr.o qlyw.o range.o \
+	save.o scanner.o signals.o text.o sort.o stdpreds.o \
+	sysbits.o threads.o tracer.o \
+	udi.o\
+	utf8.o\
+	unify.o userpreds.o utilpreds.o \
+	yap-args.o write.o \
+	blobs.o library/dialect/swi/fli/swi.o library/dialect/swi/fli/blobs.o ypstdio.o \
+	$(IOLIB_OBJECTS)
+
+JIT_OBJECTS = \
+    @JITCOMPILER@ \
+    @JITCONFIGPREDS@ \
+    @JITANALYSISPREDS@ \
+    @JITTRANSFORMPREDS@ \
+    @JITCODEGENPREDS@ \
+    @JITDEBUGPREDS@ \
+    @JITSTATISTICPREDS@
+
+MYDDAS_ALL_OBJECTS = \
+	myddas_initialization.o \
+	myddas_mysql.o \
+	myddas_odbc.o \
+	myddas_postgres.o \
+	myddas_shared.o \
+	myddas_sqlite3.o \
+	myddas_statistics.o \
+	myddas_util.o \
+	myddas_wkb2prolog.o
+
+MYDDAS_OBJECTS = @OBJECTS_MYDDAS@
+
+# not being compiled.
+LIBTAI_OBJECTS = \
+	tai_add.o tai_now.o tai_pack.o \
+        tai_sub.o tai_unpack.o taia_add.o taia_approx.o \
+        taia_fmtfrac.o taia_frac.o taia_half.o taia_less.o \
+        taia_now.o taia_pack.o taia_sub.o taia_tai.o taia_unpack.o \
+        caldate_fmt.o caldate_scan.o caldate_fmjd.o caldate_mjd.o \
+        caldate_norm.o caldate_ster.o leapsecs_read.o \
+        leapsecs_init.o leapsecs_add.o leapsecs_sub.o caltime_fmt.o \
+        caltime_scan.o caltime_tai.o caltime_utc.o
+
+C_INTERFACE_OBJECTS = \
+	load_foreign.o load_dl.o load_dld.o load_dyld.o \
+	load_none.o load_aout.o load_aix.o load_dll.o load_shl.o \
+	c_interface.o clause_list.o
+
+OR_OBJECTS = \
+	or.memory.o opt.init.o opt.preds.o   \
+	or.copy_engine.o or.cow_engine.o or.sba_engine.o or.thread_engine.o \
+	or.scheduler.o or.cut.o      \
+	tab.tries.o tab.completion.o
+
+BEAM_OBJECTS = \
+	eamamasm.o eam_showcode.o eamindex.o eam_am.o
+
+STATIC_OBJECTS = \
+	@STATIC_MODE@sys.o yap_random.o regexp.o  @NO_BUILTIN_REGEXP@ regcomp.o regerror.o regfree.o regexec.o
+
+LIB_OBJECTS = $(ENGINE_OBJECTS) \
+	$(C_INTERFACE_OBJECTS) $(OR_OBJECTS)  \
+	$(BEAM_OBJECTS) $(STATIC_OBJECTS) \
+	$(JIT_OBJECTS) \
+	$(MYDDAS_OBJECTS)
+
+OBJECTS = yap.o yapi.o $(LIB_OBJECTS)
+
+PLCONS_OBJECTS = \
+	pl-ntcon.o \
+	pl-ntconsole.o \
+	pl-ntmain.o \
+	yapres.o
+
+all: startup.yss windowsi
+
+windowsi:
+	@WINDOWS@ yap-win@EXEC_SUFFIX@
+
+Makefile: $(srcdir)/Makefile.in
+
+H/Yap.h: config.h YapTermConfig.h \
+		H/YapTags.h \
+		H/YapCompoundTerm.h
+
+$(OBJECTS): config.h
+
+yap.o: console/yap.c config.h
+	$(CC) -c $(CFLAGS) -I$(srcdir)/include $< -o $@
+
+#special rule for this one: we cannot use -fomit-frame-pointer because this will
+# interface with the outside world.
+c_interface.o: C/c_interface.c include/c_interface.h config.h
+	$(CC) $(C_INTERF_FLAGS) -c $< -o c_interface.o
+
+yap-args.o: C/yap-args.c include/c_interface.h config.h
+	$(CC) $(C_INTERF_FLAGS) -c $< -o yap-args.o
+
+clause_list.o: C/clause_list.c include/clause_list.h config.h
+	$(CC) $(C_INTERF_FLAGS) -c $< -o clause_list.o
+
+udi.o: C/udi.c config.h
+	$(CC) -c $(C_INTERF_FLAGS) $< -o $@
+
+save.o: C/save.c
+	$(CC) -c $(C_INTERF_FLAGS) -DYAPSTARTUP=\"$(YAPSTARTUP)\" $< -o $@
+
+library/dialect/swi/fli/%.o: library/dialect/swi/fli/%.c  library/dialect/swi/fli/swi.h include/SWI-Prolog.h library/dialect/swi/os/SWI-Stream.h config.h
+	$(CC) -c $(CFLAGS) -I$(srcdir)/include  -I$(srcdir)/library/dialect/swi/fli -I$(srcdir)/library/dialect/swi/os  $<  -o $@
+
+%.o: C/%.c config.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+%.o: packages/myddas/%.c config.h
+	$(CC) -c $(CFLAGS)   @MYDDAS_CPPFLAGS@ $< -o $@
+
+%.o: OPTYap/%.c config.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+%.o: BEAM/%.c config.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+yapi.o: CXX/yapi.cpp CXX/yapi.hh CXX/yapq.hh CXX/yapt.hh CXX/yapdb.hh CXX/yapie.hh CXX/yapa.hh config.h
+	$(CXX) -c $(CXXFLAGS)  $< -o $@
+
+sys.o: library/system/sys.c config.h
+	$(CC) -c $(CFPLAGS) -I$(srcdir)/include -I. $<  -o $@
+
+yap_random.o: library/random/yap_random.c config.h
+	$(CC) -c $(CFLAGS) -I$(srcdir)/include  $<  -o $@
+
+%.o: library/regex/%.c  @NO_BUILTIN_REGEXP@ library/regex/regex2.h  library/regex/engine.c config.h
+	$(CC) -c $(CFLAGS) -I$(srcdir)/include -Ilibrary/regex $< -o $@
+
+%.o: os/%.c config.h
+	$(CC) -c $(CFLAGS) -I$(srcdir)/include  -I$(srcdir)  -Ios  @EXTRA_INCLUDES_FOR_WIN32@  $< -o $@
+
+JIT_Compiler.o: IT/JIT_Compiler.cpp
+	$(CXX) -c $(CFLAGS) $(JITFLAGS) $< -o $@
+
+%.o: $JIT/%.c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+pl-ntcon.o: console/LGPL/pl-ntcon.c config.h
+	$(CC) -c $(CFLAGS)   -DUNICODE -D_UNICODE -DPL_CONSOLE=1 -I$(srcdir)/include $< -o $@
+
+pl-ntconsole.o: console/LGPL/pl-ntconsole.c config.h
+	$(CC) -c $(CFLAGS)   -DUNICODE -D_UNICODE -DPL_CONSOLE=1  -I$(srcdir) -I$(srcdir)/include -I$(srcdir)/os @EXTRA_INCLUDES_FOR_WIN32@ $< -o $@
+
+pl-ntmain.o: console/LGPL/pl-ntmain.c config.h
+	$(CC) -c $(CFLAGS)   -DUNICODE -D_UNICODE -DPL_CONSOLE=1 -I$(srcdir)/include  -I$(srcdir)  -I$(srcdir)/os @EXTRA_INCLUDES_FOR_WIN32@ $< -o $@
+
+yapres.o: console/LGPL/yap.rc console/LGPL/manifest.xml config.h
+	$(RC) $(RCFLAGS) -DUNICODE -D_UNICODE -DPL_CONSOLE=1 -I. -I$(srcdir)/include  -I$(srcdir)  -I$(srcdir)/os -I$(srcdir)/console/LGPL @EXTRA_INCLUDES_FOR_WIN32@ -i $< -o $@
+
+uxnt.o: os/windows/uxnt.c config.h
+	$(CC) -c $(CFLAGS) -I$(srcdir)/include  -I$(srcdir)  -Ios @EXTRA_INCLUDES_FOR_WIN32@ $< -o $@
+
+# libtai rule
+%.o : os/libtai/%.c config.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+
+## CPP'ed files (for macro debugging)
+
+%.i : C/%.c
+	$(CC) -E $< $(CFLAGS) > $@
+
+absmi.i: C/absmi.c
+	$(CC) -E $(CFLAGS) $(ABSMI_FLAGS) C/absmi.c > $@
+
+c_interface.i: C/c_interface.c include/c_interface.h
+	$(CC) -E $(C_INTERF_FLAGS) C/c_interface.c > $@
+#
+
+INSTALLED_PACKAGES= \
+	library/matrix \
+	library/random \
+	library/regex \
+	library/rltree \
+	library/system \
+	library/tries \
+	packages/meld \
+	packages/ProbLog \
+	packages/xml \
+	packages/yap-lbfgs \
+	@PKG_BDDLIB@ \
+	@PKG_CLPBN@ \
+	@PKG_CUDA@ \
+	@PKG_CPLINT@ \
+	@PKG_GECODE@ \
+	@PKG_MATLAB@ \
+	@PKG_MINISAT@ \
+	@PKG_MPI@ \
+	@PKG_MYDDAS@ \
+	@PKG_PRISM@ \
+	@PKG_PYTHON@ \
+	@PKG_RAPTOR@ \
+	@PKG_CLIB@ \
+	@PKG_CHR@ \
+	@PKG_JPL@ \
+	@PKG_LIBARCHIVE@ \
+	@PKG_PLUNIT@ \
+	@PKG_REAL@ \
+	@PKG_RDF@ \
+	@PKG_SEMWEB@ \
+	@PKG_SGML@ \
+	@PKG_SWIG@ \
+	@PKG_WINCONSOLE@ \
+	@PKG_ZLIB@
+
+PACKAGES=  \
+	library \
+	swi/library \
+	swi/library/clp \
+	$(INSTALLED_PACKAGES)
+
+all: startup.yss
+	for p in $(PACKAGES); do \
+	  echo " ============== " $$p; \
+	  if [ -r $$p/Makefile ]; then $(MAKE) -C $$p || exit 1; fi; \
+	done
+
+@STARTUP_DEFAULT@startup.yss: yap@EXEC_SUFFIX@ $(PL_SOURCES) $(SWI_LIB_SOURCES)
+	-rm -f startup.yss
+	echo "bootstrap('$(srcdir)/pl/init.yap'). module(user). qsave_program('startup.yss')." |  @PRE_INSTALL_ENV@ ./yap@EXEC_SUFFIX@ -b $(srcdir)/pl/boot.yap
+
+yap@EXEC_SUFFIX@: $(HEADERS) yap.o @YAPLIB@ libYap.a
+	$(MPI_CC) $(EXECUTABLE_CFLAGS) $(LDFLAGS) -o yap@EXEC_SUFFIX@ yap.o @YAPLIB@ $(LIBS) $(PAPILIB) $(JITLIBS) $(JITLD)
+
+yap-win: yap-win@EXEC_SUFFIX@
+
+yapwin: yap-win@EXEC_SUFFIX@
+
+yap-win@EXEC_SUFFIX@: $(PLCONS_OBJECTS) $(HEADERS) @YAPLIB@
+	$(MAKE) -C swi/console
+	$(MPI_CC) -municode -DUNICODE -D_UNICODE $(EXECUTABLE_CFLAGS) $(LDFLAGS) -Wl,-subsystem,windows -o yap-win@EXEC_SUFFIX@ $(PLCONS_OBJECTS) plterm.dll @YAPLIB@ $(LIBS) @MYDDAS_LIBS@ -lgdi32 @MPILDF@ -lshlwapi
+
+libYap.a: $(LIB_OBJECTS) yapi.o
+	-rm -f libYap.a
+	$(AR) rc libYap.a $(LIB_OBJECTS) yapi.o
+	$(RANLIB) libYap.a
+
+@DYNYAPLIB@: $(LIB_OBJECTS)
+	@SHLIB_LD@  -o $@ $(LIB_OBJECTS) $(LIBS) $(LDFLAGS) $(SONAMEFLAG)
+	for p in $(EXTRAYAPLIBS); do \
+	  $(LN_S) -f @DYNYAPLIB@ $$p; \
+	done
+
+@STARTUP_ANDROID@startup.yss: 	yap@EXEC_SUFFIX@ @DYNYAPLIB@ $(PL_SOURCES) $(SWI_LIB_SOURCES)
+	( cd packages/myddas && make myddas-yap )
+	\rm -rf data/yap
+	mkdir -p data/yap/packages
+	mkdir -p data/yap/swi
+	cp -a yap data/yap
+	cp -a @DYNYAPLIB@ data/yap
+	for p in $(EXTRAYAPLIBS); do \
+	  (cd data/yap && $(LN_S) @DYNYAPLIB@ $$p ); \
+	done
+	cp -a ../../gmp-android/lib/libgmp.so data/yap
+	cp -a ../../sqlite3-android/lib/libsqliteX.so data/yap
+	cp -a $(srcdir)/pl data/yap
+	cp -a $(srcdir)/library data/yap
+	cp -a $(srcdir)/swi/library data/yap/swi
+	mkdir -p data/yap/packages/chr
+	mkdir -p data/yap/packages/clib
+	mkdir -p data/yap/packages/myddas
+	for i in $(srcdir)/packages/clib/*;  do cp -a $$i data/yap/packages/chr; done
+	for i in $(srcdir)/packages/chr/*;  do cp -a $$i data/yap/packages/chr; done
+	for i in packages/chr/*;  do cp -a $$i data/yap/packages/chr; done
+	cp -a $(srcdir)/packages/myddas/pl/parameters.yap data/yap/packages/myddas
+	cp -a $(srcdir)/library/lists.yap data/yap/packages/myddas/
+	cp -a $(srcdir)/swi/library/error.pl data/yap/packages/myddas/
+	adb push data/yap /data/yap >/dev/null 2>&1
+	adb shell "echo \"bootstrap('/data/yap/pl/init.yap'). module(user). ensure_loaded('/data/yap/packages/myddas/myddas'), qsave_program('/data/yap/startup.yss').\" | LD_LIBRARY_PATH=/data/yap /data/yap/yap@EXEC_SUFFIX@ -b /data/yap/pl/boot.yap"
+	adb pull /data/yap/startup.yss
+
+
+install: @STARTUP_DEFAULT@@INSTALL_COMMAND@ install_startup install_common
+
+xinstall_unix:  android/jni/Android.mk install_unix
+
+android/jni/Android.mk:
+	( cd packages/swig && make android/jni/Android.mk )
+
+install_unix: @YAPLIB@ yap@EXEC_SUFFIX@
+	mkdir -p $(DESTDIR)$(BINDIR)
+	mkdir -p $(DESTDIR)$(YAPLIBDIR)
+	mkdir -p $(DESTDIR)$(SHAREDIR)
+	mkdir -p $(DESTDIR)$(SHAREDIR)/Yap
+	mkdir -p $(DESTDIR)$(SHAREDIR)/Yap/icons
+	$(INSTALL_PROGRAM) -m 755 yap@EXEC_SUFFIX@ $(DESTDIR)$(BINDIR)/yap
+	$(INSTALL_DATA) -m 755 @YAPLIB@ $(DESTDIR)$(LIBDIR)
+
+install_startup: startup.yss
+	$(INSTALL_DATA) startup.yss $(DESTDIR)$(YAPLIBDIR)/startup.yss
+
+install_win32: startup.yss @WINDOWS@ yap-win@EXEC_SUFFIX@
+	mkdir -p $(DESTDIR)$(BINDIR)
+	mkdir -p $(DESTDIR)$(YAPLIBDIR)
+	mkdir -p $(DESTDIR)$(SHAREDIR)
+	mkdir -p $(DESTDIR)$(SHAREDIR)/Yap
+	mkdir -p $(DESTDIR)$(SHAREDIR)/Yap/icons
+	$(INSTALL_PROGRAM) -m 755 yap.dll $(DESTDIR)$(BINDIR)/yap.dll
+	@WINDOWS@ $(INSTALL_PROGRAM) -m 755 yap-win.exe $(DESTDIR)$(BINDIR)/yap-win.exe
+	@WINDOWS@ $(INSTALL_PROGRAM) -m 755 yap.exe $(DESTDIR)$(BINDIR)/yap.exe
+	@WINDOWS@ for i in *.dll; do $(INSTALL_PROGRAM) -m 755 $$i $(DESTDIR)$(BINDIR)/; done
+	$(INSTALL_DATA) $(srcdir)/misc/icons/yap.ico $(DESTDIR)$(SHAREDIR)/Yap/icons/yap.ico
+
+install_common: install_startup
+	mkdir -p $(DESTDIR)$(YAPLIBDIR)
+	mkdir -p $(DESTDIR)$(SHAREDIR)
+	mkdir -p $(DESTDIR)$(SHAREDIR)/Yap
+	mkdir -p $(DESTDIR)$(SHAREDIR)/PrologCommons
+	$(INSTALL) $(srcdir)/PrologCommons/PROLOGCOMMONS.md $(DESTDIR)$(SHAREDIR)/PrologCommons
+	mkdir -p $(DESTDIR)$(SHAREDIR)/Yap/pl
+	mkdir -p $(DESTDIR)$(DOCSDIR)
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)/src
+	for p in $(EXTRAYAPLIBS); do \
+	  $(LN_S) -f $(DESTDIR)$(LIBDIR)/@YAPLIB@ $(DESTDIR)$(LIBDIR)/$$p; \
+	done
+	$(INSTALL) $(srcdir)/Artistic $(DESTDIR)$(DOCSDIR)
+	$(INSTALL) $(srcdir)/README.TXT $(DESTDIR)$(DOCSDIR)
+	$(INSTALL) $(srcdir)/COPYING $(DESTDIR)$(DOCSDIR)
+	for f in $(PL_SOURCES); do $(INSTALL) $(srcdir)/$$f $(DESTDIR)$(SHAREDIR)/Yap/pl; done
+	for h in $(INTERFACE_HEADERS); do $(INSTALL) $(srcdir)/$$h $(DESTDIR)$(INCLUDEDIR); done
+	for h in $(HEADERS); do $(INSTALL) $(srcdir)/$$h $(DESTDIR)$(INCLUDEDIR)/src; done
+	$(INSTALL) config.h $(DESTDIR)$(INCLUDEDIR)/src/config.h
+	$(INSTALL) config.h $(DESTDIR)$(INCLUDEDIR)/YapConfig.h
+	$(INSTALL) YapTermConfig.h $(DESTDIR)$(INCLUDEDIR)
+	for p in $(PACKAGES); do \
+	  echo " ============== INSTALLING" $$p; \
+	  if [ -r $$p/Makefile ]; then $(MAKE) -C $$p install || exit 1; fi; \
+	done
+
+install_library: @YAPLIB@
+	mkdir -p $(DESTDIR)$(INCLUDEDIR)
+	for h in $(HEADERS); do $(INSTALL) $$h $(DESTDIR)$(INCLUDEDIR); done
+
+##########
+FULL_PATH_C_SOURCES=$(addprefix $(srcdir)/, $(C_SOURCES) )
+FULL_PATH_PL_SOURCES=$(addprefix $(srcdir)/, $(PL_SOURCES) )
+FULL_PATH_HEADERS=$(addprefix $(srcdir)/, $(HEADERS) )
+
+TAGS: $(C_SOURCES) $(PL_SOURCES) $(HEADERS)
+	rm -f TAGS
+	find . -name '*.c' -exec etags -a {} \;
+	find . -name '*.h' -exec etags -a {} \;
+	find . -name '*.i' -exec etags -a {} \;
+	find . -name '*.yap' -exec etags -a {} \;
+	find . -name '*.pl' -exec etags -a {} \;
+	find . -name '*.cpp' -exec etags -a {} \;
+	find . -name '*.hh' -exec etags -a {} \;
+	find . -name '*.java' -exec etags -a {} \;
+	find . -name '*.py' -exec etags -a {} \;
+
+depend: $(HEADERS) $(C_SOURCES)
+	-@if test "$(GCC)" = yes; then\
+	  $(CC) -MM $(CFLAGS) -D__YAP_NOT_INSTALLED__=1 -I$(srcdir)/H -I$(srcdir)/include -I$(srcdir)/os -I$(srcdir)/library/dialect/swi/fli -I. $(FULL_PATH_C_SOURCES) >> Makefile;\
+	else\
+          makedepend -f - -- $(CFLAGS) -Iinclude -- $(C_SOURCES) |\
+          sed 's|.*/\([^:]*\):|\1:|' >> Makefile ;\
+	fi
+
+clean: clean_docs clean_local
+	for f in $(PACKAGES); do ( $(MAKE) -C $$f clean ); done
+
+clean_local:
+	rm -f *.o *~ *.BAK *.a
+
+distclean:  distclean_docs clean_local
+	for p in $(PACKAGES); do \
+          echo " ============== DISTCLEAN " $$p; \
+	  if [ -r $$p/Makefile ]; then $(MAKE) -C $$p distclean || exit 1; fi; \
+	done
+	rm -f yap* startup.yss libYap.* Makefile packages/Makefile.defs packages/Dialect.defs
+
+dist:
+
+.c.s:
+	$(CC) $(CFLAGS) -S $<
+
+# use my own .def file.
+libWYap.a: yap.dll
+	dlltool --def misc/yap.def \
+	--dllname yap.dll \
+	--output-lib libWYap.a
+
+# yap.dll:  libYap.a
+# 	$(CC) $(CFLAGS) -shared -o yap.dll \
+# 	-Wl,--export-all-symbols \
+# 	-Wl,--enable-auto-import \
+# 	-Wl,--whole-archive libYap.a \
+# 	-Wl,--no-whole-archive $(LIBS) $(LDFLAGS)
+
+install_info:
+	$(MAKE) info; \
+	$(INSTALL) yap.info* $(DESTDIR)$(INFODIR); \
+	if test -e $(DESTDIR)$(INFODIR)/emacs.bz2; then \
+	  bzip2 --quiet --force $(DESTDIR)$(INFODIR)/yap.info*; \
+	else \
+	  if test -e $(DESTDIR)$(INFODIR)/emacs.gz; then \
+	  gzip --quiet --force $(DESTDIR)$(INFODIR)/yap.info*; \
+	  fi \
+	fi; \
+	$(INSTALL_INFO) --quiet --section "Programming Languages" yap.info $(DESTDIR)$(INFODIR)/dir; \
+	cd LGPL/pillow/doc ; \
+	$(INSTALL) pillow_doc.info $(DESTDIR)$(INFODIR); \
+	if test -e $(DESTDIR)$(INFODIR)/emacs.bz2; then \
+	  bzip2 --quiet --force $(DESTDIR)$(INFODIR)/pillow_doc.info; \
+	else \
+	  if test -e $(DESTDIR)$(INFODIR)/emacs.gz; then \
+	  gzip --quiet --force $(DESTDIR)$(INFODIR)/pillow_doc.info; \
+	  fi \
+	fi; \
+	$(INSTALL_INFO) --quiet --section "Programming Languages" --entry="`cat pillow_doc.infoindex`" --info-dir=$(DESTDIR)$(INFODIR) pillow_doc.info
+
+install_docs: doxygen
+	$(MAKE) pdf
+	$(MAKE) html
+	$(INSTALL_DATA) html $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) pdf $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) README.TXT $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) Artistic $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) COPYING $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) changes4.3.html $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) changes-5.0.html $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) changes-5.1.html $(DESTDIR)$(DOCSDIR)
+	$(INSTALL_DATA) changes-6.0.html $(DESTDIR)$(DOCSDIR)
+
+doxygen:
+	doxygen $(srcdir)/docs/doxygen.rc
+
+info: yap.info
+
+yap.info: docs/yap.tex
+	$(MAKEINFO) $<
+
+html: yap.html
+
+yap.html: docs/yap.tex
+	$(TEXI2HTML) $<
+
+dvi: yap.dvi
+
+yap.dvi: docs/yap.tex
+	$(TEXI2DVI) $<
+
+ps:	yap.ps
+
+yap.ps:  docs/yap.tex
+	dvips -o yap.ps $<
+
+pdf: yap.pdf
+
+yap.pdf:  docs/yap.tex
+	$(TEXI2PDF) $<
+
+clean_docs:
+	rm -f *.aux *.ca *.cas *.cn *.cns *.cp *.cps *.cy *.cys *.dvi *.fn *.fns *.ky *.log *.sa *.sas *.sn *.sns *.sy *.sys *~ *.tp *.vr *.toc *.pg
+
+distclean_docs: clean_docs
+	rm -f yap.ps yap.html yap_toc.html yap.pdf yap.info*
+
+installcheck:
+	$(MAKE) -C packages/cplint installcheck
+
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

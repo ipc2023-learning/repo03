@@ -1,0 +1,75 @@
+################################################################
+# Makefile for the SWI-Prolog console window.
+################################################################
+
+#
+# default base directory for YAP installation
+# (EROOT for architecture-dependent files)
+#
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+ROOTDIR = $(prefix)
+EROOTDIR = @exec_prefix@
+#
+# where YAP should look for libraries
+#
+LIBDIR=@libdir@/Yap
+#
+#
+CC=@CC@
+CPPFLAGS=@CPPFLAGS@ 
+DEFS=-D_export="extern __declspec(dllexport)" -DUNICODE -D_UNICODE \
+	-D__WINDOWS__ -D__YAP_PROLOG__
+CFLAGS= @CFLAGS@ $(DEFS) $(CPPFLAGS)  -I$(srcdir) -DRLC_VENDOR="\"YAP\""
+#
+#
+# You shouldn't need to change what follows.
+#
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+RANLIB=@RANLIB@
+AR=@AR@
+VPATH=@srcdir@
+srcdir=@srcdir@
+
+SOURCES= \
+	$(srcdir)/complete.c $(srcdir)/console.c \
+	$(srcdir)/edit.c $(srcdir)/history.c \
+	$(srcdir)/menu.c
+HEADERS= \
+	$(srcdir)/common.h $(srcdir)/console.h \
+	$(srcdir)/console_i.h $(srcdir)/history.h \
+	$(srcdir)/menu.h
+
+OBJECTS=	complete.o console.o edit.o history.o menu.o
+
+LIBS=-lgdi32 -lcomdlg32
+
+all: ../../plterm.dll
+
+../../plterm.dll:  libplterm.a
+	$(CC) -municode $(CFLAGS) -shared -o ../../plterm.dll \
+	-Wl,--export-all-symbols \
+	-Wl,--enable-auto-import \
+	-Wl,--whole-archive libplterm.a \
+	-Wl,--no-whole-archive $(LIBS) $(LDFLAGS)
+
+libplterm.a: $(OBJECTS) $(SOURCES) $(HEADERS)
+	-rm -f libplterm.a
+	$(AR) rc libplterm.a $(OBJECTS)
+	$(RANLIB) libplterm.a
+
+install:
+
+ clean:
+	rm -f *.o *~ *.dll
+
+.o: .c
+	$(CC) -c $(CFLAGS) $(SHLIB_CFLAGS) $@ -o $<
+
+
+console.o: $(srcdir)/console_i.h $(srcdir)/console.h
+
+distclean: clean
+	rm -f Makefile

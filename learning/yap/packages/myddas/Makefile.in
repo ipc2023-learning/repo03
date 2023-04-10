@@ -1,0 +1,115 @@
+#
+# default base directory for YAP installation
+# (EROOT for architecture-dependent files)
+#
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+ROOTDIR = $(prefix)
+EROOTDIR = @exec_prefix@
+abs_top_builddir = @abs_top_builddir@
+#
+# where the binary should be
+#
+BINDIR = $(EROOTDIR)/bin
+#
+# where YAP should look for libraries
+#
+LIBDIR=@libdir@
+SHAREDIR=$(ROOTDIR)/share/Yap
+YAPLIBDIR=@libdir@/Yap
+#
+#
+CC=@CC@
+YAP_EXTRAS=@YAP_EXTRAS@
+CFLAGS= $(YAP_EXTRAS) @SHLIB_CFLAGS@ $(YAP_EXTRAS) $(DEFS) -I$(srcdir) -I../.. -I$(srcdir)/../../include -I$(srcdir)/../../H -I$(srcdir)/../../OPTYap -I$(srcdir)/../../os  @MYDDAS_CPPFLAGS@
+LDFLAGS=@LDFLAGS@ @MYDDAS_LDFLAGS@
+ECPP=@ECPP@
+#
+#
+# You shouldn't need to change what follows.
+#
+INSTALL=@INSTALL@
+INSTALL_DATA=@INSTALL_DATA@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+SHELL=/bin/sh
+RANLIB=@RANLIB@
+srcdir=@srcdir@
+SO=@SO@
+#4.1VPATH=@srcdir@:@srcdir@/OPTYap
+CWD=$(PWD)
+#
+
+MYDDAS_HEADERS= \
+	$(srcdir)/myddas.h $(srcdir)/myddas_structs.h \
+	$(srcdir)/myddas_statistics.h \
+	$(srcdir)/myddas_statistics_structs.h \
+	$(srcdir)/myddas_wkb.h $(srcdir)/myddas_wkb2prolog.h
+
+MYDDAS_SOURCES= \
+	myddas_mysql.c \
+	myddas_odbc.c \
+	myddas_postgres.c \
+	myddas_sqlite3.c \
+	myddas_util.c \
+	myddas_initialization.c \
+	myddas_shared.c \
+	myddas_statistics.c \
+	myddas_top_level.c \
+	myddas_wkb2prolog.c
+
+MYDDAS_PROLOG= \
+	myddas.ypp \
+	myddas_assert_predicates.ypp \
+	myddas_mysql.ypp \
+	myddas_sqlite3.ypp \
+	myddas_top_level.ypp \
+	myddas_errors.ypp \
+	myddas_postgres.ypp \
+	myddas_prolog2sql.ypp \
+	myddas_util_predicates.ypp \
+	myddas_prolog2sql_optimizer.ypp
+
+
+OBJS=	$(MYDDAS_SOURCES:.c=.o)
+MYDDAS_YAP=	$(MYDDAS_PROLOG:.ypp=.yap)
+SOBJS=	myddas.@SO@
+
+#in some systems we just create a single object, in others we need to
+# create a libray
+
+all: $(SOBJS) myddas-yap
+
+myddas-yap: $(MYDDAS_YAP)
+
+.PRECIOUS: %.o %.yap
+
+%.o: $(srcdir)/%.c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+%.yap: $(srcdir)/pl/%.ypp
+	$(ECPP) $(YAP_EXTRAS) -P -w $< > $@
+
+@DO_SECOND_LD@%.@SO@: $(OBJS)
+	@DO_SECOND_LD@	@SHLIB_LD@ $(LDFLAGS) -o $@ $(OBJS) @EXTRA_LIBS_FOR_DLLS@ @MYDDAS_LIBS@
+
+install: all install_myddas install-examples
+	mkdir -p $(DESTDIR)$(SHAREDIR)
+	$(INSTALL_PROGRAM) $(SOBJS) $(DESTDIR)$(YAPLIBDIR)
+
+install-examples:
+
+install_myddas:
+	count=`echo "$(YAP_EXTRAS)" | grep MYDDAS | wc -l`; \
+	if [ $$count -ne 0 ]; then \
+		mkdir -p $(DESTDIR)$(SHAREDIR); \
+	    for p in $(MYDDAS_PROLOG); \
+	    do name=`basename $$p .ypp`; echo $$name;\
+	    	$(INSTALL_DATA) $$name.yap $(DESTDIR)$(SHAREDIR); \
+		done; \
+	fi
+
+clean:
+	rm -f *.o *~ $(OBJS) $(SOBJS) *.BAK
+
+distclean: clean
+	rm -f Makefile
