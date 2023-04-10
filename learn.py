@@ -15,6 +15,7 @@ sys.path.append(f'{os.path.dirname(__file__)}/training')
 import training
 from good_operator_experiment import run_step_good_operators
 from partial_grounding_rules import run_step_partial_grounding_rules
+from partial_grounding_aleph import run_step_partial_grounding_aleph
 
 from downward import suites
 
@@ -65,9 +66,13 @@ def main():
 
     run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
+    run_step_good_operators(f'{TRAINING_DIR}/good-operators', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
     #TODO: set time and memory limits
-    run_step_partial_grounding_rules(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules', args.domain)
+    #TODO: train also without good operators
+    #run_step_partial_grounding_rules(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules', args.domain)
+
+    run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
 if __name__ == "__main__":
     main()
