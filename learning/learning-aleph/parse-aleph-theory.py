@@ -6,11 +6,12 @@ import argparse
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("directory", help="Domain file")
+argparser.add_argument("--class-probability", action="store_true", help="this is the result of class probability rules")
 
 options = argparser.parse_args()
 
 
-def parse_aleph_hypothesis_file(hypothesis_file):
+def parse_aleph_hypothesis_file(hypothesis_file, is_class_probability):
     with open (hypothesis_file) as f:
         lines = f.readlines()
 
@@ -18,7 +19,7 @@ def parse_aleph_hypothesis_file(hypothesis_file):
         class_args = None
         for l in lines:
             if l.startswith("class"):
-                class_args = l.split(":-")[0][6:].split(",")[:-2]
+                class_args = l.split(":-")[0][6:].split(",")[:-2 if is_class_probability else -1]
                 rules.append(l.strip())
             else:
                 rules[-1] += l.strip()
@@ -37,7 +38,7 @@ def parse_aleph_log_file(logfile):
         class_args = None
         for l in lines:
             if not class_args and l.startswith("class"):
-                class_args = l.split(":-")[0][6:].split(",")[:-2]
+                class_args = l.split(":-")[0][6:].split(",")[:-2 if is_class_probability else -1]
 
             if l.startswith("[Rule"):
                 if previous_rule:
@@ -129,17 +130,80 @@ def transform_probability_class_rules(rules, class_args):
     return new_rule_tuples
 
 
+def transform_hard_rule(rule, class_args):
+    rule_tuples = rule[:-1].split(":-")[1].split(", ")# remove last argument, which is the task
+
+    free_vars_args = {}
+    num_free_vars_args = 0
+    for (i, r) in enumerate(rule_tuples):
+        r = ",".join(r.split(",")[:-1]).replace("'", "")
+        predicates = r.split("),")
+        for pred in predicates:
+            if pred.startswith("("):
+                pred = pred[1:]
+            if not pred:
+                continue
+
+            pred_name, args = pred.replace(")", "").split("(")
+
+            for arg in args.split(","):
+                if arg in class_args:
+                    continue
+                if not arg in free_vars_args:
+                    num_free_vars_args += 1
+                    id_arg = num_free_vars_args
+                    first_time = i
+                else:
+                    (id_arg, first_time, _) = free_vars_args[arg]
+
+                free_vars_args[arg] = (id_arg, first_time, i)
+
+    new_rule_tuples = []
+    for i, r in enumerate(rule_tuples):
+        r = ",".join(r.split(",")[:-1]).replace("'", "") +  ")" # remove last argument, which is the task
+        predicates = r.split("),")
+        for pred in predicates:
+            if pred.startswith("("):
+                pred = pred[1:]
+            if not pred:
+                continue
+            pred_name, args = pred.replace(")", "").split("(")
+
+            new_args = []
+            for arg in args.split(","):
+                if arg in class_args:
+                    new_args.append("?arg{}".format(class_args.index(arg)))
+                else:
+                    (id_arg, first_time, last_time) = free_vars_args[arg]
+                    if first_time == last_time:
+                        name_arg = "_"
+                    elif i == last_time:
+                        name_arg = "?fv{}-i".format(id_arg)
+                    elif i == first_time:
+                        name_arg = "?fv{}-o".format(id_arg)
+                    else:
+                        name_arg = "?fv{}-io".format(id_arg)
+
+                    new_args.append(name_arg)
+
+            new_rule_tuples.append("{}({})".format(pred_name, ", ".join(new_args)))
+
+
+
+    return ",".join(new_rule_tuples)
+
+
 # Get those schemas for which we have some hypothesis file
 schemas = [fname[:-2] for fname in os.listdir(options.directory) if fname.endswith('.h')]
 for schema in schemas:
+    rules, class_args = parse_aleph_hypothesis_file("{}/{}.h".format(options.directory, schema), options.class_probability)
 
-    rules, class_args = parse_aleph_hypothesis_file("{}/{}.h".format(options.directory, schema))
-    # rules2, class_args2 = parse_aleph_log_file("{}/{}.l".format(options.directory, schema))
-    # assert (class_args == class_args2)
-    # assert (rules == rules2)
-
-    new_rule_tuples = transform_probability_class_rules(rules, class_args)
-    print(schema + " :- " + "; ".join(["{} {:f}".format(x[0], x[1]) for x in new_rule_tuples]))
+    if options.class_probability:
+        new_rule_tuples = transform_probability_class_rules(rules, class_args)
+        print(schema + " :- " + "; ".join(["{} {:f}".format(x[0], x[1]) for x in new_rule_tuples]))
+    else:
+        for r in rules:
+            print(schema + " (" + ", ".join(["?arg{}".format(i) for i in range(len(class_args))]) + ")" + " :- " + transform_hard_rule (r, class_args) + ".")
 
 
 
