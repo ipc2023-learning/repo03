@@ -59,7 +59,7 @@ def main():
     for problem in args.problem:
         # TODO Split instances in some way and only put some on instances smac
         shutil.copy(problem, BENCHMARKS_DIR)
-        shutil.copy(problem, INSTANCES_SMAC)
+        # shutil.copy(problem, INSTANCES_SMAC)
 
     ENV = LocalEnvironment(processes=args.cpus)
     SUITE_TRAINING = suites.build_suite(TRAINING_DIR, ['instances-training'])
