@@ -11,12 +11,11 @@ Stage: build
     apt-get -y install --no-install-recommends cmake make g++ python3 pypy3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3
 
 
-    # TODO: Fix compilation error in newer g++
-    # rm -rf fd-symbolic/builds
-    # cd fd-symbolic
-    # pypy3 build.py
-    # strip --strip-all builds/release64/bin/preprocess builds/release64/bin/downward
-    # cd ..
+    rm -rf fd-symbolic/builds
+    cd fd-symbolic
+    pypy3 build.py
+    strip --strip-all builds/release64/bin/preprocess builds/release64/bin/downward
+    cd ..
 
 
     mkdir yap
