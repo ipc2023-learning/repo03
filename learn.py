@@ -49,25 +49,31 @@ def main():
     os.mkdir(TRAINING_DIR)
 
     # Copy all input benchmarks to the directory
-    os.mkdir(BENCHMARKS_DIR)
-    shutil.copy(args.domain, BENCHMARKS_DIR)
-    for problem in args.problem:
-        shutil.copy(problem, BENCHMARKS_DIR)
+    if os.path.isdir(args.domain): # If the first argument is a folder instead of a domain file
+        shutil.copy(args.domain, BENCHMARKS_DIR)
+    else:
+        os.mkdir(BENCHMARKS_DIR)
+        shutil.copy(args.domain, BENCHMARKS_DIR)
+        for problem in args.problem:
+            shutil.copy(problem, BENCHMARKS_DIR)
 
     ENV = LocalEnvironment(processes=args.cpus)
     SUITE_ALL = suites.build_suite(TRAINING_DIR, ['instances'])
 
-    # Run lama, with empty config and using the alias
+    # Run lama, with empty config and using the alias   # TODO: Set suitable time and memory limit
     run_step_good_operators(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, fetch_everything=True,  driver_options = ["--alias", "lama-first"])
 
     # We run the good operators tool only on instances solved by lama in less than 30 seconds
-    instances = select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['translator_operators'] < 100)
-    # instances = select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
+    instances = select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
     SUITE_GOOD_OPERATORS = suites.build_suite(TRAINING_DIR, [f'instances:{name}.pddl' for name in instances])
+
+    # TODO: Overall time limit is 10s. Set suitable memory limit
     run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_GOOD_OPERATORS, fetch_everything=True)
 
-    # Only do this if the domain has action cost:
-    # run_step_good_operators(f'{TRAINING_DIR}/good-operators', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)
+    has_action_cost = len(select_instances_by_properties(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
+
+    if has_action_cost:  # TODO: Overall time limit is 10s. Set suitable memory limit
+        run_step_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
     #TODO: set time and memory limits
     #TODO: train also without good operators

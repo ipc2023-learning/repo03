@@ -14,7 +14,6 @@ TRANSLATE = os.path.join(CEDALION, "src", "translate", "translate.py")
 PREPROCESS = os.path.join(CEDALION, "src", "preprocess", "preprocess")
 SEARCH = os.path.join(CEDALION, "src", "search", "downward-release")
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("domain_knowledge", help="path to domain knowledge file")

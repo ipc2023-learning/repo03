@@ -14,8 +14,12 @@ def read_good_operators(content, props):
 class GoodOperatorsParser(Parser):
     def __init__(self):
         Parser.__init__(self)
+
         self.add_function(read_good_operators, file="good_operators")
 
+        self.add_pattern('use_metric', r"Use metric\? (.+)", type=int)
+        self.add_pattern('min_action_cost', r"Min Action Cost: (.+)", type=int)
+        self.add_pattern('max_action_cost', r"Max Action Cost: (.+)", type=int)
 
 def main():
     parser = GoodOperatorsParser()

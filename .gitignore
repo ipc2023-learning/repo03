@@ -1,0 +1,5 @@
+fd-symbolic/src/search/cudd-3.0.0
+__pycache__
+*~
+*.img
+fd-symbolic/builds

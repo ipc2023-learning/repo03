@@ -10,9 +10,11 @@ from sklearn.model_selection import cross_val_score
 def train(config: Configuration, instance: str, seed: int = 0) -> float:
     # Launch planner on multiple instances and try to solve them
 
-    # ./learn using learning hyperparameters
+    # create folder for the model
+    # Go over configuration to create model
+    # ./plan.py using config + model
 
-    # ./plan.py using config + learned model
+
 
 
 
@@ -37,8 +39,7 @@ def run_smac(WORKING_DIR, instance_set, walltime_limit, n_trials, n_workers):
     for schema in action_schemas:
         # Gather model_names
         parameters.append(Categorical("model_{schema}", model_names))
-
-    parameters.append(Categorical("queue_type", ["simple", "round_robin"])) # TODO set these parameters better (e.g. add weighted round robin?)
+        # parameters.append(Categorical("queue_type", ["simple", "round_robin"])) # TODO set these parameters better (e.g. add weighted round robin?)
 
 
     configspace = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
