@@ -11,5 +11,7 @@ minimal = ["-DCMAKE_BUILD_TYPE=Release", "-DDISABLE_PLUGINS_BY_DEFAULT=YES"]
 symbolic = ["-DCMAKE_BUILD_TYPE=Release", "-DDISABLE_PLUGINS_BY_DEFAULT=YES", "-DPLUGIN_SYMBOLIC_ENABLED=TRUE", "-DPLUGIN_EAGER_SEARCH_ENABLED=TRUE"]
 symbolic_debug = symbolic + ["-DDEBUG=TRUE", "-DCMAKE_BUILD_TYPE=Debug"]
 
-DEFAULT = "release64"
-DEBUG = "debug64"
+release = release64
+debug = debug64
+DEFAULT = "release"
+DEBUG = "debug"
