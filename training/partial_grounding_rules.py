@@ -20,7 +20,6 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
           ], "generate-training-data-1", time_limit=time_limit, memory_limit=memory_limit).wait()
 
 
-
     # TODO: Consider here more feature selection methods, possibly parameterized
     feature_selection_methods = ["DT"]
 

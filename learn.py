@@ -64,6 +64,9 @@ def main():
     ENV = LocalEnvironment(processes=args.cpus)
     SUITE_TRAINING = suites.build_suite(TRAINING_DIR, ['instances-training'])
 
+    # Run lama, with empty config and using the alias
+    run_step_good_operators(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_TRAINING, fetch_everything=True,  driver_options = ["--alias", "lama-first"])
+
     run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
 
     # Only do this if the domain has action cost:

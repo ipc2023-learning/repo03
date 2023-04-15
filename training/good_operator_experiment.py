@@ -38,7 +38,7 @@ def run_step_good_operators(path_exp, planner, config, ENV, SUITE, fetch_everyth
 
     exp.add_resource("", PLANNER / "driver", "code/driver")
     exp.add_resource(_get_solver_resource_name(cached_rev), PLANNER / "fast-downward.py", "code/fast-downward.py")
-    exp.add_resource("", PLANNER / "builds" / "release64" / "bin", "code/builds/release64/bin")
+    exp.add_resource("", PLANNER / "builds" / "release" / "bin", "code/builds/release/bin")
 
     for task in SUITE:
         algo = _DownwardAlgorithm(
