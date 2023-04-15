@@ -47,6 +47,7 @@ def do_incremental_grounding(args):
             new_limit = get_new_limit(num_grounded_actions, increment, args)
             termination_condition += ["min-number", str(new_limit)]
         elif (args.incremental_grounding_minimum):
+            # TODO does this actually make sense?
             termination_condition += ["min-number", str(args.incremental_grounding_minimum), "percentage", "10", "max-increment", "20000"]# TODO make this an option
         args.translate_options = old_translate_options + termination_condition
         
@@ -67,6 +68,8 @@ def do_incremental_grounding(args):
             num_grounded_actions = get_new_limit(num_grounded_actions, increment, args)
             print("Task proved unsolvable in translator, increasing minimum number of grounded actions.")
             continue
+
+        # TODO integrate h2 preprocessor
         
         args.search_options = list(old_search_options)
         
