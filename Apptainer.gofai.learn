@@ -12,6 +12,7 @@ Stage: build
 
     pip install lab
     pip install smac
+    pip install pandas
 
     rm -rf fd-symbolic/builds
     cd fd-symbolic

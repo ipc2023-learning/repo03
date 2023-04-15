@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument("domain_knowledge", help="path to domain knowledge file")
     parser.add_argument("domain", help="path to domain file")
     parser.add_argument("problem", help="path to problem file")
-    parser.add_argument("plan", help="path to output plan file")
+    parser.add_argument("--plan", default=None, help="path to output plan file")
     parser.add_argument("--alias", default="lama-first", type=str,
                         help="alias for the search config")
 
@@ -44,7 +44,10 @@ def parse_args():
 
 def main():
     args = parse_args()
-    driver_options = ["--alias", args.alias, "--plan-file", args.plan]
+    driver_options = ["--alias", args.alias]
+
+    if args.plan:
+        driver_options += ["--plan-file", args.plan]
 
     translate_options = ["--translate-options",
                          "--batch-evaluation",

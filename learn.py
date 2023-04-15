@@ -16,6 +16,7 @@ import training
 from run_experiment import RunExperiment
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph
+from optimize_smac import run_smac
 from utils import select_instances_by_properties
 
 from downward import suites
@@ -81,7 +82,13 @@ def main():
     #TODO: train also without good operators
     run_step_partial_grounding_rules(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules', args.domain)
 
-    run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
+    # run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
+
+
+    # TODO: Select different instances for instances
+    SMAC_INSTANCES =  select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
+    run_smac(f'{TRAINING_DIR}', SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
+
 
 if __name__ == "__main__":
     main()
