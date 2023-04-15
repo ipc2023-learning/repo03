@@ -8,7 +8,6 @@ import os.path
 import shutil
 import sys
 
-from lab.calls.call import Call
 from lab.environments import  LocalEnvironment
 
 sys.path.append(f'{os.path.dirname(__file__)}/training')
@@ -87,7 +86,7 @@ def main():
 
     # TODO: Select different instances for instances
     SMAC_INSTANCES =  select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
-    run_smac(f'{TRAINING_DIR}', SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
+    run_smac(f'{TRAINING_DIR}', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
 
 
 if __name__ == "__main__":

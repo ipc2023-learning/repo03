@@ -8,6 +8,8 @@ from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 import os
 import shutil
+from lab.calls.call import Call
+import sys
 
 # from functools import partial
 
@@ -15,14 +17,15 @@ INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
 PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-rules'
 
 class Eval:
-    def __init__(self, WORKING_DIR, sk_models_per_action_schema,
-                 ):
+    def __init__(self, WORKING_DIR, domain_file, instances_dir, sk_models_per_action_schema):
         self.WORKING_DIR = WORKING_DIR
         self.MY_DIR = os.path.dirname(os.path.realpath(__file__))
         self.sk_models_per_action_schema=sk_models_per_action_schema
 
         self.SMAC_MODELS_DIR = os.path.join(WORKING_DIR, INTERMEDIATE_SMAC_MODELS)
         os.mkdir(self.SMAC_MODELS_DIR)
+        self.instances_dir = instances_dir
+        self.domain_file = domain_file
 
 
 
@@ -53,6 +56,9 @@ class Eval:
                 f.write('\n'.join(collected_relevant_rules))
 
 
+        extra_parameters = ['alias', config['alias'], '--grounding-queue', config['queue_type']]
+
+        Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file,os.path.join(self.instances_dir, instance)] + extra_parameters, 'smac-plan').wait()
 
         # Go over configuration to create model
         # ./plan.py using config + model
@@ -70,11 +76,13 @@ class Eval:
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
 
-def run_smac(WORKING_DIR, instance_set : list, walltime_limit, n_trials, n_workers):
+def run_smac(WORKING_DIR, domain_file, instance_dir, instance_set : list, walltime_limit, n_trials, n_workers):
     ## Configuration Space ##
     ## Define parameters to select models
 
-    queue_type = Categorical("queue_type", ["trained", "roundrobintrained"], default='trained')
+
+    alias = Categorical ('alias', ['lama'], default='lama')
+    queue_type = Categorical("queue_type", ["trained", "roundrobintrained",'noveltyfifo','roundrobinnovelty'], default='trained')
 
     parameters = [queue_type]
     conditions = []
@@ -99,7 +107,7 @@ def run_smac(WORKING_DIR, instance_set : list, walltime_limit, n_trials, n_worke
     cs.add_hyperparameters(parameters)
     cs.add_conditions(conditions)
 
-    evaluator = Eval (WORKING_DIR, sk_models_per_action_schema)
+    evaluator = Eval (WORKING_DIR, domain_file, instance_dir, sk_models_per_action_schema)
 
     scenario = Scenario(
         configspace=cs, deterministic=True,
