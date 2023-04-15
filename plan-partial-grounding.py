@@ -69,8 +69,7 @@ def main():
                                str(args.incremental_grounding_increment_percentage)]
     else:
         translate_options += ["--termination-condition", "goal-relaxed-reachable"]
-    print(driver_options)
-    print(translate_options)
+
     subprocess.check_call([sys.executable, os.path.join(FD_PARTIAL_GROUNDING, "fast-downward.py")] +
                           driver_options +
                           [args.domain, args.problem] +
