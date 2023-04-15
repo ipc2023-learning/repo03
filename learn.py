@@ -16,9 +16,9 @@ import training
 from good_operator_experiment import run_step_good_operators
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph
+from utils import select_instances_by_properties
 
 from downward import suites
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -41,8 +41,7 @@ def main():
 
     REPO_GOOD_OPERATORS = f"{ROOT}/fd-symbolic"
     REPO_LEARNING = f"{ROOT}/learning"
-    BENCHMARKS_DIR = f"{TRAINING_DIR}/instances-training"
-    INSTANCES_SMAC = f"{TRAINING_DIR}/instances-smac"
+    BENCHMARKS_DIR = f"{TRAINING_DIR}/instances"
     REPO_PARTIAL_GROUNDING = f"{ROOT}/fd-partial-grounding"
 
     if os.path.exists(TRAINING_DIR):
@@ -52,22 +51,20 @@ def main():
     # Copy all input benchmarks to the directory
     os.mkdir(BENCHMARKS_DIR)
     shutil.copy(args.domain, BENCHMARKS_DIR)
-
-    # os.mkdir(INSTANCES_SMAC)
-    # shutil.copy(args.domain, INSTANCES_SMAC)
-
     for problem in args.problem:
-        # TODO Split instances in some way and only put some on instances smac
         shutil.copy(problem, BENCHMARKS_DIR)
-        # shutil.copy(problem, INSTANCES_SMAC)
 
     ENV = LocalEnvironment(processes=args.cpus)
-    SUITE_TRAINING = suites.build_suite(TRAINING_DIR, ['instances-training'])
+    SUITE_ALL = suites.build_suite(TRAINING_DIR, ['instances'])
 
     # Run lama, with empty config and using the alias
-    run_step_good_operators(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_TRAINING, fetch_everything=True,  driver_options = ["--alias", "lama-first"])
+    run_step_good_operators(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, fetch_everything=True,  driver_options = ["--alias", "lama-first"])
 
-    run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_TRAINING, fetch_everything=True,)
+    # We run the good operators tool only on instances solved by lama in less than 30 seconds
+    instances = select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['translator_operators'] < 100)
+    # instances = select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
+    SUITE_GOOD_OPERATORS = suites.build_suite(TRAINING_DIR, [f'instances:{name}.pddl' for name in instances])
+    run_step_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_GOOD_OPERATORS, fetch_everything=True)
 
     # Only do this if the domain has action cost:
     # run_step_good_operators(f'{TRAINING_DIR}/good-operators', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)

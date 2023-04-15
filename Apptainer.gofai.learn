@@ -64,14 +64,12 @@ Stage: run
     PROBLEM_FILES=("$@")  # All remaining arguments are problem files.
 
     export PYTHONPATH=/lab
-    pypy3 learn.py "$DOMAIN_FILE" "$PROBLEM_FILES"
-
-#    mv tuning-exp-eval/configs.py "$DOMAIN_KNOWLEDGE_FILE"
+    pypy3 learn.py "$DOMAIN_FILE" "$PROBLEM_FILES" --domain_knowledge "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total-time-limit 259200 --total-memory-limit 90000
 
 %labels
-Name        Fast Downward SMAC 2014
-Description Single Fast Downward configuration, optimized with SMAC for the given training tasks.
-Authors     Jendrik Seipp <jendrik.seipp@liu.se>, Silvan Sievers <silvan.sievers@unibas.ch, Frank Hutter <fh@informatik.uni-freiburg.de>
+Name        GOFAI-learn
+Description Learning part of the GOFAI submission
+Authors     Alvaro Torralba <alto@cs.aau.dk>, Daniel Gnad <daniel.gnad@liu.se>
 License     GPL 3
 Tracks      single-core
 SupportsDerivedPredicates                       yes
