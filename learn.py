@@ -22,8 +22,8 @@ from downward import suites
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("domain", help="path to domain file")
-    parser.add_argument("problem", nargs="+", help="path to problem file")
+    parser.add_argument("domain", help="path to domain file. Alternatively, just provide a path to the directory with a domain.pddl and instance files.")
+    parser.add_argument("problem", nargs="*", help="path to problem(s) file. Empty if a directory is provided.")
     parser.add_argument("--path", default='./data', help="path to store results")
     parser.add_argument("--cpus", type=int, default=1, help="number of cpus available")
     parser.add_argument("--total_time_limit", default=30, type=int, help="time limit")
@@ -50,7 +50,8 @@ def main():
 
     # Copy all input benchmarks to the directory
     if os.path.isdir(args.domain): # If the first argument is a folder instead of a domain file
-        shutil.copy(args.domain, BENCHMARKS_DIR)
+        shutil.copytree(args.domain, BENCHMARKS_DIR)
+        args.domain += "/domain.pddl"
     else:
         os.mkdir(BENCHMARKS_DIR)
         shutil.copy(args.domain, BENCHMARKS_DIR)
@@ -73,7 +74,7 @@ def main():
     has_action_cost = len(select_instances_by_properties(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
 
     if has_action_cost:  # TODO: Overall time limit is 10s. Set suitable memory limit
-        run_step_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_TRAINING, fetch_everything=True,)
+        run_step_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS, fetch_everything=True,)
 
     #TODO: set time and memory limits
     #TODO: train also without good operators
