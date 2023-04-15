@@ -373,9 +373,9 @@ def parse_args():
                      "Do no specify both --debug and --build.")
     if not args.build:
         if args.debug:
-            args.build = "debug64"
+            args.build = "debug"
         else:
-            args.build = "release64"
+            args.build = "release"
 
     _split_planner_args(parser, args)
 
