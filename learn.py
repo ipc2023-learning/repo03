@@ -16,7 +16,7 @@ from run_experiment import RunExperiment
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph
 from optimize_smac import run_smac
-from utils import select_instances, select_instances_with_properties
+from utils import select_instances, select_instances_with_properties, save_model
 
 from downward import suites
 
@@ -24,6 +24,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("domain", help="path to domain file. Alternatively, just provide a path to the directory with a domain.pddl and instance files.")
     parser.add_argument("problem", nargs="*", help="path to problem(s) file. Empty if a directory is provided.")
+    parser.add_argument("--domain_knowledge", help="path to store knowledge file.")
+
     parser.add_argument("--path", default='./data', help="path to store results")
     parser.add_argument("--cpus", type=int, default=1, help="number of cpus available")
     parser.add_argument("--total_time_limit", default=30, type=int, help="time limit")
@@ -86,7 +88,11 @@ def main():
     SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30, ['translator_operators', 'translator_facts', 'translator_variables'])
     assert (len(SMAC_INSTANCES))
 
-    run_smac(f'{TRAINING_DIR}', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
+    # TODO: check n workers
+    run_smac(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac1', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
+
+    if args.domain_knowledge:
+        save_model(os.path.join(TRAINING_DIR}, 'smac1', 'incumbent'), args.domain_knowledge)
 
 if __name__ == "__main__":
     main()

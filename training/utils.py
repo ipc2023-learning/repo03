@@ -1,5 +1,7 @@
 import json
 import os
+import tarfile
+
 
 def select_instances (RUNS, f):
     result = []
@@ -29,3 +31,8 @@ def select_instances_with_properties(RUNS, f, properties):
                 pass
 
     return result
+
+
+def save_model(source_dir, knowledge_file):
+    with tarfile.open(knowledge_file, "w:gz") as tar:
+        tar.add(source_dir, arcname=os.path.basename(source_dir))

@@ -62,20 +62,22 @@ Stage: run
     learning/translate
 
     /usr/local/bin/yap
-    /usr/local/lib/lib_yap0.so
-    /usr/local/lib/yap_random.so
-    /usr/local/lib/yap_rl.so
-    /usr/local/lib/libPy4YAP.so
-    /usr/local/lib/libPy4YAP.so.7.3.0
-    /usr/local/lib/libYAPmpi.so
+    /usr/local/include/Yap
     /usr/local/lib/libYAP++.so
-    /usr/local/lib/libPy4YAP.so.7.3
-    /usr/local/lib/libYAPCudd.so
-    /usr/local/lib/libYAPPython.so
-    /usr/local/lib/YAPsqlite3.so
+    /usr/local/lib/startup.yss
+    /usr/local/share/Yap
+    /usr/local/lib/libLBFGS.so
     /usr/local/lib/libYap.so
     /usr/local/lib/libYap.so.7.3
     /usr/local/lib/libYap.so.7.3.0
+
+    /usr/local/lib/matrix.so
+    /usr/local/lib/yap_random.so
+    /usr/local/lib/regexp.so
+    /usr/local/lib/yap_rl.so
+    /usr/local/lib/sys.so
+    /usr/local/lib/tries.so
+
 
 %post
     apt-get update
@@ -96,7 +98,7 @@ Stage: run
     shift 2  # Forget first two arguments.
     PROBLEM_FILES=("$@")  # All remaining arguments are problem files.
 
-    pypy3 learn.py "$DOMAIN_FILE" "$PROBLEM_FILES" --domain_knowledge "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total-time-limit 259200 --total-memory-limit 90000
+    python learn.py "$DOMAIN_FILE" "$PROBLEM_FILES" --domain_knowledge "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total-time-limit 259200 --total-memory-limit 90000
 
 %labels
 Name        GOFAI-learn
