@@ -18,11 +18,11 @@ PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-rules'
 
 class Eval:
     def __init__(self, WORKING_DIR, domain_file, instances_dir, sk_models_per_action_schema):
-        self.WORKING_DIR = WORKING_DIR
+        self.WORKING_DIR = os.path.abspath(WORKING_DIR)
         self.MY_DIR = os.path.dirname(os.path.realpath(__file__))
         self.sk_models_per_action_schema=sk_models_per_action_schema
 
-        self.SMAC_MODELS_DIR = os.path.join(WORKING_DIR, INTERMEDIATE_SMAC_MODELS)
+        self.SMAC_MODELS_DIR = os.path.join(self.WORKING_DIR, INTERMEDIATE_SMAC_MODELS)
         if os.path.exists(self.SMAC_MODELS_DIR):
             shutil.rmtree(self.SMAC_MODELS_DIR)
         os.mkdir(self.SMAC_MODELS_DIR)
