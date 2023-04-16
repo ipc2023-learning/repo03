@@ -160,6 +160,9 @@ def evaluate_inigoal_rule(rule, fact_list):
 
         predicate_name, arguments  = rule.split("(")
         arguments = arguments.replace(")", "").replace("\n", "").replace(".", "").replace(" ", "").split(",")
+        if arguments == ['']:
+            # e.g. for predicates without argument like "handempty()"
+            arguments = []
         valid_arguments = tuple(set([a for a in arguments if a.startswith("?")]))
         constants = [(i, val) for (i, val) in enumerate(arguments) if val != "_" and not val.startswith("?")]
         positions_argument = {}
