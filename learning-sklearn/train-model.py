@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-from learning.learn import LearnRules
+from subdominization.learn import LearnRules
 
 import os
 import sys
