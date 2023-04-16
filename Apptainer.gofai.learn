@@ -25,8 +25,8 @@ Stage: build
     # cd fd-partial-grounding
     # pypy3 build.py
     # strip --strip-all builds/release/bin/downward
+    # strip --strip-all builds/release/bin/preprocess-h2
     # cd ..
-    # TODO: compile h2 preprocessor as well
 
     mkdir yap
     cd learning/yap

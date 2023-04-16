@@ -47,6 +47,9 @@ def main():
     for component in args.components:
         if component == "translate":
             (exitcode, continue_execution) = run_components.run_translate(args)
+            if continue_execution and args.transform_task:
+                print()
+                run_components.transform_task(args)
         elif component == "search":
             (exitcode, continue_execution) = run_components.run_search(args)
             if not args.keep_sas_file:
