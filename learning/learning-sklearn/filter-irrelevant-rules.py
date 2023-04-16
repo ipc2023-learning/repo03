@@ -58,8 +58,8 @@ if __name__ == "__main__":
     training_lines = defaultdict(list)
     relevant_rules = set()
 
-
     training_re = RuleTrainingEvaluator(options.training_rules.readlines())
+    print(f"Filtering irrelevant rules; number rules before filtering {training_re.num_rules}")
     i = 1
     for task_run in sorted(os.listdir(options.runs_folder)):
         if i > options.instances_relevant_rules:
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         if not os.path.isfile('{}/{}/{}'.format(options.runs_folder, task_run, 'sas_plan')):
             continue
 
-        print (i)
+        print(f"handling instance {i}/{len(os.listdir(options.runs_folder))}")
         i += 1
 
 
@@ -92,9 +92,9 @@ if __name__ == "__main__":
                 for action in actions:
                     training_re.evaluate(action.strip())
 
-    training_re.print_statistics()
+    # training_re.print_statistics()
 
     relevant_rules = training_re.get_relevant_rules()
-    print ("Relevant rules: ", len(relevant_rules))
+    print("Relevant rules: ", len(relevant_rules))
 
     options.output.write("\n".join(map(lambda x : x.replace('\n', ''), relevant_rules)))
