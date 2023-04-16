@@ -69,7 +69,9 @@ def do_incremental_grounding(args):
             print("Task proved unsolvable in translator, increasing minimum number of grounded actions.")
             continue
 
-        # TODO integrate h2 preprocessor
+        if args.transform_task:
+            print()
+            run_components.transform_task(args)
         
         args.search_options = list(old_search_options)
         

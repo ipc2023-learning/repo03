@@ -21,6 +21,11 @@ def parse_args():
     parser.add_argument("--alias", default="lama-first", type=str,
                         help="alias for the search config")
 
+    parser.add_argument("--h2-preprocessor", action="store_true",
+                        help="run h2 preprocessor")
+    parser.add_argument("--h2-time-limit", type=int, default=300,
+                        help="time limit for h2 preprocessor, default 5min")
+
     parser.add_argument("--incremental-grounding", action="store_true")
     parser.add_argument("--incremental-grounding-search-time-limit", type=int, default=600,
                         help="search time limit in seconds per iteration")
@@ -48,6 +53,9 @@ def main():
 
     if args.plan:
         driver_options += ["--plan-file", args.plan]
+    if args.h2_preprocessor:
+        driver_options += ["--transform-task", "fd-partial-grounding/builds/release/bin/preprocess-h2",
+                           "--transform-task-options", f"h2_time_limit,{args.h2_time_limit}"]
 
     translate_options = ["--translate-options",
                          "--batch-evaluation",
