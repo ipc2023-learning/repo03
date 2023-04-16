@@ -64,15 +64,18 @@ class Eval:
                 with open(os.path.join(model_path, 'relevant_rules'), 'w') as f:
                     f.write('\n'.join(collected_relevant_rules))
 
-                extra_parameters += ['--model', config_name]
+                # extra_parameters += ['--model', config_name]
 
-
+        else:
+            model_path = '.'
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
         assert(os.path.exists(instance_file))
 
-        print (" ".join([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', self.domain_file, instance_file] + extra_parameters))
-        # Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters, 'smac-plan').wait()
+
+        print (" ".join([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters))
+
+        Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters, 'smac-plan').wait()
 
         # Go over configuration to create model
         # ./plan.py using config + model
@@ -138,3 +141,5 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instances_with_features : d
     # Use SMAC to find the best configuration/hyperparameters
     smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function)
     incumbent = smac.optimize()
+
+    print(incumbent)

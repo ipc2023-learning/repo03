@@ -36,7 +36,6 @@ Stage: build
     make
     make install
 
-
 # Stage 2: Run the planner
 Bootstrap: docker
 From: ubuntu:kinetic

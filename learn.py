@@ -88,6 +88,5 @@ def main():
 
     run_smac(f'{TRAINING_DIR}', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
 
-
 if __name__ == "__main__":
     main()
