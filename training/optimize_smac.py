@@ -31,47 +31,49 @@ class Eval:
 
 
     def get_unique_model_name(self, config):
-        print(config)
-        print (self.sk_models_per_action_schema.items())
-        for aschema, opts in self.sk_models_per_action_schema.items():
-            print(f"{aschema}")
-            print(opts.index(config[f'model_{aschema}']))
-
+        print(config, [a for a in self.sk_models_per_action_schema])
+        assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
         return "-".join([str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
 
 
     def target_function (self, config: Configuration, instance: str, seed: int) -> float:
         # create folder for the model
-        config_name = self.get_unique_model_name(config)
-        model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
-        if not os.path.exists(model_path):
-            os.mkdir(model_path)
-
-            collected_relevant_rules = []
-            for aschema in self.sk_models_per_action_schema:
-                if config[f'model_{aschema}'] == 'none':
-                    continue
-                assert os.path.exists(os.path.join(self.WORKING_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema))
-                os.symlink(os.path.join(self.WORKING_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema), os.path.join(model_path, aschema))
-
-                with open(os.path.join(self.WORKING_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], 'relevant_rules')) as rfile:
-                    for line in rfile:
-                        if line.startswith (aschema[:-6] + " ("):
-                            collected_relevant_rules.append(line.strip())
-
-            with open(os.path.join(model_path, 'relevant_rules'), 'w') as f:
-                f.write('\n'.join(collected_relevant_rules))
-
+        using_model = all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
+            any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
 
         extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
+
+        if using_model:
+            config_name = self.get_unique_model_name(config)
+            model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
+            if not os.path.exists(model_path):
+                os.mkdir(model_path)
+
+                collected_relevant_rules = []
+                for aschema in self.sk_models_per_action_schema:
+                    if config[f'model_{aschema}'] == 'none':
+                        continue
+                    assert os.path.exists(os.path.join(self.WORKING_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema))
+                    os.symlink(os.path.join(self.WORKING_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema), os.path.join(model_path, aschema))
+
+                    with open(os.path.join(self.WORKING_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], 'relevant_rules')) as rfile:
+                        for line in rfile:
+                            if line.startswith (aschema[:-6] + " ("):
+                                collected_relevant_rules.append(line.strip())
+
+                with open(os.path.join(model_path, 'relevant_rules'), 'w') as f:
+                    f.write('\n'.join(collected_relevant_rules))
+
+                extra_parameters += ['--model', config_name]
+
+
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
         assert(os.path.exists(instance_file))
 
-        print ([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters)
-        Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters, 'smac-plan').wait()
+        print (" ".join([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', self.domain_file, instance_file] + extra_parameters))
+        # Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters, 'smac-plan').wait()
 
-        exit()
         # Go over configuration to create model
         # ./plan.py using config + model
         # print(self.WORKING_DIR)

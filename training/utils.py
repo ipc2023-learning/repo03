@@ -24,7 +24,7 @@ def select_instances_with_properties(RUNS, f, properties):
                 with open(os.path.join(RUNS, run, 'properties')) as pfile:
                     content = json.load(pfile)
                     if f (content) and all([p in content for p in properties]):
-                        result[run] = [content[p] in content for p in properties]
+                        result[run] = [content[p] for p in properties]
             except:
                 pass
 
