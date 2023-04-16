@@ -50,7 +50,7 @@ from sklearn.metrics import make_scorer
 randBinList = lambda n: [randint(0,1) for b in range(1,n+1)]
 
 
-from learning import helpers
+from subdominization import helpers
 
 
 
