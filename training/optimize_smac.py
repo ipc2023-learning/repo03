@@ -72,7 +72,6 @@ class Eval:
                 return 100000000
         if 'trained' in config['queue_type']:
             print ("YESSSS", config)
-            return 1
 
 
         extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
