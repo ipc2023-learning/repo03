@@ -47,7 +47,18 @@ class TrainedModel():
         if (self.model[action.predicate.name].is_classifier):
             # the returned list has only one entry (estimates for the input action), 
             # of which the second entry is the probability that the action is in the plan (class 1)
-            estimate = self.model[action.predicate.name].model.predict_proba([self.ruleEvaluator.evaluate(action)])[0][1]
+            prob_estimation = self.model[action.predicate.name].model.predict_proba([self.ruleEvaluator.evaluate(action)])[0]
+
+            if len(prob_estimation) > 1:
+                assert len(prob_estimation) == 2
+                estimate = prob_estimation[1]
+            else:
+                estimated_class = self.model[action.predicate.name].model.predict([self.ruleEvaluator.evaluate(action)])[0]
+                if estimated_class == 1:
+                    estimate = 1
+                else:
+                    assert estimated_class == 0
+                    estimate = 0
         else:
             estimate = self.model[action.predicate.name].model.predict([self.ruleEvaluator.evaluate(action)])[0]
 
@@ -75,7 +86,12 @@ class TrainedModel():
         if (self.model[schema].is_classifier):
             # the returned list has only one entry (estimates for the input action), 
             # of which the second entry is the probability that the action is in the plan (class 1)
-            estimates = [p[1] for p in self.model[schema].model.predict_proba([self.ruleEvaluator.evaluate(a) for a in actions])]
+            prob_estimates = [p for p in self.model[schema].model.predict_proba([self.ruleEvaluator.evaluate(a) for a in actions])]
+            if len(prob_estimates[0]) > 1:
+                estimates = [p[1] for p in prob_estimates]
+            else:
+                value = self.model[schema].model.predict([self.ruleEvaluator.evaluate(actions[0])])[0]
+                estimates = [value for a in actions]
         else:
             estimates = self.model[schema].model.predict([self.ruleEvaluator.evaluate(a) for a in actions])        
           
