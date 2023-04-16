@@ -11,23 +11,26 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
 
     Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive-1k', f'{WORKING_DIR}/rules-exhaustive-1k-filtered'], "filter-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
 
-    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py', \
-                                         f'{RUNS_DIR}',\
-                                         f'{WORKING_DIR}/rules-exhaustive-1k-filtered',\
-                                         f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered',\
-                                         '--op-file', 'good_operators',\
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py',
+                                         f'{RUNS_DIR}',
+                                         f'{WORKING_DIR}/rules-exhaustive-1k-filtered',
+                                         f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered',
+                                         '--op-file', 'good_operators',
                                          '--max-training-examples', '1000000' # '--num-test-instances TODO Set some test instances
           ], "generate-training-data-1", time_limit=time_limit, memory_limit=memory_limit).wait()
 
 
     # TODO: Consider here more feature selection methods, possibly parameterized
-    feature_selection_methods = ["DT"]
+    # TODO: not sure if it's worth playing around with this; in some local tests, it looks like
+    # DT gives by far the best scores. The other models mostly give similar scores to very many
+    # rules, so it's not clear if these scores say a lot about the relevance.
+    feature_selection_methods = ["DT", "RF", "LINR", "LOGR", "SVR"]
 
     for method in feature_selection_methods:
         Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/feature-selection.py', '--training-folder', f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered', '--selector-type', method], "feature-selection", time_limit=time_limit, memory_limit=memory_limit).wait()
 
     # Generate training data for all files of useful rules
-    useful_rules_files = [f for f in os.listdir( f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
+    useful_rules_files = [f for f in os.listdir(f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
     for useful_rules_file in useful_rules_files:
         Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py', \
               f'{RUNS_DIR}',\
