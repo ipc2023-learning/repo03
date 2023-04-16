@@ -23,13 +23,20 @@ class Eval:
         self.sk_models_per_action_schema=sk_models_per_action_schema
 
         self.SMAC_MODELS_DIR = os.path.join(WORKING_DIR, INTERMEDIATE_SMAC_MODELS)
+        if os.path.exists(self.SMAC_MODELS_DIR):
+            shutil.rmtree(self.SMAC_MODELS_DIR)
         os.mkdir(self.SMAC_MODELS_DIR)
         self.instances_dir = instances_dir
         self.domain_file = domain_file
 
 
-
     def get_unique_model_name(self, config):
+        print(config)
+        print (self.sk_models_per_action_schema.items())
+        for aschema, opts in self.sk_models_per_action_schema.items():
+            print(f"{aschema}")
+            print(opts.index(config[f'model_{aschema}']))
+
         return "-".join([str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
 
 
@@ -56,10 +63,12 @@ class Eval:
                 f.write('\n'.join(collected_relevant_rules))
 
 
-        extra_parameters = ['alias', config['alias'], '--grounding-queue', config['queue_type']]
+        extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
 
+        print ([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file,os.path.join(self.instances_dir, instance)] + extra_parameters)
         Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file,os.path.join(self.instances_dir, instance)] + extra_parameters, 'smac-plan').wait()
 
+        exit()
         # Go over configuration to create model
         # ./plan.py using config + model
         # print(self.WORKING_DIR)
@@ -80,11 +89,10 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instance_set : list, wallti
     ## Configuration Space ##
     ## Define parameters to select models
 
-
     alias = Categorical ('alias', ['lama'], default='lama')
     queue_type = Categorical("queue_type", ["trained", "roundrobintrained",'noveltyfifo','roundrobinnovelty'], default='trained')
 
-    parameters = [queue_type]
+    parameters = [alias,queue_type]
     conditions = []
 
      # Gather model_names
@@ -108,6 +116,13 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instance_set : list, wallti
     cs.add_conditions(conditions)
 
     evaluator = Eval (WORKING_DIR, domain_file, instance_dir, sk_models_per_action_schema)
+
+
+    num_instances = len(instance_set)
+    instance_set = [ins + ".pddl" for ins in instance_set if os.path.exists(os.path.join(instance_dir, ins + ".pddl"))]
+    if num_instances != len(instance_set):
+        print ("Warning: some instances in the set for optimize SMAC were not found")
+
 
     scenario = Scenario(
         configspace=cs, deterministic=True,
