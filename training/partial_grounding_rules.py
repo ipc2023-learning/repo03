@@ -45,7 +45,13 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
     training_data_directories = [f for f in os.listdir( f'{WORKING_DIR}/') if f.startswith('training-data')]
 
     # TODO: consider here more learning methods, possibly parameterized
-    learning_methods = [("DT", ["--model-type", "DT"])]
+    learning_methods = [("DT", ["--model-type", "DT"]),
+                        ('LOGR', ["--model-type", "LOGR"]),
+                        ('LINR', ["--model-type", "LINR"]),
+                        ('RF', ["--model-type", "RF"]),
+                        ('SVR', ["--model-type", "SVR"]),
+                        ('KRN_RG', ["--model-type", "KRN_RG"]),
+                        ]
     for training_data_dir in training_data_directories:
         for learning_method_name, learning_method_parameters in learning_methods:
 
