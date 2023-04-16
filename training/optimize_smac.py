@@ -11,6 +11,9 @@ import shutil
 from lab.calls.call import Call
 import sys
 
+import subprocess
+import re
+
 # from functools import partial
 
 INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
@@ -29,15 +32,15 @@ class Eval:
         self.instances_dir = instances_dir
         self.domain_file = domain_file
 
+        self.regex_total_time = re.compile(rb"INFO\s+Planner time:\s(.+)s", re.MULTILINE)
+        self.regex_operators = re.compile(rb"Translator operators:\s(.+)", re.MULTILINE)
 
     def get_unique_model_name(self, config):
-        print(config, [a for a in self.sk_models_per_action_schema])
         assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
         return "-".join([str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
 
 
     def target_function (self, config: Configuration, instance: str, seed: int) -> float:
-        print ('Testing', config)
         # create folder for the model
         using_model = all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
             any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
@@ -63,15 +66,10 @@ class Eval:
 
                 with open(os.path.join(model_path, 'relevant_rules'), 'w') as f:
                     f.write('\n'.join(collected_relevant_rules))
-
-                # extra_parameters += ['--model', config_name]
         else:
             model_path = '.'
             if 'trained' in config['queue_type']:
-                print ("NOOOO", config)
                 return 100000000
-        if 'trained' in config['queue_type']:
-            print ("YESSSS", config)
 
 
         extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
@@ -81,9 +79,19 @@ class Eval:
         assert(os.path.exists(instance_file))
 
 
-        print (" ".join([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters))
+        command=[sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters
 
-        Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters, 'smac-plan').wait()
+        output = subprocess.check_output(command)
+
+        total_time = self.regex_total_time.search(output)
+        num_operators = self.regex_operators.search(output)
+
+        if total_time and num_operators:
+            total_time = float(total_time.group(1))
+            num_operators = float(num_operators.group(1))
+            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}")
+        else:
+            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved")
 
         # Go over configuration to create model
         # ./plan.py using config + model
@@ -94,13 +102,12 @@ class Eval:
         # PAR10 score with respect to operators
         # PAR10 score with respect to quality
 
-        return 10.0
+        return num_operators
 
 
 # Note: default configuration should solve at least 50% of the instances. Pick instances
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
-
 def run_smac(WORKING_DIR, domain_file, instance_dir, instances_with_features : dict, walltime_limit, n_trials, n_workers):
     ## Configuration Space ##
     ## Define parameters to select models
@@ -125,7 +132,7 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instances_with_features : d
     for schema, models in sk_models_per_action_schema.items():
         m = Categorical(f"model_{schema}", models)
         parameters.append(m)
-        # conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
+        conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
 
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
