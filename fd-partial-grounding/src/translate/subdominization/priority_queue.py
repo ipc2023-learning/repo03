@@ -262,7 +262,7 @@ class EvaluatorQueue(PriorityQueue):
         else:
             estimate = self.model.get_estimate(action)
             if (estimate == None):
-                estimate = randint(0, 100) / 100 # TODO not sure if this is really a good idea
+                estimate = 1.0
             self.queue.push(action, estimate)
     def pop(self):
         if (self.batch_eval and any(bool(l) for l in self.non_evaluated_actions.values())):
@@ -271,7 +271,7 @@ class EvaluatorQueue(PriorityQueue):
                     estimates = self.model.get_estimates(actions)
                     if not estimates:
                         # we have no model for this action schema
-                        estimates = [randint(0, 100) / 100 for i in range(len(actions))] # TODO not sure if this is really a good idea
+                        estimates = [1.0 for i in range(len(actions))]
                     self.queue.push_list(actions, estimates)
                     self.non_evaluated_actions[schema] = []
         action = self.queue.pop()
