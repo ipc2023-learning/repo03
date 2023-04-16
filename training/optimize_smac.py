@@ -54,6 +54,8 @@ class Eval:
 
         self.regex_total_time = re.compile(rb"INFO\s+Planner time:\s(.+)s", re.MULTILINE)
         self.regex_operators = re.compile(rb"Translator operators:\s(.+)", re.MULTILINE)
+        self.regex_plan_cost = re.compile(rb"\[t=.*s, .* KB\] Plan cost:\s(.+)\n", re.MULTILINE)
+
 
     def get_unique_model_name(self, config):
         assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
@@ -74,7 +76,7 @@ class Eval:
         else:
             model_path = '.'
             if 'trained' in config['queue_type']:
-                return 100000000
+                return None
 
 
         extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
@@ -84,29 +86,22 @@ class Eval:
         assert(os.path.exists(instance_file))
 
         command=[sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters
-
         output = subprocess.check_output(command)
 
         total_time = self.regex_total_time.search(output)
         num_operators = self.regex_operators.search(output)
+        plan_cost = self.regex_plan_cost.search(output)
 
-        if total_time and num_operators:
+        if total_time and num_operators and plan_cost:
             total_time = float(total_time.group(1))
             num_operators = float(num_operators.group(1))
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}")
+            plan_cost = float(plan_cost.group(1))
+            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
+            return num_operators
         else:
             print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved")
+            return None
 
-        # Go over configuration to create model
-        # ./plan.py using config + model
-        # print(self.DATA_DIR)
-
-        # Our objective function takes into consideration:
-        # PAR10 score with respect to runtime
-        # PAR10 score with respect to operators
-        # PAR10 score with respect to quality
-
-        return num_operators
 
 
 # Note: default configuration should solve at least 50% of the instances. Pick instances
@@ -165,5 +160,5 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
 
     print("Chosen configuration: ", incumbent)
     copy_model_to_folder(incumbent, sk_models_per_action_schema, DATA_DIR, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
-    with open(os.path.join(WORKING_DIR, 'incumbent', 'config')) as config_file:
-        config_file.writeline("--alias {incumbent['alias']} --grounding-queue {incumbent['queue_type']}")
+    with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
+        config_file.write("--alias {incumbent['alias']} --grounding-queue {incumbent['queue_type']}")

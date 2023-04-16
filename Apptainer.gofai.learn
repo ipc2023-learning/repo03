@@ -98,7 +98,7 @@ Stage: run
     shift 2  # Forget first two arguments.
     PROBLEM_FILES=("$@")  # All remaining arguments are problem files.
 
-    python learn.py "$DOMAIN_FILE" "$PROBLEM_FILES" --domain_knowledge "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total-time-limit 259200 --total-memory-limit 90000
+    python learn.py "$DOMAIN_FILE" "$PROBLEM_FILES" --domain_knowledge_file "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total-time-limit 259200 --total-memory-limit 90000
 
 %labels
 Name        GOFAI-learn

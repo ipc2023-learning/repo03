@@ -24,7 +24,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("domain", help="path to domain file. Alternatively, just provide a path to the directory with a domain.pddl and instance files.")
     parser.add_argument("problem", nargs="*", help="path to problem(s) file. Empty if a directory is provided.")
-    parser.add_argument("--domain_knowledge", help="path to store knowledge file.")
+    parser.add_argument("--domain_knowledge_file", help="path to store knowledge file.")
 
     parser.add_argument("--path", default='./data', help="path to store results")
     parser.add_argument("--cpus", type=int, default=1, help="number of cpus available")
@@ -91,8 +91,8 @@ def main():
     # TODO: check n workers
     run_smac(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac1', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
 
-    if args.domain_knowledge:
-        save_model(os.path.join(TRAINING_DIR}, 'smac1', 'incumbent'), args.domain_knowledge)
+    if args.domain_knowledge_file:
+        save_model(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'), args.domain_knowledge_file)
 
 if __name__ == "__main__":
     main()
