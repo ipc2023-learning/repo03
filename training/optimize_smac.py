@@ -37,11 +37,11 @@ class Eval:
 
 
     def target_function (self, config: Configuration, instance: str, seed: int) -> float:
+        print ('Testing', config)
         # create folder for the model
         using_model = all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
             any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
 
-        extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
 
         if using_model:
             config_name = self.get_unique_model_name(config)
@@ -65,9 +65,18 @@ class Eval:
                     f.write('\n'.join(collected_relevant_rules))
 
                 # extra_parameters += ['--model', config_name]
-
         else:
             model_path = '.'
+            if 'trained' in config['queue_type']:
+                print ("NOOOO", config)
+                return 100000000
+        if 'trained' in config['queue_type']:
+            print ("YESSSS", config)
+            return 1
+
+
+        extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
+
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
         assert(os.path.exists(instance_file))
@@ -97,8 +106,9 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instances_with_features : d
     ## Configuration Space ##
     ## Define parameters to select models
 
-    alias = Categorical ('alias', ['lama'], default='lama')
-    queue_type = Categorical("queue_type", ["trained", "roundrobintrained",'noveltyfifo','roundrobinnovelty'], default='trained')
+    alias = Categorical ('alias', ['lama-first'], default='lama-first')
+    queue_type = Categorical("queue_type", ["trained", "roundrobintrained"], default='trained')
+    #,'noveltyfifo','roundrobinnovelty'], default='trained')
 
     parameters = [alias,queue_type]
     conditions = []
@@ -116,7 +126,7 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instances_with_features : d
     for schema, models in sk_models_per_action_schema.items():
         m = Categorical(f"model_{schema}", models)
         parameters.append(m)
-        conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
+        # conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
 
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
