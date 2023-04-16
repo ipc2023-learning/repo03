@@ -65,8 +65,11 @@ class Eval:
 
         extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
 
-        print ([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file,os.path.join(self.instances_dir, instance)] + extra_parameters)
-        Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file,os.path.join(self.instances_dir, instance)] + extra_parameters, 'smac-plan').wait()
+        instance_file = os.path.join(self.instances_dir, instance + ".pddl")
+        assert(os.path.exists(instance_file))
+
+        print ([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters)
+        Call([sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters, 'smac-plan').wait()
 
         exit()
         # Go over configuration to create model
@@ -85,7 +88,7 @@ class Eval:
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
 
-def run_smac(WORKING_DIR, domain_file, instance_dir, instance_set : list, walltime_limit, n_trials, n_workers):
+def run_smac(WORKING_DIR, domain_file, instance_dir, instances_with_features : dict, walltime_limit, n_trials, n_workers):
     ## Configuration Space ##
     ## Define parameters to select models
 
@@ -118,19 +121,16 @@ def run_smac(WORKING_DIR, domain_file, instance_dir, instance_set : list, wallti
     evaluator = Eval (WORKING_DIR, domain_file, instance_dir, sk_models_per_action_schema)
 
 
-    num_instances = len(instance_set)
-    instance_set = [ins + ".pddl" for ins in instance_set if os.path.exists(os.path.join(instance_dir, ins + ".pddl"))]
-    if num_instances != len(instance_set):
-        print ("Warning: some instances in the set for optimize SMAC were not found")
-
-
+    print ([ins for ins in instances_with_features])
+    print(instances_with_features)
     scenario = Scenario(
         configspace=cs, deterministic=True,
         output_directory=os.path.join(WORKING_DIR, 'smac'),
         walltime_limit=walltime_limit,
         n_trials=n_trials,
         n_workers=n_workers,
-        instances=instance_set
+        instances=[ins for ins in instances_with_features],
+        instance_features=instances_with_features
     )
 
     # Use SMAC to find the best configuration/hyperparameters

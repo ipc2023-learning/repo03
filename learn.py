@@ -16,7 +16,7 @@ from run_experiment import RunExperiment
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph
 from optimize_smac import run_smac
-from utils import select_instances_by_properties
+from utils import select_instances, select_instances_with_properties
 
 from downward import suites
 
@@ -30,7 +30,6 @@ def parse_args():
     parser.add_argument("--total_memory_limit", default=7*1024, help="memory limit")
 
     return parser.parse_args()
-
 
 def main():
     args = parse_args()
@@ -68,11 +67,11 @@ def main():
     # RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first"])
 
     # # We run the good operators tool only on instances solved by lama in less than 30 seconds
-    # instances = select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
+    # instances = select_instances(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
     # SUITE_GOOD_OPERATORS = suites.build_suite(TRAINING_DIR, [f'instances:{name}.pddl' for name in instances])
     # RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_GOOD_OPERATORS)
 
-    # has_action_cost = len(select_instances_by_properties(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
+    # has_action_cost = len(select_instances(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
     # if has_action_cost:
     #     RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
 
@@ -85,7 +84,9 @@ def main():
 
 
     # TODO: Select different instances for instances
-    SMAC_INSTANCES =  select_instances_by_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
+    SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30, ['translator_operators', 'translator_facts', 'translator_variables'])
+    assert (len(SMAC_INSTANCES))
+
     run_smac(f'{TRAINING_DIR}', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
 
 

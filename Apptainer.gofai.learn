@@ -4,15 +4,16 @@ From: ubuntu:kinetic
 Stage: build
 
 %files
-    .
+    fd-symbolic
+    fd-partial-grounding
+    learning
+    training
+    learn.py
+    plan-partial-grounding.py
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends cmake make g++ python3 pypy3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3 python3-pip
-
-    pip install lab
-    pip install smac
-    pip install pandas
+    apt-get -y install --no-install-recommends cmake make g++ python3 pypy3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3
 
     rm -rf fd-symbolic/builds
     cd fd-symbolic
@@ -20,11 +21,18 @@ Stage: build
     strip --strip-all builds/release/bin/preprocess builds/release/bin/downward
     cd ..
 
+    rm -rf fd-partial-grounding/builds
+    cd fd-partial-grounding
+    pypy3 build.py
+    strip --strip-all builds/release/bin/downward
+    cd ..
+    # TODO: compile h2 preprocessor as well
+
     mkdir yap
     cd learning/yap
     mkdir build
     cd build
-    cmake ..  # -DCMAKE_INSTALL_PREFIX=/yap
+    cmake ..
     make
     make install
 
@@ -36,13 +44,18 @@ Stage: run
 
 # Copy planner binary and required files from Stage 1.
 %files from build
-
     learn.py
+    plan-partial-grounding.py
+
     training
 
     fd-symbolic/builds/release/bin/
     fd-symbolic/fast-downward.py
     fd-symbolic/driver
+
+    fd-partial-grounding/builds/release/bin/
+    fd-partial-grounding/fast-downward.py
+    fd-partial-grounding/driver
 
     learning/learning-aleph
     learning/learning-sklearn
@@ -51,9 +64,13 @@ Stage: run
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends default-jre-headless pypy python ruby
+    apt-get -y install --no-install-recommends pypy3 python3 python3-pip
     apt-get clean
     rm -rf /var/lib/apt/lists/*
+
+    pip install lab
+    pip install smac
+    pip install pandas
 
 %runscript
     #! /bin/bash
