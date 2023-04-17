@@ -359,3 +359,6 @@ class RulesEvaluator:
 
     def get_all_rules (self):
         return [rule.text for (schema, rules)  in self.rules.items() for rule in rules]
+
+    def get_action_schemas_with_rules():
+        return self.rules.keys()
