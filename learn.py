@@ -82,7 +82,7 @@ def main():
     #TODO: train also without good operators
     run_step_partial_grounding_rules(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules', args.domain)
 
-    # run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
+    run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
     # TODO: Select different instances for SMAC optimization
     SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30, ['translator_operators', 'translator_facts', 'translator_variables'])
