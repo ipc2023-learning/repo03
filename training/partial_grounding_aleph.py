@@ -8,9 +8,6 @@ import shutil
 def run_step_partial_grounding_aleph(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domain_file, time_limit=300, memory_limit = 4*1024*1024):
     #TODO: check time and memory limit (right now it's taken as a limit per step, and not a limit in total
 
-    # if os.path.exists(WORKING_DIR):
-    #     shutil.rmtree(WORKING_DIR)
-
     os.mkdir(WORKING_DIR)    # TODO: Set to 10k instead of 1k
 
     # TODO:  Add negated and equal predicate?

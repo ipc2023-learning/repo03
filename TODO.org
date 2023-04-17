@@ -1,7 +1,7 @@
 * Daniel:
 ** Plan script taking best config
 ** Implement good/bad actions queue as part of the flexible queue
-** Add stopping condition based on time
+
 
 * Alvaro:
 ** Configure Aleph good/bad actions properly -> and parse good actions correctly
@@ -9,6 +9,7 @@
 ** Add aleph models to SMAC
 ** Use cost good operators as well
 ** Configure aleph to learn multiple models
+
 
 * Fix
 ** [#A] Set time limits for everything
@@ -19,7 +20,7 @@
 
 
 * Features
-** [#A] Allow SMAC to tune stopping condition -> how? Does it make sense to do a stopping condition based on  the action schema?
+** [#A] Allow SMAC to tune stopping condition -> how? Use stopping condition based percentage of operators + X%, Does it make sense to do a stopping condition based on the action schema?
 ** Add BadPruning rules
 ** Add features from relaxed plans
 ** Incremental learning: First learn good/bad actions, then take them into  account when training models
@@ -30,3 +31,4 @@
 * Nice to have
 ** Fix numpy seed in learning scripts (via parameter)
 ** Virtual environment :)
+** Open more parameters for sklearn
