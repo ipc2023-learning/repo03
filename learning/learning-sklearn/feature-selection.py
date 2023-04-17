@@ -350,7 +350,7 @@ def main():
 
             selector = FeatureSelector(dataset, args.selector_type)
 
-            usefulness[action_schema] = sorted([(rank, i) for i, rank in enumerate(selector.get_feature_ranking())])
+            usefulness[action_schema] = sorted([(abs(rank), i) for i, rank in enumerate(selector.get_feature_ranking())])
             usefulness[action_schema].reverse()
 
             max_eval = usefulness[action_schema][0][0]
