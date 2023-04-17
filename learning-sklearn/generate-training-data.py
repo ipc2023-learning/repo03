@@ -62,7 +62,6 @@ if __name__ == "__main__":
     argparser.add_argument("--num-test-instances", type=int,default=0, help="Number of instances reserved for the testing set")
     argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)
 
-
     options = argparser.parse_args()
 
     if os.path.exists(options.store_training_data):
@@ -116,10 +115,14 @@ if __name__ == "__main__":
 
         relevant_rules = sorted(training_re.get_relevant_rules())
 
-
         print ("Relevant rules: ", len(relevant_rules))
     else:
         relevant_rules = sorted([l for l in options.training_rules.readlines()])
+
+
+    if not relevant_rules:
+        print ("There are no have any rules so we do not generate any training set")
+        exit(0)
 
     if not os.path.exists(options.store_training_data):
         os.makedirs(options.store_training_data)
@@ -170,6 +173,8 @@ if __name__ == "__main__":
                     all_operators_content = [action for action in actions]
             for action in all_operators_content:
                     schema, arguments = action.split("(")
+                    if schema not in re.get_action_schemas_with_rules():
+                        continue
                     if not is_test_instance and schema in skip_schemas_training:
                         continue
                     if is_test_instance and schema in skip_schemas_testing:
