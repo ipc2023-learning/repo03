@@ -16,27 +16,51 @@ import re
 
 # from functools import partial
 
-INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
+# Hardcoded paths that depend on the trraining part. This could be passed by parameter instead
 PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-rules'
+PARTIAL_GROUNDING_ALEPH_DIR = 'partial-grounding-aleph'
+SUFFIX_ALEPH_MODELS = '.rules'
+PREFIX_SK_MODELS = 'model_'
+
+# Hardcoded paths
+INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
 
 
 def copy_model_to_folder(config, sk_models_per_action_schema, DATA_DIR, target_dir, symlink=False ):
     os.mkdir(target_dir)
 
     collected_relevant_rules = []
+    collected_aleph_models = []
     for aschema in sk_models_per_action_schema:
-        if config[f'model_{aschema}'] == 'none':
-            continue
-        assert os.path.exists(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema))
-        os.symlink(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema), os.path.join(target_dir, aschema))
+        if config[f'model_{aschema}'].startswith(PREFIX_SK_MODELS):
+            assert os.path.exists(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema))
 
-        with open(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], 'relevant_rules')) as rfile:
-            for line in rfile:
-                if line.startswith (aschema[:-6] + " ("):
-                    collected_relevant_rules.append(line.strip())
+            if symlink:
+                os.symlink(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema), os.path.join(target_dir, aschema))
+            else:
+                shutil.copy(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], aschema), os.path.join(target_dir, aschema))
 
-    with open(os.path.join(target_dir, 'relevant_rules'), 'w') as f:
-        f.write('\n'.join(collected_relevant_rules))
+            with open(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR, config[f'model_{aschema}'], 'relevant_rules')) as rfile:
+                for line in rfile:
+                    if line.startswith (aschema[:-6] + " ("):
+                        collected_relevant_rules.append(line.strip())
+        # elif config[f'model_{aschema}'].endswith(SUFFIX_ALEPH_MODELS):
+            # with open(os.path.join(DATA_DIR, ALEPH_DIR, model_flename)) as probability_model:
+            #     for line in probability_model.readlines():
+            #         schema = line.split(":-")[0].strip()
+            #         if schema == aschema:
+            #             collected_aleph_models.append(model_filename)
+
+        else:
+            assert config[f'model_{aschema}'] == 'none'
+
+    if collected_relevant_rules:
+        with open(os.path.join(target_dir, 'relevant_rules'), 'w') as f:
+            f.write('\n'.join(collected_relevant_rules))
+
+    if collected_aleph_models:
+        with open(os.path.join(target_dir, 'probability_class.rules'), 'w') as f:
+            f.write('\n'.join(collected_aleph_models))
 
 
 class Eval:
@@ -59,7 +83,8 @@ class Eval:
 
     def get_unique_model_name(self, config):
         assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
-        return "-".join([str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
+        prefix = lambda x : "sk" if x.startswith(PREFIX_SK_MODELS) else ("a" if x.endswith(SUFFIX_ALEPH_MODELS) else "")
+        return "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
 
 
     def target_function (self, config: Configuration, instance: str, seed: int) -> float:
@@ -67,12 +92,11 @@ class Eval:
         using_model = all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
             any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
 
-
         if using_model:
             config_name = self.get_unique_model_name(config)
             model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
             if not os.path.exists(model_path):
-                copy_model_to_folder(config, self.sk_models_per_action_schema, self.DATA_DIR, model_path, True)
+                copy_model_to_folder(config, self.sk_models_per_action_schema, self.DATA_DIR, model_path, symlink=True)
         else:
             config_name = "---"
             model_path = '.'
@@ -80,7 +104,7 @@ class Eval:
                 return 10000000
 
 
-        extra_parameters = ['--alias', config['alias'], '--grounding-queue', config['queue_type']]
+        extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type']]
 
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
@@ -104,10 +128,10 @@ class Eval:
                 return num_operators
             elif self.regex_no_solution.search(output):
                 print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")
-                print(output.decode())
+                #print(output.decode())
                 return 10000000
             else:
-                print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
+                print (f"WARNING: Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
 
                 print("Output: ", output.decode())
                 if error_output:
@@ -151,9 +175,10 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     parameters = [alias,queue_type]
     conditions = []
 
-     # Gather model_names
-    sk_models = [name for name in os.listdir(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR)) if name.startswith('model_')]
-
+    ############################
+    ### Gather sk_models
+    #############################
+    sk_models = [name for name in os.listdir(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR)) if name.startswith(PREFIX_SK_MODELS)]
     sk_models_per_action_schema = defaultdict(lambda : ['none'])
     for model in sk_models:
         for n in os.listdir(os.path.join(DATA_DIR, PARTIAL_GROUNDING_RULES_DIR, model)):
@@ -161,10 +186,35 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
                 continue
             sk_models_per_action_schema[n].append(model)
 
+    ############################
+    ### Gather aleph probability_class, good_rule and bad_rule models
+    #############################
+    # aleph_model_filenames = [name for name in os.listdir(os.path.join(DATA_DIR, PARTIAL_GROUNDING_ALEPH_DIR)) if name.endswith(SUFFIX_ALEPH_MODELS)]
+    # for model_filename in aleph_model_filenames:
+    #     if 'class_probability' in model_filename:
+    #         with open(os.path.join(DATA_DIR, PARTIAL_GROUNDING_ALEPH_DIR, model_flename)) as probability_model:
+    #             for line in probability_model.readlines():
+    #                 schema = line.split(":-")[0].strip()
+    #                 sk_models_per_action_schema [schema].append(model_filename)
+
+
+    ############################
+    ### Create model parameters
+    #############################
+
     for schema, models in sk_models_per_action_schema.items():
         m = Categorical(f"model_{schema}", models)
         parameters.append(m)
         conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
+
+
+    ############################
+    ### Stopping condition parameters
+    #############################
+
+    # TODO!!
+
+
 
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
@@ -191,6 +241,9 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     incumbent = smac.optimize()
 
     print("Chosen configuration: ", incumbent)
-    copy_model_to_folder(incumbent, sk_models_per_action_schema, DATA_DIR, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
+    if 'trained' in  incumbent['queue_type']:
+        copy_model_to_folder(incumbent, sk_models_per_action_schema, DATA_DIR, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
+
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
-        config_file.write("--alias {incumbent['alias']} --grounding-queue {incumbent['queue_type']}")
+        json.dump(incumbent, config_file)
+        #config_file.write(f"--alias {incumbent['alias']} --grounding-queue {incumbent['queue_type']}")

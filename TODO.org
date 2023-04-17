@@ -2,7 +2,6 @@
 ** Plan script taking best config
 ** Implement good/bad actions queue as part of the flexible queue
 ** Add stopping condition based on time
-** h2 preprocessor is not being used!
 
 * Alvaro:
 ** Configure Aleph good/bad actions properly -> and parse good actions correctly
@@ -30,3 +29,4 @@
 
 * Nice to have
 ** Fix numpy seed in learning scripts (via parameter)
+** Virtual environment :)
