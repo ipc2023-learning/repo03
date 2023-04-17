@@ -1,0 +1,32 @@
+* Daniel:
+** Plan script taking best config
+** Implement good/bad actions queue as part of the flexible queue
+** Add stopping condition based on time
+** h2 preprocessor is not being used!
+
+* Alvaro:
+** Configure Aleph good/bad actions properly -> and parse good actions correctly
+** Curation of good/bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
+** Add aleph models to SMAC
+** Use cost good operators as well
+** Configure aleph to learn multiple models
+
+* Fix
+** [#A] Set time limits for everything
+** Bad rules do not learn even the basic never paint down in floortile
+** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
+** plan partial grounding is crashing (when instances are not solved)
+
+
+
+* Features
+** [#A] Allow SMAC to tune stopping condition -> how? Does it make sense to do a stopping condition based on  the action schema?
+** Add BadPruning rules
+** Add features from relaxed plans
+** Incremental learning: First learn good/bad actions, then take them into  account when training models
+** Do more iterations of SMAC
+** Run SMAC in multicore
+
+
+* Nice to have
+** Fix numpy seed in learning scripts (via parameter)
