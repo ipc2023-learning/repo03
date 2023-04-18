@@ -6,27 +6,23 @@ Stage: build
 %files
     fd-symbolic
     fd-partial-grounding
-    learning
-    training
-    learn.py
-    plan-partial-grounding.py
+    learning/yap
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends cmake make g++ python3 pypy3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3
+    apt-get -y install --no-install-recommends cmake make g++ python3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3
 
-    # rm -rf fd-symbolic/builds
-    # cd fd-symbolic
-    # pypy3 build.py
-    # strip --strip-all builds/release/bin/preprocess builds/release/bin/downward
-    # cd ..
+    rm -rf fd-symbolic/builds
+    cd fd-symbolic
+    python3 build.py
+    strip --strip-all builds/release/bin/preprocess builds/release/bin/downward
+    cd ..
 
-    # rm -rf fd-partial-grounding/builds
-    # cd fd-partial-grounding
-    # pypy3 build.py
-    # strip --strip-all builds/release/bin/downward
-    # strip --strip-all builds/release/bin/preprocess-h2
-    # cd ..
+    rm -rf fd-partial-grounding/builds
+    cd fd-partial-grounding
+    python3 build.py
+    strip --strip-all builds/release/bin/downward builds/release/bin/preprocess-h2
+    cd ..
 
     mkdir yap
     cd learning/yap
@@ -42,24 +38,26 @@ From: ubuntu:kinetic
 Stage: run
 
 # Copy planner binary and required files from Stage 1.
+%files
+    requirements-learn.txt
+
+    learn.py /learn.py
+    plan-partial-grounding.py /plan-partial-grounding.py
+    training /training
+
+    learning/learning-aleph /learning/learning-aleph
+    learning/learning-sklearn /learning/learning-sklearn
+    learning/aleph/aleph.pl /learning/aleph/aleph.pl
+    learning/translate /learning/translate
+
 %files from build
-    learn.py
-    plan-partial-grounding.py
+    /fd-symbolic/builds/release/bin
+    /fd-symbolic/fast-downward.py
+    /fd-symbolic/driver
 
-    training
-
-    fd-symbolic/builds/release/bin/
-    fd-symbolic/fast-downward.py
-    fd-symbolic/driver
-
-    fd-partial-grounding/builds/release/bin/
-    fd-partial-grounding/fast-downward.py
-    fd-partial-grounding/driver
-
-    learning/learning-aleph
-    learning/learning-sklearn
-    learning/aleph/aleph.pl
-    learning/translate
+    /fd-partial-grounding/builds/release/bin
+    /fd-partial-grounding/fast-downward.py
+    /fd-partial-grounding/driver
 
     /usr/local/bin/yap
     /usr/local/include/Yap
@@ -85,9 +83,7 @@ Stage: run
     apt-get clean
     rm -rf /var/lib/apt/lists/*
 
-    pip install lab
-    pip install smac
-    pip install pandas
+    pip install -r requirements-learn.txt
 
 %runscript
     #! /bin/bash
@@ -98,7 +94,7 @@ Stage: run
     shift 2  # Forget first two arguments.
     PROBLEM_FILES=("$@")  # All remaining arguments are problem files.
 
-    python learn.py "$DOMAIN_FILE" "$PROBLEM_FILES" --domain_knowledge_file "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total-time-limit 259200 --total-memory-limit 90000
+    python3 /learn.py "$DOMAIN_FILE" "${PROBLEM_FILES[@]}" --domain_knowledge_file "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total_time_limit 259200 --total_memory_limit 90000
 
 %labels
 Name        GOFAI-learn
