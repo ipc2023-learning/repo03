@@ -99,7 +99,9 @@ def main():
 
     # TODO add memory limit
     # run standard LAMA as fallback or to improve found solution
-    lama_config = ["--plan", args.plan, args.domain, args.problem]
+    lama_config = ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
+                   "--transform-task-options", "h2_time_limit,300",
+                   "--plan", args.plan, args.domain, args.problem]
     if os.path.isfile(args.plan):
         with open(args.plan) as plan_file:
             cost_line = plan_file.readlines()[-1]
