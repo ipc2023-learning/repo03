@@ -79,7 +79,7 @@ Stage: run
 
 %post
     apt-get update
-    apt-get -y install --no-install-recommends pypy3 python3 python3-pip
+    apt-get -y install --no-install-recommends python3 python3-pip
     apt-get clean
     rm -rf /var/lib/apt/lists/*
 
@@ -97,7 +97,7 @@ Stage: run
     python3 /learn.py "$DOMAIN_FILE" "${PROBLEM_FILES[@]}" --domain_knowledge_file "$DOMAIN_KNOWLEDGE_FILE" --cpus 1 --total_time_limit 259200 --total_memory_limit 90000
 
 %labels
-Name        GOFAI-learn
+Name        GOFAI
 Description Learning part of the GOFAI submission
 Authors     Alvaro Torralba <alto@cs.aau.dk>, Daniel Gnad <daniel.gnad@liu.se>
 License     GPL 3
