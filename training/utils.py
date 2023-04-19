@@ -34,5 +34,6 @@ def select_instances_with_properties(RUNS, f, properties):
 
 
 def save_model(source_dir, knowledge_file):
-    with tarfile.open(knowledge_file, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
+    with tarfile.open(knowledge_file, "w:gz", dereference=True) as tar:
+        for f in os.listdir(source_dir):
+            tar.add(os.path.join(source_dir, f), arcname=f)
