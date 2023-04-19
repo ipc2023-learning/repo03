@@ -79,6 +79,7 @@ def main():
             driver_options += ["--incremental-grounding-increment-percentage",
                                str(args.incremental_grounding_increment_percentage)]
     else:
+        # TODO allow for full grounding (e.g. with good/bad action rules)
         translate_options += ["--termination-condition", "goal-relaxed-reachable"]
 
     subprocess.run([sys.executable, os.path.join(FD_PARTIAL_GROUNDING, "fast-downward.py")] +
