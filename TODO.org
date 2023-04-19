@@ -6,7 +6,6 @@
 * Alvaro:
 ** Configure Aleph good/bad actions properly -> and parse good actions correctly
 ** Curation of good/bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
-** Add aleph models to SMAC
 ** Use cost good operators as well
 ** Configure aleph to learn multiple models
 
@@ -18,7 +17,11 @@
 ** plan partial grounding is crashing (when instances are not solved)
 
 
+** Bad rules in freecell colfromfreecell (?arg0, ?arg1, ?arg2, ?arg3) :- True. -> format not suported
 
+** parse aleph theory -> need to add some equal constraints
+
+** Aleph not and equal do not work
 * Features
 ** [#A] Allow SMAC to tune stopping condition -> how? Use stopping condition based percentage of operators + X%, Does it make sense to do a stopping condition based on the action schema?
 ** Add BadPruning rules
@@ -26,6 +29,7 @@
 ** Incremental learning: First learn good/bad actions, then take them into  account when training models
 ** Do more iterations of SMAC
 ** Run SMAC in multicore
+** Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
 
 
 * Nice to have

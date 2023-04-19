@@ -123,7 +123,6 @@ class CandidateModels:
         prefix = lambda x : "sk" if x.startswith(PREFIX_SK_MODELS) else ("a" if x.endswith(SUFFIX_ALEPH_MODELS) else "")
         return "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
 
-
     def load_sk_folder(self, sk_folder):
         self.sk_folder = sk_folder
 
@@ -134,7 +133,6 @@ class CandidateModels:
                 if n == 'relevant_rules':
                     continue
                 self.sk_models_per_action_schema[n[:-6]].append(model)
-
 
     def load_aleph_folder(self, aleph_folder):
         self.aleph_folder = aleph_folder
@@ -192,6 +190,19 @@ class CandidateModels:
             with open(os.path.join(target_dir, 'probability_class.rules'), 'w') as f:
                 f.write('\n'.join(collected_aleph_models))
 
+        selected_bad_rules = [r for i, r in enumerate(self.bad_rules) if [config[f"bad{i}"]]]
+        if selected_bad_rules:
+            with open(os.path.join(target_dir, 'bad_rules.rules'), 'w') as f:
+                f.write('\n'.join(selected_bad_rules))
+
+        selected_good_rules = [r for i, r in enumerate(self.good_rules) if [config[f"good{i}"]]]
+        if selected_good_rules:
+            with open(os.path.join(target_dir, 'good_rules.rules'), 'w') as f:
+                f.write('\n'.join(selected_good_rules))
+
+
+
+
 
 
 # Note: default configuration should solve at least 50% of the instances. Pick instances
@@ -215,10 +226,11 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     ### Create model parameters
     #############################
 
+    stopping_condition = Categorical(f"stopping-condition", ['full-grounding', 'goal-relaxed-reachable'])
     alias = Categorical ('alias', ['lama-first'], default='lama-first')
-    queue_type = Categorical("queue_type", ["trained", "roundrobintrained", "fifo", "lifo"], default='trained')
+    queue_type = Categorical("queue_type", ["trained", "roundrobintrained", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='trained')
 
-    parameters = [alias,queue_type]
+    parameters = [alias, queue_type, stopping_condition]
     conditions = []
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
@@ -227,19 +239,12 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
         conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
 
     for i, r in enumerate(candidate_models.good_rules):
-        parameters.append(Categorical(f"good_{i}", [False, True]))
+        good = Categorical(f"good_{i}", [False, True])
+        parameters.append(good)
+        conditions.append(InCondition(child=good, parent=stopping_condition, values=["goal-relaxed-reachable"]))
 
     for i, r in enumerate(candidate_models.bad_rules):
         parameters.append(Categorical(f"bad{i}", [False, True]))
-
-    ############################
-    ### Stopping condition parameters
-    #############################
-
-    # TODO!!
-
-
-
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
     cs.add_hyperparameters(parameters)
@@ -249,7 +254,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
 
 
     print ([ins for ins in instances_with_features])
-    print(instances_with_features)
+
     scenario = Scenario(
         configspace=cs, deterministic=True,
         output_directory=os.path.join(WORKING_DIR, 'smac'),
@@ -271,5 +276,10 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
         os.mkdir(os.path.join(WORKING_DIR, 'incumbent'))
 
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
-        json.dump(incumbent.get_dictionary(), config_file)
+        properties = {k : v for k,v in incumbent.get_dictionary().items() if not k.startswith('good') and not k.startswith('bad')}
+
+        properties['bad-rules'] = [i for i, _ in enumerate(candidate_models.bad_rules) if [config[f"bad{i}"]]]
+        properties['good-rules'] = [i for i, _ in enumerate(candidate_models.good_rules) if [config[f"good{i}"]]]
+
+        json.dump(properties, config_file)
         #config_file.write(f"--alias {incumbent['alias']} --grounding-queue {incumbent['queue_type']}")

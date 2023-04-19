@@ -78,21 +78,45 @@ def main():
         RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
 
 
+    ####
+    # run_hard_rules()
+    ####
+
+    ### SMAC Optimization to select good sets of good and hard rules
+    ### No incremental grounding
+    ### full grounding + bad rules
+
+
+
     #TODO: set time and memory limits
     #TODO: train also without good operators
     run_step_partial_grounding_rules(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-rules', args.domain)
-
     run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
     # TODO: Select different instances for SMAC optimization
-    SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30, ['translator_operators', 'translator_facts', 'translator_variables'])
+    SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : 10 <= p['search_time'] and p['search_time'] <= 300,
+                                                       ['translator_operators', 'translator_facts', 'translator_variables'])
+
+    # Make sure that we have 10 instances for SMAC. Preferably, instances that were not solved by good operators.
+    # Score instances according to how far they are from the desired range, pick 10 best (diversifying)
     assert (len(SMAC_INSTANCES))
+
+    # SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['coverage'] == 0, ['translator_operators'])
+    # select_instances_by_order (SMAC_INSTANCES, lambda x,y :  x['translator_operators'] < u['translator_operators'] )
+
 
     # TODO: check n workers
     run_smac(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac1', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
 
     if args.domain_knowledge_file:
         save_model(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'), args.domain_knowledge_file)
+
+
+    # RUN.run_planner(f'{TRAINING_DIR}/runs-incumbent', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = [use_config_from_incumbent])
+    # Select instances that are solved by incumbent in XX seconds
+
+    ## Run a new SMAC optimization, that optimizes for search time, and that also selects search (lama or something else)
+
 
 if __name__ == "__main__":
     main()
