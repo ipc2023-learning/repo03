@@ -3,16 +3,16 @@
 from __future__ import print_function
 
 import argparse
+import json
 import os.path
+import shutil
 import subprocess
+import tarfile
 import sys
 
-
 ROOT = os.path.dirname(os.path.abspath(__file__))
-CEDALION = os.path.join(ROOT, "cedalion")
-TRANSLATE = os.path.join(CEDALION, "src", "translate", "translate.py")
-PREPROCESS = os.path.join(CEDALION, "src", "preprocess", "preprocess")
-SEARCH = os.path.join(CEDALION, "src", "search", "downward-release")
+PLAN_PARTIAL_GROUNDING = os.path.join(ROOT, "plan-partial-grounding.py")
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -23,28 +23,42 @@ def parse_args():
     return parser.parse_args()
 
 
-def get_configs(portfolio):
-    attributes = {}
-    with open(portfolio) as portfolio_file:
-        content = portfolio_file.read()
-        try:
-            exec(content, attributes)
-        except Exception:
-            sys.exit("The file %s could not be loaded" % portfolio)
-    if "configs" not in attributes:
-        sys.exit("portfolio %s must define configs" % portfolio)
-    return attributes["configs"]
+def get_options(config_file):
+    with open(config_file, "r") as cfile:
+        config_dict = json.load(cfile)
+
+    config = ["--alias", config_dict["alias"]]
+
+    if "queue_type" in config_dict:
+        config += ["--grounding-queue", config_dict["queue_type"],
+                   "--h2-preprocessor",  # TODO this is not currently set by SMAC
+                   ]
+
+        config += ["--incremental-grounding"]
+        # TODO add incremental grounding options to config file
+
+    return config
 
 
 def main():
     args = parse_args()
-    configs = get_configs(args.domain_knowledge)
-    _, config = configs[0]
-    subprocess.check_call([sys.executable, TRANSLATE, args.domain, args.problem])
-    with open("output.sas") as f:
-        subprocess.check_call([PREPROCESS], stdin=f)
-    with open("output") as f:
-        subprocess.check_call([SEARCH, "--plan-file", args.plan] + config, stdin=f)
+
+    dk_folder = f"{os.path.basename(args.domain_knowledge)}-extracted"
+
+    # uncompress domain knowledge file
+    with tarfile.open(args.domain_knowledge, "r:gz") as tar:
+        if os.path.exists(dk_folder):
+            shutil.rmtree(dk_folder)
+        tar.extractall(dk_folder)
+
+    config = get_options(os.path.join(dk_folder, "config"))
+
+    # TODO add time + memory limits
+    subprocess.run([sys.executable, PLAN_PARTIAL_GROUNDING] +
+                   [dk_folder, args.domain, args.problem, "--plan", "args.plan"] +
+                   config)
+
+    # TODO run plain LAMA as fallback if not solved, yet
 
 
 if __name__ == "__main__":

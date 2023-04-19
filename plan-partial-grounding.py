@@ -54,7 +54,7 @@ def main():
     if args.plan:
         driver_options += ["--plan-file", args.plan]
     if args.h2_preprocessor:
-        driver_options += ["--transform-task", "fd-partial-grounding/builds/release/bin/preprocess-h2",
+        driver_options += ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
                            "--transform-task-options", f"h2_time_limit,{args.h2_time_limit}"]
 
     translate_options = ["--translate-options",
@@ -81,10 +81,10 @@ def main():
     else:
         translate_options += ["--termination-condition", "goal-relaxed-reachable"]
 
-    subprocess.check_call([sys.executable, os.path.join(FD_PARTIAL_GROUNDING, "fast-downward.py")] +
-                          driver_options +
-                          [args.domain, args.problem] +
-                          translate_options)
+    subprocess.run([sys.executable, os.path.join(FD_PARTIAL_GROUNDING, "fast-downward.py")] +
+                   driver_options +
+                   [args.domain, args.problem] +
+                   translate_options)
 
 
 if __name__ == "__main__":
