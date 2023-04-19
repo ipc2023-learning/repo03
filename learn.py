@@ -105,7 +105,7 @@ def main():
 
 
         sorted_instances = sorted([instance for instance, p in lama_instances.items() if p['planner-time'] < 120], key = lambda x  : instances_to_time[x]['planner_time'])
-        SMAC_INSTANCES.add(sorted_instances[-3:]) # Pick the last three instances
+        SMAC_INSTANCES.update(sorted_instances[-3:]) # Pick the last three instances
         if len(INSTANCES_WITH_TRAINING_DATA) <= 10:
             print ("Warning: we do not have good training instances")
             break
@@ -136,19 +136,19 @@ def main():
     run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
 
-    SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : 10 <= p['search_time'] and p['search_time'] <= 300,
+    SMAC_INSTANCES_FIRST_OPTIMIZATION =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['problem'] in SMAC_INSTANCES,
                                                        ['translator_operators', 'translator_facts', 'translator_variables'])
 
     # Make sure that we have 10 instances for SMAC. Preferably, instances that were not solved by good operators.
     # Score instances according to how far they are from the desired range, pick 10 best (diversifying)
-    assert (len(SMAC_INSTANCES))
+    assert (len(SMAC_INSTANCES_FIRST_OPTIMIZATION))
 
     # SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['coverage'] == 0, ['translator_operators'])
     # select_instances_by_order (SMAC_INSTANCES, lambda x,y :  x['translator_operators'] < u['translator_operators'] )
 
 
     # TODO: check n workers
-    run_smac(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac1', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
+    run_smac(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac1', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES_FIRST_OPTIMIZATION, walltime_limit=100, n_trials=100, n_workers=1)
 
     if args.domain_knowledge_file:
         save_model(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'), args.domain_knowledge_file)
