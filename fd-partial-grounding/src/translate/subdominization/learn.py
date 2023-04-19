@@ -19,8 +19,15 @@ from sklearn.neighbors import KNeighborsRegressor
 from sklearn.ensemble import RandomForestClassifier
 
 
+class ConstantEstimator(BaseEstimator):
+    def __init__(self, value):
+        self.value = value
 
-class LearnRules():
+    def predict(self, actions):
+        return [self.value] * len(actions)
+
+
+class LearnRules:
     def __init__(self):
         pass
 

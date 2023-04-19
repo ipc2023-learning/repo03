@@ -53,11 +53,15 @@ randBinList = lambda n: [randint(0,1) for b in range(1,n+1)]
 from subdominization import helpers
 
 
+class ConstantEstimator(BaseEstimator):
+    def __init__(self, value):
+        self.value = value
+
+    def predict(self, l):
+        return [self.value] * len(l)
 
 
-
-class LearnRules():
-
+class LearnRules:
     def __init__(self, isBalanced=False, modelType='LRCV', training_file ='', njobs=1, testSize=0.00000001, remove_duplicate_features=True, take_max_for_duplicates=True):
         '''
         Constructor take parameters:
@@ -86,11 +90,12 @@ class LearnRules():
 
         self.is_empty = True
 
-        if (training_file !='') :
+
+        if training_file != '':
 
             dataset = helpers.get_dataset_from_csv(training_file, not remove_duplicate_features, take_max_for_duplicates)
 
-            if (dataset is None):
+            if dataset is None:
                 return
 
             self.is_empty = False # we actually train the model
@@ -98,6 +103,11 @@ class LearnRules():
             # print dataset.shape
             # separate in features an target
             X, y = dataset.iloc[:,:-1], list(dataset.iloc[:, -1])
+
+            if y.count(y[0]) == len(y):
+                # only one output class
+                self.model = ConstantEstimator(y[0])
+                return
 
             # if we want to separate into train and test sets
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=0)
