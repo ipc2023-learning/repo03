@@ -109,7 +109,7 @@ def main():
     # Make sure that at least 3 instances are solved by lama under 2 minutes
     if num_instances_from_properties (lama_instances, [planner_time_under(120), in_instanceset(SMAC_INSTANCES) ]) < 3:
         candidate_instances = select_instances_from_properties (lama_instances, [planner_time_under(120), notin_instanceset(SMAC_INSTANCES) ])
-        sorted_instances = sorted(candidate_instances, key = lambda x : instances_to_time[x]['planner_time'])
+        sorted_instances = sorted(candidate_instances, key = lambda x : lama_instances[x]['planner_time'])
 
         SMAC_INSTANCES.update(sorted_instances[-3:]) # Pick the last three instances
 
@@ -121,7 +121,7 @@ def main():
         candidate_instances = select_instances_from_properties (lama_instances, [planner_time_under(120), notin_instanceset(SMAC_INSTANCES) ])
 
         if (candidate_instances):
-            sorted_instances = sorted(candidate_instances, key = lambda x : instances_to_time[x]['planner_time'])
+            sorted_instances = sorted(candidate_instances, key = lambda x : lama_instances[x]['planner_time'])
 
             SMAC_INSTANCES.add(sorted_instances[-1]) # Pick the last instance
 
