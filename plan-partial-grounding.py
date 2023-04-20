@@ -38,11 +38,16 @@ def parse_args():
                              "e.g. 10 for 10% additional actions. If provided in combination with "
                              "--incremental-grounding-increment, the maximum of the two is taken.")
 
-    # TODO introduce plan-ratios queues
     parser.add_argument("--grounding-queue", type=str, default="trained",
-                        help="Options are trained/roundrobintrained (sklearn model), "
-                             "aleph/roundrobinaleph (aleph model)),"
-                             "noveltyfifo/roundrobinnovelty (novelty)")
+                        help="Options are trained/roundrobintrained/ratiotrained (sklearn model), "
+                             "aleph/roundrobinaleph/ratioaleph (aleph model)),"
+                             "noveltyfifo/roundrobinnovelty (novelty),"
+                             "roundrobin/ratio (no model)")
+
+    parser.add_argument("--termination-condition", type=str, default="relaxed",
+                        choices=["relaxed", "relaxed5", "relaxed10", "relaxed20", "full"],
+                        help="Ground until the goal is relaxed reachable, possibly add another x% of the actions"
+                             "grounded up to that point; respectively full grounding.")
 
     return parser.parse_args()
 
@@ -57,17 +62,28 @@ def main():
         driver_options += ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
                            "--transform-task-options", f"h2_time_limit,{args.h2_time_limit}"]
 
-    translate_options = ["--translate-options",
-                         "--batch-evaluation",
-                         "--grounding-action-queue-ordering",
-                         args.grounding_queue]
-    if args.grounding_queue in ["trained", "roundrobintrained"]:
-        translate_options += ["--trained-model-folder", args.domain_knowledge]
-    elif args.grounding_queue in ["aleph", "roundrobinaleph"]:
-        # TODO this does not work yet, need to provide the actual file
-        translate_options += ["--aleph-model-file", args.domain_knowledge]
+    translate_options = []
+
+    if args.termination_condition != "full":
+        # TODO add support for good/bad action pruning when doing "full" grounding
+        translate_options += ["--translate-options",
+                              "--batch-evaluation",
+                              "--grounding-action-queue-ordering",
+                              args.grounding_queue]
+        if "trained" in args.grounding_queue:
+            translate_options += ["--trained-model-folder", args.domain_knowledge]
+        elif "aleph" in args.grounding_queue:
+            # this assumes that the file is always called like this
+            translate_options += ["--aleph-model-file", os.path.join(args.domain_knowledge, "class_probability.rules")]
+
+        if "ratio" in args.grounding_queue:
+            # this assumes that the file is always called like this
+            translate_options += ["--action-schema-ratios", os.path.join(args.domain_knowledge, "schema_ratios"),
+                                  "--plan-ratios"]
 
     if args.incremental_grounding:
+        if args.termination_condition in ["relaxed5", "relaxed10", "relaxed20", "full"]:
+            print("WARNING: termination condition is ignored when running incremental grounding.")
         driver_options += ["--incremental-grounding",
                            "--incremental-grounding-search-time-limit", str(args.incremental_grounding_search_time_limit),
                            ]
@@ -79,8 +95,11 @@ def main():
             driver_options += ["--incremental-grounding-increment-percentage",
                                str(args.incremental_grounding_increment_percentage)]
     else:
-        # TODO allow for full grounding (e.g. with good/bad action rules)
-        translate_options += ["--termination-condition", "goal-relaxed-reachable"]
+        tc = args.termination_condition
+        if tc != "full":
+            translate_options += ["--termination-condition", "goal-relaxed-reachable"]
+            if tc.startswith("relaxed") and len(args.termination_condition) > len("relaxed"):
+                translate_options += ["percentage", tc[len("relaxed"):]]
 
     subprocess.run([sys.executable, os.path.join(FD_PARTIAL_GROUNDING, "fast-downward.py")] +
                    driver_options +
