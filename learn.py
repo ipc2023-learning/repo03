@@ -136,6 +136,13 @@ def main():
     print ("Instances for the training phase: ", INSTANCES_WITH_TRAINING_DATA)
     print ("Instances for SMAC optimization: ", SMAC_INSTANCES)
 
+    SMAC_INSTANCES_FIRST_OPTIMIZATION =  select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama', [in_instanceset(SMAC_INSTANCES)],
+                                                                                        ['translator_operators', 'translator_facts', 'translator_variables'])
+
+    # Make sure that we have 10 instances for SMAC. Preferably, instances that were not solved by good operators.
+    # Score instances according to how far they are from the desired range, pick 10 best (diversifying)
+    assert (len(SMAC_INSTANCES_FIRST_OPTIMIZATION))
+
     ####
     # run_hard_rules()
     ####
@@ -152,12 +159,6 @@ def main():
     run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
 
-    SMAC_INSTANCES_FIRST_OPTIMIZATION =  select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['problem'] in SMAC_INSTANCES,
-                                                                                    ['translator_operators', 'translator_facts', 'translator_variables'])
-
-    # Make sure that we have 10 instances for SMAC. Preferably, instances that were not solved by good operators.
-    # Score instances according to how far they are from the desired range, pick 10 best (diversifying)
-    assert (len(SMAC_INSTANCES_FIRST_OPTIMIZATION))
 
     # SMAC_INSTANCES =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['coverage'] == 0, ['translator_operators'])
     # select_instances_by_order (SMAC_INSTANCES, lambda x,y :  x['translator_operators'] < u['translator_operators'] )

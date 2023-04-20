@@ -33,6 +33,7 @@ def select_instances_from_runs_with_properties(RUNS, conditions = [], properties
                         else:
                             result[run] = content
             except:
+                print("Error while retrieving properties from run", run )
                 pass
 
     return result
