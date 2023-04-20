@@ -16,7 +16,7 @@ from run_experiment import RunExperiment
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph
 from optimize_smac import run_smac
-from utils import select_instances, select_instances_with_properties, save_model
+from utils import *
 
 from downward import suites
 
@@ -69,16 +69,10 @@ def main():
     RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first"])
 
     # We run the good operators tool only on instances solved by lama in less than 30 seconds
-    instances = select_instances(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
+    instances = select_instances_from_runs(f'{TRAINING_DIR}/runs-lama', lambda p : p['search_time'] < 30)
     SUITE_GOOD_OPERATORS = suites.build_suite(TRAINING_DIR, [f'instances:{name}.pddl' for name in instances])
     RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_GOOD_OPERATORS)
     RUN_DIRS = [f'{TRAINING_DIR}/good-operators-unit']
-
-
-    has_action_cost = len(select_instances(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
-    if has_action_cost:
-        RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
-        RUN_DIRS.append(f'{TRAINING_DIR}/good-operators-cost')
 
     ######
     ### We split instances between training and SMAC optimization following the criteria:
@@ -87,38 +81,60 @@ def main():
     ###   (3) We want to minimize the overlap with instances for which we have good operators
     ######
 
-    INSTANCES_WITH_TRAINING_DATA = set(select_instances(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['coverage']))
-    RUN_DIRS.append(f'{TRAINING_DIR}/runs-lama')
+    INSTANCES_WITH_TRAINING_DATA = set(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['coverage']))
+
+    has_action_cost = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
+    if has_action_cost:
+        RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
+        RUN_DIRS.append(f'{TRAINING_DIR}/good-operators-cost')
+        INSTANCES_WITH_TRAINING_DATA.update(select_instances(f'{TRAINING_DIR}/good-operators-cost', lambda p : p['coverage']))
+
+    if len(INSTANCES_WITH_TRAINING_DATA) < 10:
+        print (f"Warning: we do not have good training instances (only {len(INSTANCES_WITH_TRAINING_DATA)} instances were solvable by our optimal planning tool). Consider adding more easy instances to the training set.")
+
+        RUN_DIRS.append(f'{TRAINING_DIR}/runs-lama')
+        # TODO: add some instances solved with lama to the INSTANCES_WITH_TRAINING_DATA
 
 
-    lama_instances = select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda x : True, ['planner-time', 'coverage'])
+    lama_instances = select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama')
 
-    instances_not_solved_by_lama = [instance for instance, properties in lama_instances.items() if not properties['coverage']]
+    instances_not_solved_by_lama = select_instances_from_properties(lama_instances, [not_solved()])
     if not instances_not_solved_by_lama:
         print ("Warning: all instances are solved by lama. Make sure your training instances contain difficult instances that are representative of the difficulty of the domain")
 
     # Here, we have instances reserved for using SMAC (not all of them need to be used). This includes all the instances for which we do not have training data
     SMAC_INSTANCES = set([instance for instance in lama_instances if instance not in INSTANCES_WITH_TRAINING_DATA])
 
-    # Make sure that at least 3 instances are solved by lama under 2 minutes, and get about a 10% of such instances
-    while len([ins for ins, p in lama_instances.items() and p['coverage'] and p['planner_time'] < 120 and ins in SMAC_INSTANCES]) < 3 or len([ins for ins, p in lama_instances.items() and p['coverage'] and p['planner_time'] < 120 and ins in SMAC_INSTANCES]) < len(INSTANCES_WITH_TRAINING_DATA)/10:
 
+    # Make sure that at least 3 instances are solved by lama under 2 minutes
+    if num_instances_from_properties (lama_instances, [planner_time_under(120), in_instanceset(SMAC_INSTANCES) ]) < 3:
+        candidate_instances = select_instances_from_properties (lama_instances, [planner_time_under(120), notin_instanceset(SMAC_INSTANCES) ])
+        sorted_instances = sorted(candidate_instances, key = lambda x : instances_to_time[x]['planner_time'])
 
-        sorted_instances = sorted([instance for instance, p in lama_instances.items() if p['planner-time'] < 120], key = lambda x  : instances_to_time[x]['planner_time'])
         SMAC_INSTANCES.update(sorted_instances[-3:]) # Pick the last three instances
-        if len(INSTANCES_WITH_TRAINING_DATA) <= 10:
-            print ("Warning: we do not have good training instances")
-            break
-        else:
+
+        if len(INSTANCES_WITH_TRAINING_DATA) > 10:
             INSTANCES_WITH_TRAINING_DATA = [ins for ins in INSTANCES_WITH_TRAINING_DATA if ins not in SMAC_INSTANCES]
 
-    num_smac_instances_unsolved = len([ins for ins, p in lama_instances.items() and not p['coverage'] and ins in SMAC_INSTANCES])
-    num_smac_instances_under_2m = len([ins for ins, p in lama_instances.items() and p['planner-time'] < 120 and ins in SMAC_INSTANCES])
-    num_smac_instances_overlap = len([ins for ins, p in lama_instances.items() and ins in INSTANCES_WITH_TRAINING_DATA and ins in SMAC_INSTANCES])
+
+    while (num_instances_from_properties(lama_instances, [planner_time_under(120), in_instanceset(SMAC_INSTANCES)]) < len(INSTANCES_WITH_TRAINING_DATA)/10):
+        candidate_instances = select_instances_from_properties (lama_instances, [planner_time_under(120), notin_instanceset(SMAC_INSTANCES) ])
+
+        if (candidate_instances):
+            sorted_instances = sorted(candidate_instances, key = lambda x : instances_to_time[x]['planner_time'])
+
+            SMAC_INSTANCES.add(sorted_instances[-1]) # Pick the last instance
+
+            assert len(INSTANCES_WITH_TRAINING_DATA) > 10
+            INSTANCES_WITH_TRAINING_DATA = [ins for ins in INSTANCES_WITH_TRAINING_DATA if ins not in SMAC_INSTANCES]
+
+    num_smac_instances_unsolved = num_instances_from_properties(lama_instances, [not_solved(), in_instanceset(SMAC_INSTANCES) ])
+    num_smac_instances_under_2m = num_instances_from_properties(lama_instances, [planner_time_under(120), in_instanceset(SMAC_INSTANCES) ])
+    num_smac_instances_overlap = num_instances_from_properties(lama_instances, [in_instanceset(INSTANCES_WITH_TRAINING_DATA), in_instanceset(SMAC_INSTANCES) ])
 
     print (f"After the split, we have {len(INSTANCES_WITH_TRAINING_DATA)} instances for training, {len(SMAC_INSTANCES)} for hyperparameter optimization, out of which {num_smac_instances_overlap} have overlap and {num_smac_instances_unsolved} are not solved by lama and {num_smac_instances_under_2m} are solved under 2 minutes)")
-    print (INSTANCES_WITH_TRAINING_DATA)
-    print (SMAC_INSTANCES)
+    print ("Instances for the training phase: ", INSTANCES_WITH_TRAINING_DATA)
+    print ("Instances for SMAC optimization: ", SMAC_INSTANCES)
 
     ####
     # run_hard_rules()
@@ -136,8 +152,8 @@ def main():
     run_step_partial_grounding_aleph(REPO_LEARNING, f'{TRAINING_DIR}/good-operators-unit', f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
 
-    SMAC_INSTANCES_FIRST_OPTIMIZATION =  select_instances_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['problem'] in SMAC_INSTANCES,
-                                                       ['translator_operators', 'translator_facts', 'translator_variables'])
+    SMAC_INSTANCES_FIRST_OPTIMIZATION =  select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama', lambda p : p['problem'] in SMAC_INSTANCES,
+                                                                                    ['translator_operators', 'translator_facts', 'translator_variables'])
 
     # Make sure that we have 10 instances for SMAC. Preferably, instances that were not solved by good operators.
     # Score instances according to how far they are from the desired range, pick 10 best (diversifying)
