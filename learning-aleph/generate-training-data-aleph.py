@@ -152,11 +152,11 @@ def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_
         num_good_operators = sum([len(x) for x in good_operators[schema.name].values()])
         num_bad_operators = sum([len(x) for x in bad_operators[schema.name].values()])
 
-        if prediction_type == PredictionType.bad_actions and num_bad_operators < min_positive_instances or num_good_operators < min_negative_instances:
+        if background_file_opts.prediction_type == PredictionType.bad_actions and num_bad_operators < min_positive_instances or num_good_operators < min_negative_instances:
             print(f"Skipping {schema.name} due to lack of training data: {num_bad_operators} positive examples and {num_good_operators} negative examples" )
             continue
 
-        if prediction_type != PredictionType.bad_actions and num_good_operators < min_positive_instances or num_bad_operators < min_negative_instances:
+        if background_file_opts.prediction_type != PredictionType.bad_actions and num_good_operators < min_positive_instances or num_bad_operators < min_negative_instances:
             print(f"Skipping {schema.name} due to lack of training data: {num_good_operators} positive examples and {num_bad_operators} negative examples" )
             continue
 
