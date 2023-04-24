@@ -13,7 +13,6 @@ from math import inf
 
 
 # TODO add support for writing/reading action list from file
-# TODO add support for good/bad action rules
 
 def get_hybrid_model(task, args):
     if not args.trained_model_folder:
