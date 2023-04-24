@@ -4,6 +4,7 @@ from lab.parser import Parser
 import os
 import re
 import json
+from itertools import combinations
 
 regex_summary = re.compile(r"\[Training set summary\] \[\[(\d+),(\d+),(\d+),(\d+)\]\]", re.MULTILINE)
 regex_rule = re.compile(r'\[Pos cover = (\d+) Neg cover = (\d+)\]([^.]+)')
@@ -27,13 +28,21 @@ class AlephParser(Parser):
             if f.endswith('.h'):
                 self.add_function(self.parse_aleph_hypothesis_file, file=f)
 
-
-
     def transform_hard_rule(self, rule, new_class_args):
-        if ":-" not in rule:
-            return "True"
-
         class_args = rule.split(":-")[0].split("(")[1].split(")")[0].split(",")[:-1]
+
+        # If there are duplicate arguments in class args, we need to transform it into an equal rule
+        new_rule_tuples = []
+        for a, b in combinations(range(len(class_args)),2):
+            if class_args[a] == class_args[b]:
+                new_rule_tuples.append(f"equal:({new_class_args[a]},{new_class_args[b]})")
+
+        if ":-" not in rule:
+            if new_rule_tuples:
+                return ",".join(new_rule_tuples).strip()
+            else:
+                return "True"
+
 
         rule_tuples = rule[:-1].split(":-")[1].split(", ")# remove last argument, which is the task
 
@@ -62,7 +71,6 @@ class AlephParser(Parser):
 
                     free_vars_args[arg] = (id_arg, first_time, i)
 
-        new_rule_tuples = []
         for i, r in enumerate(rule_tuples):
             r = ",".join(r.split(",")[:-1]).replace("'", "") +  ")" # remove last argument, which is the task
             predicates = r.split("),")

@@ -120,7 +120,9 @@ def main():
     if not os.path.exists(f'{TRAINING_DIR}/runs-lama'):
         # Run lama, with empty config and using the alias
         ## TODO: enable h2 preprocessor
-        RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first"])
+        RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first",
+                                                                                                                   "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
+                                                                                                                   "--transform-task-options", f"h2_time_limit,300"])
     else:
         assert args.resume
     instances_manager = InstanceSet(f'{TRAINING_DIR}/runs-lama')
@@ -149,7 +151,6 @@ def main():
     ## Training of partial grounding hard rules
     #####
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules'):
-
         aleph_experiment = AlephExperiment(REPO_LEARNING, args.domain, time_limit=TIME_LIMITS_SEC ['train-hard-rules'], memory_limit=MEMORY_LIMITS_MB ['train-hard-rules'])
         aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-hard-rules', instances_manager.get_training_datasets(), ENV)
     else:

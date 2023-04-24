@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import List
 from pathlib import Path
 
+import json
 class AlephExperiment:
 
     def __init__(self, REPO_LEARNING, domain_file, time_limit, memory_limit):
@@ -75,5 +76,29 @@ class AlephExperiment:
 
         ENV.run_steps(exp.steps)
 
-        # process_lab_dir.process_lab_dir(path_exp+ "-exp", path_exp)
+        good_rules = set()
+        bad_rules = set()
+        for direc in os.listdir(os.path.join(WORKING_DIR, "exp")):
+            if direc.startswith("runs") and os.path.isdir(os.path.join(WORKING_DIR, "exp", direc)):
+                for rundir in os.listdir(os.path.join(WORKING_DIR, "exp", direc)):
+                    try:
+                        input_dir = os.path.join(WORKING_DIR, "exp", direc, rundir)
+
+                        rules = json.load(open('%s/properties' % input_dir))['rules']
+                        config = json.load(open('%s/static-properties' % input_dir))['config']
+                        if config == "bad_rules":
+                            bad_rules.update(rules)
+                        else:
+                            good_rules.update(rules)
+                    except:
+                        print ("Warning: Unknown error while gathering rules")
+
+
+        with open(os.path.join(WORKING_DIR,'good_rules.rules'), 'w') as f:
+            f.write("\n".join(list(sorted(good_rules))))
+
+        with open(os.path.join(WORKING_DIR,'bad_rules.rules'), 'w') as f:
+             f.write("\n".join(list(sorted(bad_rules))))
+
+
         # shutil.rmtree(path_exp+ "-exp")
