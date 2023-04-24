@@ -84,7 +84,7 @@ def get_class_example(arguments, task):
 
 def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_opts, positive_examples_filename='good_operators', all_ops_file='all_operators',
                                  aleph_directory=f'{os.path.dirname(__file__)}/../aleph',
-                                 yap_command = 'yap', extra_parameters = {}, min_positive_instances=1, min_negative_instances=0)):
+                                 yap_command = 'yap', extra_parameters = {}, min_positive_instances=1, min_negative_instances=0):
 
     if not os.path.exists(store_training_data):
         os.makedirs(store_training_data)
