@@ -10169,7 +10169,7 @@ set_def(updateback, miscellaneous,
 	noshow).
 set_def(verbosity, miscellaneous,
 	'Level of verbosity',
-	int(1)-int(+inf), 1,
+	int(0)-int(+inf), 1,
 	show).
 set_def(version, miscellaneous,
 	'Aleph version',
