@@ -54,7 +54,7 @@ class Eval:
         else:
             config_name = "---"
             model_path = '.'
-            if 'trained' in config['queue_type']:
+            if 'ipc23' in config['queue_type']:
                 return 10000000
 
         extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type']]
@@ -133,8 +133,10 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     #############################
 
     stopping_condition = Categorical(f"stopping-condition", ['full-grounding', 'goal-relaxed-reachable'])
-    alias = Categorical ('alias', ['lama-first'], default='lama-first')
-    queue_type = Categorical("queue_type", ["trained", "roundrobintrained", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='trained')
+    alias = Categorical('alias', ['lama-first'], default='lama-first')
+    queue_type = Categorical("queue_type", ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='ipc23-single-queue')
+    # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
+    # this requires a file "schema_ratios in the --trained-model-folder with line format: stack:0.246087
 
     parameters = [alias, queue_type, stopping_condition]
     conditions = []
@@ -142,7 +144,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         m = Categorical(f"model_{schema}", models)
         parameters.append(m)
-        conditions.append(InCondition(child=m, parent=queue_type, values=["trained", "roundrobintrained"]))
+        conditions.append(InCondition(child=m, parent=queue_type, values=["ipc23-single-queue", "ipc23-round-robin"]))
 
     for i, r in enumerate(candidate_models.good_rules):
         good = Categorical(f"good_{i}", [False, True])
@@ -176,7 +178,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     incumbent = smac.optimize()
 
     print("Chosen configuration: ", incumbent)
-    if 'trained' in  incumbent['queue_type']:
+    if 'ipc23' in incumbent['queue_type']:
         candidate_models.copy_model_to_folder(incumbent, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
     else:
         os.mkdir(os.path.join(WORKING_DIR, 'incumbent'))

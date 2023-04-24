@@ -38,11 +38,10 @@ def parse_args():
                              "e.g. 10 for 10% additional actions. If provided in combination with "
                              "--incremental-grounding-increment, the maximum of the two is taken.")
 
-    parser.add_argument("--grounding-queue", type=str, default="trained",
-                        help="Options are trained/roundrobintrained/ratiotrained (sklearn model), "
-                             "aleph/roundrobinaleph/ratioaleph (aleph model)),"
+    parser.add_argument("--grounding-queue", type=str, default="ipc23-single-queue",
+                        help="Options are ipc23-single-queue/ipc23-round-robin/ipc23-ratio (some learned model),"
                              "noveltyfifo/roundrobinnovelty (novelty),"
-                             "roundrobin/ratio (no model)")
+                             "fifo/roundrobin/ratio (no model)")
 
     parser.add_argument("--termination-condition", type=str, default="relaxed",
                         choices=["relaxed", "relaxed5", "relaxed10", "relaxed20", "full"],
@@ -70,16 +69,8 @@ def main():
                               "--batch-evaluation",
                               "--grounding-action-queue-ordering",
                               args.grounding_queue]
-        if "trained" in args.grounding_queue:
+        if "ipc23" in args.grounding_queue:
             translate_options += ["--trained-model-folder", args.domain_knowledge]
-        elif "aleph" in args.grounding_queue:
-            # this assumes that the file is always called like this
-            translate_options += ["--aleph-model-file", os.path.join(args.domain_knowledge, "class_probability.rules")]
-
-        if "ratio" in args.grounding_queue:
-            # this assumes that the file is always called like this
-            translate_options += ["--action-schema-ratios", os.path.join(args.domain_knowledge, "schema_ratios"),
-                                  "--plan-ratios"]
 
     if args.incremental_grounding:
         if args.termination_condition in ["relaxed5", "relaxed10", "relaxed20", "full"]:
