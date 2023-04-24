@@ -84,7 +84,7 @@ def get_class_example(arguments, task):
 
 def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_opts, positive_examples_filename='good_operators', all_ops_file='all_operators',
                                  aleph_directory=f'{os.path.dirname(__file__)}/../aleph',
-                                 yap_command = 'yap', extra_parameters = {}, min_class_instances=(1, 0)):
+                                 yap_command = 'yap', extra_parameters = {}, min_positive_instances=1, min_negative_instances=0)):
 
     if not os.path.exists(store_training_data):
         os.makedirs(store_training_data)
@@ -215,4 +215,4 @@ if __name__ == "__main__":
 
     bg_opts = BackgroundFileOptions (options.add_negated_predicates, options.add_equal_predicate, options.use_object_types, options.prediction_type, options.determination_type)
 
-    generate_training_data_aleph(options.runs_folder, options.store_training_data, bg_opts, positive_examples_filename=options.op_file, all_ops_file=options.all_ops_file, aleph_directory=options.aleph_directory if options.aleph_directory else f'{os.path.dirname(__file__)}/../aleph', yap_command=options.yap, min_class_instances=(options.min_positive_instances, optiopns.min_negative_instances))
+    generate_training_data_aleph(options.runs_folder, options.store_training_data, bg_opts, positive_examples_filename=options.op_file, all_ops_file=options.all_ops_file, aleph_directory=options.aleph_directory if options.aleph_directory else f'{os.path.dirname(__file__)}/../aleph', yap_command=options.yap, min_positive_instances=options.min_positive_instances, min_negative_instances=options.min_negative_instances)
