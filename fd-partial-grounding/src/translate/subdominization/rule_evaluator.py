@@ -283,7 +283,8 @@ class RuleEval:
                 #print (action.name, "valid according to", self.text)
                 #print ("Evaluate", self.text, action, 1)
                 return 1
-    
+
+
 class RulesEvaluator:
     def __init__(self, rule_text, task):
         self.rules = defaultdict(list)
@@ -292,9 +293,8 @@ class RulesEvaluator:
             self.rules[re.action_schema].append(re)
              
     def evaluate(self, action):
-        return [rule.evaluate(action) for rule in  self.rules[action.predicate.name]]
-    
-    
-    def get_all_rules (self):
-        return [rule.text for (schema, rules)  in self.rules.items() for rule in rules]
+        return [rule.evaluate(action) for rule in self.rules[action.predicate.name]]
+
+    def get_all_rules(self):
+        return [rule.text for (schema, rules) in self.rules.items() for rule in rules]
 
