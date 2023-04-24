@@ -1,3 +1,6 @@
+from aleph_background import PredictionType
+import os
+
 def run_yap_script():
 
 

@@ -62,12 +62,13 @@ class AlephExperiment:
                             memory_limit=self.memory_limit,
                         )
 
-                        run.set_property("id", [script])
+                        run.set_property("id", [RUNS_DIR, config_name, script])
                         run.set_property("time_limit", self.time_limit)
                         run.set_property("memory_limit", self.memory_limit)
                         run.set_property("action_schema", script[6:])
                         run.set_property("action_schema_args", [])
                         run.set_property("config", config_name)
+                        run.set_property("runs_data", RUNS_DIR)
 
         exp.add_parser(f"{os.path.dirname(__file__)}/parsers/aleph-parser.py")
 
