@@ -11,6 +11,9 @@ class PriorityQueue:
     def get_final_queue(self):
         pass
 
+    def has_good_actions(self):
+        return False
+
     def get_num_grounded_actions(self):
         pass
 

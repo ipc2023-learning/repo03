@@ -293,7 +293,7 @@ class Queue:
             self.action_queue = qf.get_action_queue_from_options(task)
         self.popped_actions = 0
     def __bool__(self):
-        return self.queue_pos < len(self.queue)
+        return self.queue_pos < len(self.queue) or self.action_queue.has_good_actions()
     __nonzero__ = __bool__
     def push(self, predicate, args):
         self.num_pushes += 1

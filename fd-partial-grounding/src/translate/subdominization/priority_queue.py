@@ -14,51 +14,59 @@ import random
 
         
 class SortedHeapQueue:
-    def __init__(self, min_wins = True):
+    def __init__(self, min_wins=True):
         self.queue = []
-        self.count = 0 # this speeds up the queue significantly
-        self.min_wins = min_wins # if true, return minimal element, if false return maximal
+        self.count = 0  # this speeds up the queue significantly
+        self.min_wins = min_wins  # if true, return minimal element, if false return maximal
+
     def __bool__(self):
         return bool(self.queue)
     __nonzero__ = __bool__
+
     def get_hard_action_if_exists(self, is_hard_action):
 #         return [action for estimate, action in self.queue if is_hard_action(action)] 
 # did not help too much + can even have negative impact on runtime
 # probably try this as a parameter n; where each call returns up to n hard actions
         for i in range(len(self.queue)):
             action = self.queue[i][1]
-            if (is_hard_action(action)):
+            if is_hard_action(action):
                 del self.queue[i]
                 heapq.heapify(self.queue)
                 return [action]
         return []
+
     def notify_new_hard_actions(self):
         pass
+
     def push(self, action, estimate):
-        if (self.min_wins):
+        if self.min_wins:
             heapq.heappush(self.queue, (estimate, self.count, action))
         else:
             heapq.heappush(self.queue, (-estimate, self.count, action))
         self.count += 1
+
     def push_list(self, actions, estimates):
         assert(len(actions) == len(estimates))
         # TODO can this be done more efficient when making actions a heapq itself 
         # and then merging the two?
         for i in range(len(actions)):
-            if (self.min_wins):
+            if self.min_wins:
                 heapq.heappush(self.queue, (estimates[i], self.count, actions[i]))
             else:
                 heapq.heappush(self.queue, (-estimates[i], self.count, actions[i]))
             self.count += 1
+
     def pop(self):
         return heapq.heappop(self.queue)[2]
+
     def pop_entry(self):
         entry = heapq.heappop(self.queue)
-        if (self.min_wins):
-            return (entry[0], entry[2])
+        if self.min_wins:
+            return entry[0], entry[2]
         else:
-            return (-entry[0], entry[2])
-    
+            return -entry[0], entry[2]
+
+
 class RandomEvaluator():
     def __init__(self) -> None:
         random_seed = 2023
