@@ -51,7 +51,7 @@ TIME_LIMITS_IPC_MULTICORE = {
     'smac-optimization-hard-rules' : 60*60 # 1 hour
 }
 
-TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
+TIME_LIMITS_SEC = FAST_TIME_LIMITS
 
 # Memory limits are in MB
 MEMORY_LIMITS_MB = {

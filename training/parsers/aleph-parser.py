@@ -39,7 +39,7 @@ class AlephParser(Parser):
 
         if ":-" not in rule:
             if new_rule_tuples:
-                return ",".join(new_rule_tuples).strip()
+                return ";".join(new_rule_tuples).strip()
             else:
                 return "True"
 
@@ -96,7 +96,7 @@ class AlephParser(Parser):
 
                 new_rule_tuples.append("{}({})".format(pred_name, ", ".join(new_args)))
 
-        return ",".join(new_rule_tuples).strip()
+        return ";".join(new_rule_tuples).strip()
 
     def has_theory(self, content, props):
         props['has_theory'] = '[theory]' in content
