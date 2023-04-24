@@ -6,7 +6,7 @@ import sys
 
 class PriorityQueue:
     def __init__(self):
-        fail
+        raise
 
     def get_final_queue(self):
         pass
@@ -31,20 +31,28 @@ def get_action_queue_from_options(task=None):
         return pq.LIFOQueue()
     elif name == "random":
         return pq.EvaluatorQueue(pq.RandomEvaluator(), "Using random action priority.")
+    elif name in ["ipc23-single-queue", "ipc23-round-robin", "ipc23-ratio"]:
+        from .ipc23_queue import IPC23SingleQueue, IPC23RoundRobinQueue, IPC23RatioQueue
+        if name == "ipc23-single-queue":
+            return IPC23SingleQueue(task, options)
+        elif name == "ipc23-round-robin":
+            return IPC23RoundRobinQueue(task, options)
+        elif name == "ipc23-ratio":
+            return IPC23RatioQueue(task, options)
     elif name in ["trained", "roundrobintrained"]:
-        from subdominization.model import TrainedModel
+        from .model import TrainedModel
         if not options.trained_model_folder:
             sys.exit("Error: need trained model to use this queue. Please specify using --trained-model-folder")
         if not task:
             sys.exit("Error: no task given")
         timer = timers.Timer()
         model = TrainedModel(options.trained_model_folder, task)
-        if (name == "trained"):
+        if name == "trained":
             return pq.EvaluatorQueue(model, f"Loaded trained model from {options.trained_model_folder} {str(timer)}")
-        elif (name == "roundrobintrained"):
+        elif name == "roundrobintrained":
             return pq.RoundRobinEvaluatorQueue(model, f"Loaded trained model from {options.trained_model_folder} {str(timer)}")
     elif name in ["aleph", "roundrobinaleph"]:
-        from subdominization.rule_evaluator_aleph import RuleEvaluatorAleph
+        from .rule_evaluator_aleph import RuleEvaluatorAleph
         if not options.aleph_model_file:
             sys.exit("Error: need trained model to use this queue. Please specify using --aleph-model-file")
         if not task:
@@ -52,9 +60,9 @@ def get_action_queue_from_options(task=None):
         timer = timers.Timer()
         with open(options.aleph_model_file, "r") as aleph_rules:
             model = RuleEvaluatorAleph(aleph_rules.readlines(), task)
-        if (name == "aleph"):
+        if name == "aleph":
             return pq.EvaluatorQueue(model, f"Loaded aleph model from {options.aleph_model_file} {str(timer)}")
-        elif (name == "roundrobinaleph"):
+        elif name == "roundrobinaleph":
             return pq.RoundRobinEvaluatorQueue(model, f"Loaded aleph model from {options.aleph_model_file} {str(timer)}")
     elif name == "roundrobin":
         return pq.RoundRobinQueue()
@@ -67,16 +75,16 @@ def get_action_queue_from_options(task=None):
     elif name == "ratio":
         return pq.RatioQueue()
     elif name == "ratiotrained":
-        from subdominization.model import TrainedModel
-        if (not options.trained_model_folder):
+        from .model import TrainedModel
+        if not options.trained_model_folder:
             sys.exit("Error: need trained model to use this queue. Please specify using --trained-model-folder")
-        if (not task):
+        if not task:
             sys.exit("Error: no task given")
         timer = timers.Timer()
         model = TrainedModel(options.trained_model_folder, task)
         return pq.RatioEvaluatorQueue(model, f"Loaded trained model from {options.trained_model_folder} {str(timer)}")
     elif name == "ratioaleph":
-        from subdominization.rule_evaluator_aleph import RuleEvaluatorAleph
+        from .rule_evaluator_aleph import RuleEvaluatorAleph
         if not options.aleph_model_file:
             sys.exit("Error: need trained model to use this queue. Please specify using --aleph-model-file")
         if not task:
@@ -86,28 +94,28 @@ def get_action_queue_from_options(task=None):
             model = RuleEvaluatorAleph(aleph_rules.readlines(), task)
         return pq.RatioEvaluatorQueue(model, f"Loaded trained model from {options.aleph_model_file} {str(timer)}")
     elif name == "policy":
-        from subdominization.policy_queue import PolicyQueue
+        from .policy_queue import PolicyQueue
         if not options.policy_file:
             sys.exit("Error: need policy to use this queue. Please specify using --policy-file")
         if not task:
             sys.exit("Error: no task given")
         return PolicyQueue(task, options.policy_file)
     elif name in ["fasttext", "roundrobinfasttext", "ratiofasttext"]:
-        if (not options.trained_model_folder):
+        if not options.trained_model_folder:
             # TODO this is shared among several queues => make this a helper function
             sys.exit("Error: need trained classifier models to use this queue. Please specify using --trained-model-folder")
-        if (not options.fasttext_model):
+        if not options.fasttext_model:
             sys.exit("Error: need trained fasttext model to use this queue. Please specify using --fasttext-model")
-        if (not options.relaxed_plan_file):
+        if not options.relaxed_plan_file:
             sys.exit("Error: need relaxed plan file to use this queue. Please specify using --relaxed-plan-file")
-        if (name == "fasttext"):
-            from subdominization.fasttext_queue import FastTextQueue
+        if name == "fasttext":
+            from .fasttext_queue import FastTextQueue
             return FastTextQueue(options.relaxed_plan_file, options.fasttext_model, options.trained_model_folder)
-        elif (name == "roundrobinfasttext"):
-            from subdominization.fasttext_queue import RoundRobinFastTextQueue
+        elif name == "roundrobinfasttext":
+            from .fasttext_queue import RoundRobinFastTextQueue
             return RoundRobinFastTextQueue(options.relaxed_plan_file, options.fasttext_model, options.trained_model_folder)
-        elif (name == "ratiofasttext"):
-            from subdominization.fasttext_queue import RatioFastTextQueue
+        elif name == "ratiofasttext":
+            from .fasttext_queue import RatioFastTextQueue
             return RatioFastTextQueue(options.relaxed_plan_file, options.fasttext_model, options.trained_model_folder)
     else:
         sys.exit(f"Error: unknown queue type: {name}")

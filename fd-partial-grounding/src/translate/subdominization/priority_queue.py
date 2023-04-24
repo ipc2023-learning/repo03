@@ -13,7 +13,7 @@ import sys
 import random
 
         
-class SortedHeapQueue():
+class SortedHeapQueue:
     def __init__(self, min_wins = True):
         self.queue = []
         self.count = 0 # this speeds up the queue significantly
