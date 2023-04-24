@@ -24,7 +24,7 @@ if __name__ == "__main__":
     main()
 
 
-def process_lab_dir(lab_dir, out, include_domain_name=False, planner = None ):
+def process_lab_dir(lab_dir, out, include_domain_name=False, planner = None):
     assert (os.path.isdir(lab_dir))
 
     for direc in os.listdir(lab_dir):

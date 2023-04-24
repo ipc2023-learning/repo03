@@ -13,6 +13,8 @@ from lab.environments import  LocalEnvironment
 sys.path.append(f'{os.path.dirname(__file__)}/training')
 import training
 from run_experiment import RunExperiment
+from aleph_experiment import AlephExperiment
+
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph,run_step_partial_grounding_hard_rules
 from optimize_smac import run_smac
@@ -53,7 +55,8 @@ TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
 
 # Memory limits are in MB
 MEMORY_LIMITS_MB = {
-    'run_experiment' : 1024
+    'run_experiment' : 1024*4,
+    'train-hard-rules' : 1024*4
 }
 
 
@@ -146,10 +149,13 @@ def main():
     ## Training of partial grounding hard rules
     #####
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules'):
-        run_step_partial_grounding_hard_rules(REPO_LEARNING, instances_manager.get_training_datasets(),
-                                              f'{TRAINING_DIR}/partial-grounding-hard-rules', args.domain,time_limit=TIME_LIMITS_SEC ['train-hard-rules'])
+
+        aleph_experiment = AlephExperiment(REPO_LEARNING, args.domain, time_limit=TIME_LIMITS_SEC ['train-hard-rules'], memory_limit=MEMORY_LIMITS_MB ['train-hard-rules'])
+        aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-hard-rules', instances_manager.get_training_datasets(), ENV)
     else:
         assert args.resume
+
+    exit()
 
     ### SMAC Optimization to select good sets of good and hard rules
     ### No incremental grounding
