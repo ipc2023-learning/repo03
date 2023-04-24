@@ -101,11 +101,11 @@ def get_aleph_parameters_and_command(prediction_type, extra_parameters):
         # double checked with respect to test instances and then their use is validated as
         # useful with the SMAC optimization
 
-        aleph_parameters = {'clauselength' : '6',
-                            'minacc' : '0.6',
+        aleph_parameters = {'clauselength' : '8',
+                            'minacc' : '0.7',
                             'check_useless' : 'true',
                             'verbosity' : '0',
-                            'minpos' : '2'}
+                            'minpos' : '10'}
 
         if  prediction_type == PredictionType.bad_actions:
             aleph_parameters['noise'] = 0
