@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import math
 from collections import defaultdict
-import itertools
 import pddl
 
 import re
@@ -11,37 +11,36 @@ def is_float(text):
     return regexp_is_float.match(text.strip())
 
 
-
 def evaluate_inigoal_rule(rule, fact_list):
-        def eval_constants(fact, constants):
-            for (i, val) in constants:
-                if fact.args[i] != val:
-                    return False
-            return True
-        compliant_values = set()
-            
-        predicate_name, arguments  = rule.split("(")
-        arguments = arguments.replace(")", "").replace("\n", "").replace(".", "").replace(" ", "").split(",")
-        valid_arguments = tuple(set([a for a in arguments if a.startswith("?")]))
-        constants = [(i, val) for (i, val) in enumerate(arguments) if val != "_" and not val.startswith("?")]
-        positions_argument = {}
-        
-        for a in valid_arguments:
-            positions_argument[a] = [i for (i, v) in enumerate(arguments) if v == a]
+    def eval_constants(fact, constants):
+        for (i, val) in constants:
+            if fact.args[i] != val:
+                return False
+        return True
+    compliant_values = set()
 
-        arguments = valid_arguments
-        for fact in fact_list:
-            if type(fact) != pddl.Assign and fact.predicate == predicate_name and eval_constants(fact, constants): 
-                values = []
-                for a in arguments:
-                    if len(set([fact.args[p] for p in positions_argument[a]])) > 1:
-                        break
-                    values.append(fact.args[positions_argument[a][0]])
+    predicate_name, arguments = rule.split("(")
+    arguments = arguments.replace(")", "").replace("\n", "").replace(".", "").replace(" ", "").split(",")
+    valid_arguments = tuple(set([a for a in arguments if a.startswith("?")]))
+    constants = [(i, val) for (i, val) in enumerate(arguments) if val != "_" and not val.startswith("?")]
+    positions_argument = {}
 
-                if len(values) == len(arguments):
-                    compliant_values.add(tuple(values))
-                    
-        return arguments, compliant_values
+    for a in valid_arguments:
+        positions_argument[a] = [i for (i, v) in enumerate(arguments) if v == a]
+
+    arguments = valid_arguments
+    for fact in fact_list:
+        if type(fact) != pddl.Assign and fact.predicate == predicate_name and eval_constants(fact, constants):
+            values = []
+            for a in arguments:
+                if len(set([fact.args[p] for p in positions_argument[a]])) > 1:
+                    break
+                values.append(fact.args[positions_argument[a][0]])
+
+            if len(values) == len(arguments):
+                compliant_values.add(tuple(values))
+
+    return arguments, compliant_values
 
 
 class AlephRule:
@@ -67,7 +66,6 @@ class AlephRule:
 
         input_pos_arg = {}
         output_pos_arg = {}
-
 
         for i, arg in enumerate(arguments):
             if arg.startswith("?arg"):
@@ -103,8 +101,6 @@ class AlephRule:
                 self.rule.add(query)
         # print("XXX", rule, self.action_arguments, self.input_free_variables, self.output_free_variables, self.rule)
 
-
-
     def evaluate(self, action_arguments, free_variable_inputs):
         if free_variable_inputs:
             free_variable_inputs_variables, free_variable_inputs_values = free_variable_inputs
@@ -123,11 +119,11 @@ class AlephRule:
                 if query not in self.rule:
                     result = False
                 elif copy_values:
-                    print ("Not supported", self.rule_text, free_variable_inputs)
+                    print("Not supported", self.rule_text, free_variable_inputs)
                     exit()
-                    result = (output_vars, [values[i] for i in copy_values] + self.rule[query])
+                    # result = (output_vars, [values[i] for i in copy_values] + self.rule[query])
                 else:
-                    return (self.output_free_variables, self.rule[query])
+                    return self.output_free_variables, self.rule[query]
             return result
         else:
             output_vars = [var for var in free_variable_inputs_variables if var not in self.input_free_variables] + self.output_free_variables
@@ -145,15 +141,12 @@ class AlephRule:
                     if query in self.rule:
                         output_val = [values[i] for i in copy_values] + self.rule[query] 
                         output_values.append(output_val)
-            return (output_vars, output_values)
+            return output_vars, output_values
 
-
-
-
-    
 
 def construct_aleph_tree(text, task):
     return AlephRuleConstant(text) if is_float(text) else AlephRuleTree(text, task)
+
 
 class AlephRuleTree:
     def __init__(self, text, task):
@@ -173,27 +166,60 @@ class AlephRuleTree:
                 return self.case_true.evaluate(action_arguments, None)
         else:
             return self.case_false.evaluate(action_arguments, free_variable_values)
-        
-        return (self.value)
     
+
 class AlephRuleConstant:
     def __init__(self, text):
         self.value = float(text)
         
     def evaluate(self, action_arguments, free_variables_inputs = None):
-        return (self.value)
+        return self.value
+
 
 class RuleEvaluatorAleph:
     def __init__(self, rule_text, task):
         self.rules = {}
-        for l in rule_text:
-            action_schema, rule = l.split(":-")
+        for line in rule_text:
+            action_schema, rule = line.split(":-")
             self.rules[action_schema.strip()] = construct_aleph_tree(rule, task)
+
+        # statistics
+        self.min_estimate_by_schema = {schema: math.inf for schema in self.rules.keys()}
+        self.max_estimate_by_schema = {schema: 0.0 for schema in self.rules.keys()}
+        self.sum_estimates_by_schema = {schema: 0.0 for schema in self.rules.keys()}
+        self.num_estimates_by_schema = {schema: 0 for schema in self.rules.keys()}
+        self.values_off_for_schema = set()
+
+    def get_trained_schemas(self):
+        return self.rules.keys()
             
     def get_estimate(self, action):
-        value = self.rules[action.predicate.name].evaluate(action.args)
-        #print (action, value)
-        return value
+        schema = action.predicate.name
+        estimate = self.rules[schema].evaluate(action.args)
+        self.min_estimate_by_schema[schema] = min(estimate, self.min_estimate_by_schema[schema])
+        self.max_estimate_by_schema[schema] = max(estimate, self.max_estimate_by_schema[schema])
+        self.sum_estimates_by_schema[schema] += estimate
+        self.num_estimates_by_schema[schema] += 1
+        return estimate
+
+    def get_estimates(self, actions):
+        schema = actions[0].predicate.name
+        estimates = [self.rules[schema].evaluate(a.args) for a in actions]
+        self.min_estimate_by_schema[schema] = min(min(estimates), self.min_estimate_by_schema[schema])
+        self.max_estimate_by_schema[schema] = max(max(estimates), self.max_estimate_by_schema[schema])
+        self.sum_estimates_by_schema[schema] += sum(estimates)
+        self.num_estimates_by_schema[schema] += len(estimates)
+        return estimates
 
     def print_stats(self):
-        pass
+        print("Statistics of Aleph model:")
+        print(f"schema{' ' * 9} \t #predictions \t min \t avg \t max")
+        for schema in self.rules.keys():
+            avg = 0
+            if self.num_estimates_by_schema[schema] > 0:
+                avg = round(self.sum_estimates_by_schema[schema] / self.num_estimates_by_schema[schema], 2)
+            print(f"{schema}{' ' * max(0, 15 - len(schema))} \t "
+                  f"{self.num_estimates_by_schema[schema]} \t\t "
+                  f"{round(self.min_estimate_by_schema[schema], 2)} \t "
+                  f"{avg} \t "
+                  f"{round(self.max_estimate_by_schema[schema], 2)}")
