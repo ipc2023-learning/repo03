@@ -1,88 +1,91 @@
-def run_yap_script():
+from aleph_background import PredictionType
+import os
+
+# def run_yap_script():
 
 
-        proc = subprocess.Popen(['bash', yap_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#         proc = subprocess.Popen(['bash', yap_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        try:
-            output, error_output = proc.communicate(timeout=self.time_limit) # Timeout in seconds
+#         try:
+#             output, error_output = proc.communicate(timeout=self.time_limit) # Timeout in seconds
 
-            aleph_output = output.decode()
+#             aleph_output = output.decode()
 
-            if '[theory]' not in aleph_output:
-                print (aleph_output, error_output.decode())
+#             if '[theory]' not in aleph_output:
+#                 print (aleph_output, error_output.decode())
 
-            aleph_output = aleph_output[aleph_output.index('[theory]'):]
+#             aleph_output = aleph_output[aleph_output.index('[theory]'):]
 
-            theory = aleph_output[9:aleph_output.index('[Training set performance]')].strip()
+#             theory = aleph_output[9:aleph_output.index('[Training set performance]')].strip()
 
-            accuracy = float(self.regex_accuracy.search(aleph_output).group(1))
+#             accuracy = float(self.regex_accuracy.search(aleph_output).group(1))
 
-            if theory:
-                rules = []
-                rules_text = theory.split('[Rule ')[1:]
-                for r in rules_text:
-                    r = r.replace('\n', ' ')
-                    match = self.regex_rule.search(r)
-                    rules.append((match[1], match[2], match[3].strip()))
+#             if theory:
+#                 rules = []
+#                 rules_text = theory.split('[Rule ')[1:]
+#                 for r in rules_text:
+#                     r = r.replace('\n', ' ')
+#                     match = self.regex_rule.search(r)
+#                     rules.append((match[1], match[2], match[3].strip()))
 
-                self.saved_rules[instance].update(rules)
+#                 self.saved_rules[instance].update(rules)
 
-                match = self.regex_summary.search(aleph_output)
-                true_positives, false_positives, false_negatives, true_negatives = int(match[1]), int(match[2]), int(match[3]), int(match[4])
-                precision = true_positives/(true_positives + false_positives)
-                recall = true_positives/(true_positives + false_negatives)
-                fvalue = 2*precision*recall/(precision + recall)
-                print (f"Aleph terminated with theory for {instance}: rules={len(rules)}, accuracy={accuracy}, precision={precision}, recall={recall}, fvalue={fvalue}, confusionmatrix = {true_positives} {false_positives} {false_negatives} {true_negatives}")
-                print('\n'.join([r[2] for r in rules]))
-                return 1-fvalue
-            else:
-                print (f"Aleph terminated with no theory for {instance}")
-                return 10
-        except subprocess.CalledProcessError:
-            print (f"WARNING: Aleph call failed")
-            print("Output: ", output.decode())
+#                 match = self.regex_summary.search(aleph_output)
+#                 true_positives, false_positives, false_negatives, true_negatives = int(match[1]), int(match[2]), int(match[3]), int(match[4])
+#                 precision = true_positives/(true_positives + false_positives)
+#                 recall = true_positives/(true_positives + false_negatives)
+#                 fvalue = 2*precision*recall/(precision + recall)
+#                 print (f"Aleph terminated with theory for {instance}: rules={len(rules)}, accuracy={accuracy}, precision={precision}, recall={recall}, fvalue={fvalue}, confusionmatrix = {true_positives} {false_positives} {false_negatives} {true_negatives}")
+#                 print('\n'.join([r[2] for r in rules]))
+#                 return 1-fvalue
+#             else:
+#                 print (f"Aleph terminated with no theory for {instance}")
+#                 return 10
+#         except subprocess.CalledProcessError:
+#             print (f"WARNING: Aleph call failed")
+#             print("Output: ", output.decode())
 
-            return 10000000
+#             return 10000000
 
-        except subprocess.TimeoutExpired as timeErr:
-            print (f"Aleph terminated with timeout for {instance}")
+#         except subprocess.TimeoutExpired as timeErr:
+#             print (f"Aleph terminated with timeout for {instance}")
 
-            output = timeErr.stdout
-            #error_output = timeErr.stderr
-
-
-            aleph_output = output.decode()
-
-            proc.kill()
-
-            rules = []
-            try:
-                while True:
-                    aleph_output = aleph_output[aleph_output.index('[best clause]') + len('[best clause]'):]
-                    relevant_text = aleph_output[:aleph_output.index(']')+1].replace('\n','')
-                    # print(relevant_text)
-                    match = self.regex_rule_timeout.search(relevant_text)
-                    # print (relevant_text, match)
-                    if int(match[2]) > 1: # Skip rules without at least 2 positive examples
-                        rules.append((match[2], match[3], match[1].strip()))
-
-            except:
-                 pass # No more best clause elements
-
-            self.saved_rules[instance].update(rules)
+#             output = timeErr.stdout
+#             #error_output = timeErr.stderr
 
 
-            print('\n'.join([r[2] for r in rules]))
-            # [best clause]
-            # class(A,B) :-
-            # 'ini:on'(A,C,B), 'goal:on'(C,D,B), 'ini:clear'(A,B), 'ini:on'(E,D,B).
-            # [pos cover = 22 neg cover = 0] [novelty] [0.0421258]
+#             aleph_output = output.decode()
+
+#             proc.kill()
+
+#             rules = []
+#             try:
+#                 while True:
+#                     aleph_output = aleph_output[aleph_output.index('[best clause]') + len('[best clause]'):]
+#                     relevant_text = aleph_output[:aleph_output.index(']')+1].replace('\n','')
+#                     # print(relevant_text)
+#                     match = self.regex_rule_timeout.search(relevant_text)
+#                     # print (relevant_text, match)
+#                     if int(match[2]) > 1: # Skip rules without at least 2 positive examples
+#                         rules.append((match[2], match[3], match[1].strip()))
+
+#             except:
+#                  pass # No more best clause elements
+
+#             self.saved_rules[instance].update(rules)
 
 
-            # print(output.decode())
-            # print(error_output.decode())
+#             print('\n'.join([r[2] for r in rules]))
+#             # [best clause]
+#             # class(A,B) :-
+#             # 'ini:on'(A,C,B), 'goal:on'(C,D,B), 'ini:clear'(A,B), 'ini:on'(E,D,B).
+#             # [pos cover = 22 neg cover = 0] [novelty] [0.0421258]
 
-            return 10
+
+#             # print(output.decode())
+#             # print(error_output.decode())
+
+#             return 10
 
 
 

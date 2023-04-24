@@ -9,7 +9,7 @@ import string
 from sys import version_info
 
 from aleph_background import PredictionType
-from aleph_yap_file import  write_yap_file
+from aleph_yap_script import  write_yap_file
 
 from builtins import open as file_open
 
@@ -153,11 +153,11 @@ def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_
         num_good_operators = sum([len(x) for x in good_operators[schema.name].values()])
         num_bad_operators = sum([len(x) for x in bad_operators[schema.name].values()])
 
-        if background_file_opts.prediction_type == PredictionType.bad_actions and num_bad_operators < min_positive_instances or num_good_operators < min_negative_instances:
+        if background_file_opts.prediction_type == PredictionType.bad_actions and (num_bad_operators < min_positive_instances or num_good_operators < min_negative_instances):
             print(f"Skipping {schema.name} due to lack of training data: {num_bad_operators} positive examples and {num_good_operators} negative examples" )
             continue
 
-        if background_file_opts.prediction_type != PredictionType.bad_actions and num_good_operators < min_positive_instances or num_bad_operators < min_negative_instances:
+        if background_file_opts.prediction_type != PredictionType.bad_actions and (num_good_operators < min_positive_instances or num_bad_operators < min_negative_instances):
             print(f"Skipping {schema.name} due to lack of training data: {num_good_operators} positive examples and {num_bad_operators} negative examples" )
             continue
 
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     argparser.add_argument("--aleph-directory", help="Directory where aleph can be found")
     argparser.add_argument("--yap", default='yap', help="Command to execute yap")
     argparser.add_argument("--min-positive-instances", default=1, help="Skip learning if we do not have at least X examples of the positive and the negative class")
-    argparser.add_argument("--min-negative-instances", default=1, help="Skip learning if we do not have at least X examples of the positive and the negative class")
+    argparser.add_argument("--min-negative-instances", default=0, help="Skip learning if we do not have at least X examples of the positive and the negative class")
 
 
 
