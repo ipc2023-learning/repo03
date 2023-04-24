@@ -1,25 +1,13 @@
-* Daniel:
-** Implement good/bad rules
-
 * Alvaro:
-** Configure Aleph good/bad actions properly -> and parse good actions correctly
 ** Curation of good/bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
-** Use cost good operators as well
-** Configure aleph to learn multiple models
-
 ** Incremental learning: First learn good/bad actions, then take them into  account when training models
-
 
 * Fix
 ** [#A] Set time limits for everything
-** Bad rules do not learn even the basic never paint down in floortile
 ** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
 ** plan partial grounding is crashing (when instances are not solved)
 
-
 ** Bad rules in freecell colfromfreecell (?arg0, ?arg1, ?arg2, ?arg3) :- True. -> format not suported
-
-** parse aleph theory -> need to add some equal constraints
 
 ** Aleph not and equal do not work
 

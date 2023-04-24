@@ -19,6 +19,7 @@ from candidate_models import CandidateModels
 # Hardcoded paths that depend on the trraining part. This could be passed by parameter instead
 PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-rules'
 PARTIAL_GROUNDING_ALEPH_DIR  = 'partial-grounding-aleph'
+PARTIAL_GROUNDING_HARD_RULES_DIR = 'partial-grounding-hard-rules'
 SUFFIX_ALEPH_MODELS = '.rules'
 PREFIX_SK_MODELS = 'model_'
 
@@ -113,7 +114,7 @@ class Eval:
 # Note: default configuration should solve at least 50% of the instances. Pick instances
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
-def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_features : dict, walltime_limit, n_trials, n_workers):
+def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_features : dict, walltime_limit, n_trials, n_workers):
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
 
@@ -127,6 +128,8 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_fe
     candidate_models = CandidateModels()
     candidate_models.load_sk_folder(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR))
     candidate_models.load_aleph_folder(os.path.join(DATA_DIR, PARTIAL_GROUNDING_ALEPH_DIR))
+    candidate_models.load_aleph_folder(os.path.join(DATA_DIR, PARTIAL_GROUNDING_HARD_RULES_DIR))
+
 
     ############################
     ### Create model parameters

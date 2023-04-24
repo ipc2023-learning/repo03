@@ -156,17 +156,17 @@ def main():
     else:
         assert args.resume
 
-    exit()
+    # exit()
 
     ### SMAC Optimization to select good sets of good and hard rules
     ### No incremental grounding
     ### full grounding + bad rules
 
     # We want to fix completely the hard rules at this stage, so let's use all SMAC_INSTANCES
-    SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
+    # SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
 
-    run_smac_hard_rules(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-hard-rules', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
-                        walltime_limit=TIME_LIMITS['smac-optimization-hard-rules'], n_trials=10000, n_workers=cpus)
+    # run_smac_hard_rules(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-hard-rules', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
+    #                     walltime_limit=TIME_LIMITS['smac-optimization-hard-rules'], n_trials=10000, n_workers=cpus)
 
     ####
     # Training of priority partial grounding models
@@ -178,25 +178,25 @@ def main():
         run_step_partial_grounding_aleph(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
 
 
-    run_smac(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac1', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES_FIRST_OPTIMIZATION, walltime_limit=100, n_trials=100, n_workers=cpus)
+    run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES_FIRST_OPTIMIZATION, walltime_limit=100, n_trials=100, n_workers=cpus)
 
     save_model.save(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'))
+
+    # RUN.run_planner(f'{TRAINING_DIR}/runs-incumbent', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = [use_config_from_incumbent])
 
 
     ###
     # Gather training data for search pruning rules
     ###
-
-    if not os.path.exists(f'{TRAINING_DIR}/runs-pruning-rules'): # TODO: Use at least hard rules over here!
-        RUN.run_good_operators(f'{TRAINING_DIR}/runs-pruning-rules', REPO_GOOD_OPERATORS,
-                               ['--search', "astar(optimal_plans_heuristic(store_operators_in_optimal_plan=true,store_relaxed_plan=true, cost_type=1), cost_type=1)"],
-                               ENV, SUITE_GOOD_OPERATORS)
-    else:
-        assert args.resume
-
+    # if not os.path.exists(f'{TRAINING_DIR}/runs-pruning-rules'): # TODO: Use at least hard rules over here!
+    #     RUN.run_good_operators(f'{TRAINING_DIR}/runs-pruning-rules', REPO_GOOD_OPERATORS,
+    #                            ['--search', "astar(optimal_plans_heuristic(store_operators_in_optimal_plan=true,store_relaxed_plan=true, cost_type=1), cost_type=1)"],
+    #                            ENV, SUITE_GOOD_OPERATORS)
+    # else:
+    #     assert args.resume
 
 
-    RUN.run_planner(f'{TRAINING_DIR}/runs-incumbent', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = [use_config_from_incumbent])
+
     # Select instances that are solved by incumbent in XX seconds
 
     ####

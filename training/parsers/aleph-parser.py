@@ -41,7 +41,7 @@ class AlephParser(Parser):
             if new_rule_tuples:
                 return ";".join(new_rule_tuples).strip()
             else:
-                return "True"
+                return "true:"
 
 
         rule_tuples = rule[:-1].split(":-")[1].split(", ")# remove last argument, which is the task
