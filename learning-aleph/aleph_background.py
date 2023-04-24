@@ -3,6 +3,7 @@ from collections import defaultdict
 from enum import Enum
 import io
 
+sys.path.append(f'{os.path.dirname(__file__)}/../translate')
 import pddl
 
 class PredictionType(str, Enum):
