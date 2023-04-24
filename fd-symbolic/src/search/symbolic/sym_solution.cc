@@ -14,7 +14,7 @@ namespace symbolic {
 	assert (path.empty()); //This code should be modified to allow appending things to paths
 	DEBUG_MSG(cout << "Extract path forward: " << g << endl; );
 	if (exp_fw) {
-	    exp_fw->getPlan(cut, g, path);   
+	    exp_fw->getPlan(cut, g, path);
 	}
 	DEBUG_MSG(cout << "Extract path backward: " << h << endl; );
 	if (exp_bw) {
@@ -23,7 +23,7 @@ namespace symbolic {
 		vector<int> s = g_initial_state_data;
 		//Get state
 		for (auto op : path) {
-		  
+
 		    for (const GlobalEffect &eff : op->get_effects()) {
 			if (eff.does_fire(s)) {
 			    s[eff.var] = eff.val;
@@ -34,7 +34,7 @@ namespace symbolic {
 	    } else {
 		newCut = cut;
 	    }
-    
+
 	    exp_bw->getPlan(newCut, h, path);
 	}
 	/*DEBUG_MSG(cout << "Path extracted" << endl;
@@ -58,7 +58,17 @@ namespace symbolic {
 
     void SymSolution::getOperatorsOptimalPlans(set <const GlobalOperator *> & opt_operators) const {
 	if (exp_fw) {
-	    exp_fw->getOperatorsOptimalPlans(cut, g, opt_operators);   
+	    exp_fw->getOperatorsOptimalPlans(cut, g, opt_operators);
+	}
+	if (exp_bw) {
+	    exp_bw->getOperatorsOptimalPlans(cut, h, opt_operators);
+	}
+    }
+
+
+    void SymSolution::getOperatorsOptimalPlans(map <const GlobalOperator *, BDD> & opt_operators) const {
+	if (exp_fw) {
+	    exp_fw->getOperatorsOptimalPlans(cut, g, opt_operators);
 	}
 	if (exp_bw) {
 	    exp_bw->getOperatorsOptimalPlans(cut, h, opt_operators);
@@ -73,7 +83,7 @@ namespace symbolic {
 	SymVariables *vars = nullptr;
 	if(exp_fw) vars = exp_fw->getStateSpace()->getVars();
 	else if(exp_bw) vars = exp_bw->getStateSpace()->getVars();
-	
+
 	ADD hADD = vars->getADD(-1);
 	int h_val = g + h;
 

@@ -281,7 +281,6 @@ namespace symbolic {
         }
 
 	while (!cuts_with_cost.empty()) {
-
             auto p = cuts_with_cost.rbegin();
             h = p->first;
             cout << "cut" << h << endl;
@@ -321,19 +320,73 @@ namespace symbolic {
 
 
     void ClosedList::extract_optimal_operators_unit_cost (const BDD &c, int h, bool fw,
+							  std::map <const GlobalOperator *, BDD> & opt_operators) const {
+	const map<int, vector<TransitionRelation>> &trs = mgr->getIndividualTRs();
+
+	Bucket cut;
+	cut.push_back(c);
+
+	while (h > 0) {
+	    mgr->mergeBucket(cut, 10000, 1000000);
+	    Bucket new_cut;
+
+	    cout << h << " " << utils::g_timer() <<  "s " << cut.size() << " "  << nodeCount(cut) << endl;
+	    for (auto key : trs) {
+		assert (key.first == 1); // Check that we are in a unit-cost domain
+		int newH = h - key.first;
+		if (key.first == 0 || closed.count(newH) == 0)
+		    continue;
+
+		for (TransitionRelation &tr : key.second) {
+		    for (const auto & cu : cut) {
+			BDD succ;
+			if (fw) {
+			    succ = tr.preimage(cu);
+			} else {
+			    succ = tr.image(cu);
+			}
+
+			BDD intersection = succ * closed.at(newH);
+			if (!intersection.IsZero()) {
+                            const GlobalOperator * applied_operator = (*(tr.getOps().begin()));
+                            BDD predecessor_states;
+                            if (fw) {
+                                predecessor_states = intersection;
+                            } else {
+                                predecessor_states = tr.preimage(intersection)*cu;
+                            }
+                            if (opt_operators.count(applied_operator)) {
+                                opt_operators[applied_operator] += predecessor_states;
+                            } else {
+                                opt_operators[applied_operator] = predecessor_states;
+                            }
+
+			    new_cut.push_back(intersection);
+
+			}
+		    }
+		}
+	    }
+	    h -= 1;
+	    new_cut.swap(cut);
+	}
+    }
+
+
+
+
+    void ClosedList::extract_optimal_operators_unit_cost (const BDD &c, int h, bool fw,
 							  std::set <const GlobalOperator *> & opt_operators) const {
 	const map<int, vector<TransitionRelation>> &trs = mgr->getIndividualTRs();
 
 	Bucket cut;
 	cut.push_back(c);
 
-
 	while (h > 0) {
-	    // cout << "Merging: " << cut.size() << endl;
 	    mgr->mergeBucket(cut, 10000, 1000000);
 	    Bucket new_cut;
 
-	    cout << h << " " << utils::g_timer() <<  " " << cut.size() << " "  << nodeCount(cut) << endl;
+	    cout << h << " " << utils::g_timer() <<  "s " << cut.size() << " "  << nodeCount(cut) << endl;
 	    for (auto key : trs) {
 		assert (key.first == 1); // Check that we are in a unit-cost domain
 		int newH = h - key.first;
@@ -357,14 +410,8 @@ namespace symbolic {
 		    }
 		}
 	    }
-	    // cout << "XXX: " << utils::g_timer() << endl;
-
-	    // std::map <int, std::vector<BDD>> res;
-	    // mgr->cost_image(!fw, cut, res, 10000000) ;
 	    h -= 1;
 	    new_cut.swap(cut);
-	    // mgr->mergeBucket(res[1], 60000, 10000000);
-	    // cut = res[1][0] * closed.at(h);
 	}
     }
 

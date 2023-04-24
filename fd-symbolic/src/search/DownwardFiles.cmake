@@ -540,7 +540,8 @@ fast_downward_plugin(
 	symbolic/breadth_first_search.cc
 	symbolic/gamer_pdbs_heuristic.cc
 	symbolic/bidirectional_search.cc
-    DEPENDENCY_ONLY 
+        heuristics/optimal_plans_heuristic.cc
+    DEPENDENCY_ONLY
 )
 
 
@@ -549,7 +550,7 @@ fast_downward_plugin(
     HELP "Symbolic search engine"
     SOURCES
         search_engines/symbolic_search.cc
-    DEPENDS SYMBOLIC 
+    DEPENDS SYMBOLIC
 )
 
 
@@ -566,7 +567,7 @@ fast_downward_plugin(
 # 	symbolic/ph_pdbs.cc
 # 	symbolic/spmas_heuristic.cc
 # 	symbolic/variable_order_finder.cc
-    
+
 #     DEPENDS SYMBOLIC
 # )
 
