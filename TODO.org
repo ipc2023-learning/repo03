@@ -1,6 +1,5 @@
 * Daniel:
-** Implement good/bad actions queue as part of the flexible queue
-
+** Implement good/bad rules
 
 * Alvaro:
 ** Configure Aleph good/bad actions properly -> and parse good actions correctly
@@ -24,6 +23,9 @@
 
 ** Aleph not and equal do not work
 
+**   File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
+** Use h2-preprocessor in lama runs
+
 
 * Features
 ** [#A] Stone Soup
@@ -32,6 +34,9 @@
 ** [#C] Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
 
 ** [#C] Allow SMAC to tune stopping condition -> how? Use stopping condition based percentage of operators + X%, Does it make sense to do a stopping condition based on the action schema?
+
+** [#B] Weighted round robin
+
 
 * Nice to have
 ** Fix numpy seed in learning scripts (via parameter)

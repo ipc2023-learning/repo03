@@ -110,9 +110,6 @@ class Eval:
 
 
 
-
-
-
 # Note: default configuration should solve at least 50% of the instances. Pick instances
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.

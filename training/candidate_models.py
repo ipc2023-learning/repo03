@@ -94,3 +94,5 @@ class CandidateModels:
         if selected_good_rules:
             with open(os.path.join(target_dir, 'good_rules.rules'), 'w') as f:
                 f.write('\n'.join(selected_good_rules))
+
+        ## TODO: Write schema_ratios file
