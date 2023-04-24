@@ -20,6 +20,8 @@ public:
 
     void getOperatorsOptimalPlans(std::set <const GlobalOperator *> & opt_operators) const;
 
+    void getOperatorsOptimalPlans(std::map <const GlobalOperator *, BDD> & opt_operators) const;
+
     ADD getADD() const;
 
     inline bool solved() const {

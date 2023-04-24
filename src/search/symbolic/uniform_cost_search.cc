@@ -395,4 +395,15 @@ namespace symbolic {
         }
     }
 
+
+
+    void UniformCostSearch::getOperatorsOptimalPlans(const BDD &cut, int g,
+						     std::map <const GlobalOperator *, BDD> &opt_operators) const {
+        if (mgr->is_unit_cost()) {
+            closed->extract_optimal_operators_unit_cost (cut, g, fw, opt_operators);
+        } else{
+            // closed->extract_optimal_operators_non_zero_cost (cut, g, fw, opt_operators);
+        }
+    }
+
 }

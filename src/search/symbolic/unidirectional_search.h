@@ -12,7 +12,7 @@
 namespace symbolic {
     class SymSolution;
     class UnidirectionalSearch;
-    class SymController; 
+    class SymController;
     class SymExpStatistics {
     public:
 	double image_time, image_time_failed;
@@ -40,14 +40,14 @@ namespace symbolic {
 
 
     class OppositeFrontier {
-    public: 
+    public:
 	virtual SymSolution checkCut(UnidirectionalSearch * search, const BDD &states, int g, bool fw) const = 0;
 
 	virtual BDD notClosed () const = 0;
 
 	//Returns true only if all not closed states are guaranteed to be dead ends
 	virtual bool exhausted () const = 0;
-	
+
 	virtual int getHNotClosed() const = 0;
     };
 
@@ -55,7 +55,7 @@ namespace symbolic {
 	BDD goal;
 	int hNotGoal;
     public:
-	OppositeFrontierFixed (BDD g, const SymStateSpaceManager & mgr); 
+	OppositeFrontierFixed (BDD g, const SymStateSpaceManager & mgr);
 	virtual SymSolution checkCut(UnidirectionalSearch * search, const BDD &states, int g, bool fw) const override;
 
 	virtual BDD notClosed () const override {
@@ -70,7 +70,7 @@ namespace symbolic {
 	    return hNotGoal;
 	}
 
-    
+
     };
 
 
@@ -96,6 +96,9 @@ namespace symbolic {
 	virtual void getPlan(const BDD &cut, int g, std::vector <const GlobalOperator *> &path) const = 0;
 
 	virtual void getOperatorsOptimalPlans(const BDD &cut, int g, std::set <const GlobalOperator *> &path) const = 0;
+
+        virtual void getOperatorsOptimalPlans(const BDD &cut, int g, std::map <const GlobalOperator *, BDD> &path) const = 0;
+
 
 	virtual int getG() const = 0;
 

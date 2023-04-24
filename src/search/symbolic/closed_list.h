@@ -56,6 +56,9 @@ public:
     void extract_optimal_operators_unit_cost (const BDD &c, int h, bool fw,
 					      std::set <const GlobalOperator *> & opt_operators) const;
 
+    void extract_optimal_operators_unit_cost (const BDD &c, int h, bool fw,
+					      std::map <const GlobalOperator *, BDD> & opt_operators) const;
+
     void extract_optimal_operators_non_zero_cost (const BDD &c, int h, bool fw,
                                                   std::set <const GlobalOperator *> & opt_operators) const;
 
