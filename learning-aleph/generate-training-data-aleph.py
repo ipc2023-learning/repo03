@@ -84,7 +84,7 @@ def get_class_example(arguments, task):
 
 def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_opts, positive_examples_filename='good_operators', all_ops_file='all_operators',
                                  aleph_directory=f'{os.path.dirname(__file__)}/../aleph',
-                                 yap_command = 'yap', extra_parameters = {}, min_class_instances=0):
+                                 yap_command = 'yap', extra_parameters = {}, min_class_instances=(1, 0)):
 
     if not os.path.exists(store_training_data):
         os.makedirs(store_training_data)
@@ -152,9 +152,14 @@ def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_
         num_good_operators = sum([len(x) for x in good_operators[schema.name].values()])
         num_bad_operators = sum([len(x) for x in bad_operators[schema.name].values()])
 
-        if num_good_operators < min_class_instances or num_bad_operators < min_class_instances:
+        if prediction_type == PredictionType.bad_actions and num_bad_operators < min_positive_instances or num_good_operators < min_negative_instances:
+            print(f"Skipping {schema.name} due to lack of training data: {num_bad_operators} positive examples and {num_good_operators} negative examples" )
+            continue
+
+        if prediction_type != PredictionType.bad_actions and num_good_operators < min_positive_instances or num_bad_operators < min_negative_instances:
             print(f"Skipping {schema.name} due to lack of training data: {num_good_operators} positive examples and {num_bad_operators} negative examples" )
             continue
+
         filename = schema.name
         filename_path = os.path.join(store_training_data, filename)
 
@@ -192,7 +197,8 @@ if __name__ == "__main__":
 
     argparser.add_argument("--aleph-directory", help="Directory where aleph can be found")
     argparser.add_argument("--yap", default='yap', help="Command to execute yap")
-    argparser.add_argument("--min-class-instances", default=0, help="Skip learning if we do not have at least X examples of the positive and the negative class")
+    argparser.add_argument("--min-positive-instances", default=1, help="Skip learning if we do not have at least X examples of the positive and the negative class")
+    argparser.add_argument("--min-negative-instances", default=1, help="Skip learning if we do not have at least X examples of the positive and the negative class")
 
 
 
@@ -209,4 +215,4 @@ if __name__ == "__main__":
 
     bg_opts = BackgroundFileOptions (options.add_negated_predicates, options.add_equal_predicate, options.use_object_types, options.prediction_type, options.determination_type)
 
-    generate_training_data_aleph(options.runs_folder, options.store_training_data, bg_opts, positive_examples_filename=options.op_file, all_ops_file=options.all_ops_file, aleph_directory=options.aleph_directory if options.aleph_directory else f'{os.path.dirname(__file__)}/../aleph', yap_command=options.yap, min_class_instances=options.min_class_instances)
+    generate_training_data_aleph(options.runs_folder, options.store_training_data, bg_opts, positive_examples_filename=options.op_file, all_ops_file=options.all_ops_file, aleph_directory=options.aleph_directory if options.aleph_directory else f'{os.path.dirname(__file__)}/../aleph', yap_command=options.yap, min_class_instances=(options.min_positive_instances, optiopns.min_negative_instances))
