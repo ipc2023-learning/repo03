@@ -8,7 +8,8 @@ import string
 
 from sys import version_info
 
-from utils import write_yap_file, PredictionType
+from aleph_background import PredictionType
+from aleph_yap_file import  write_yap_file
 
 from builtins import open as file_open
 

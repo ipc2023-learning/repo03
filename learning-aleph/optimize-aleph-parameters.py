@@ -13,7 +13,9 @@ import json
 import subprocess
 import re
 import shutil
-from utils import write_yap_file, PredictionType
+
+from aleph_background import PredictionType
+from aleph_yap_file import  write_yap_file
 
 from collections import defaultdict
 
