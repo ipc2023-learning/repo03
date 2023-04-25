@@ -16,8 +16,8 @@ class SaveModel:
                 tar.add(os.path.join(source_dir, f), arcname=f)
 
         knowledge_filename = self.knowledge_file
-        if keep_copies:
-            kwfile += f'.{keep_copies}'
-            keep_copies += 1
+        if self.keep_copies:
+            kwfile += f'.{self.keep_copies}'
+            self.keep_copies += 1
 
-        shutil.move(knowledge_file + '.tmp', knowledge_filename)
+        shutil.move(self.knowledge_file + '.tmp', knowledge_filename)
