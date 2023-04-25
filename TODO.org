@@ -2,6 +2,7 @@
 ** Curation of good/bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
 ** Incremental learning: First learn good/bad actions, then take them into  account when training models
 ** Check that SMAC of bad rules works on freecell (right now, the bad rules do not work on p20, because they prune too aggresively)
+** Combine cost and unit-cost good operators?
 
 * Fix
 ** [#A] Set time limits for everything

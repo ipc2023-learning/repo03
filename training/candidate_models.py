@@ -5,12 +5,15 @@ import shutil
 SUFFIX_ALEPH_MODELS = '.rules'
 PREFIX_SK_MODELS = 'model_'
 
+def list_with_none():
+    return ['none']
 
 class CandidateModels:
     def __init__(self):
-        self.sk_models_per_action_schema = defaultdict(lambda : ['none'])
+        self.sk_models_per_action_schema = defaultdict(list_with_none)
         self.good_rules = []
         self.bad_rules = []
+        self.aleph_folder = None
 
     def is_using_model(self, config):
         return all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
@@ -33,19 +36,24 @@ class CandidateModels:
                 self.sk_models_per_action_schema[n[:-6]].append(model)
 
     def load_aleph_folder(self, aleph_folder):
-        self.aleph_folder = aleph_folder
 
         aleph_model_filenames = [name for name in os.listdir(aleph_folder) if name.endswith(SUFFIX_ALEPH_MODELS)]
         for model_filename in aleph_model_filenames:
             with open(os.path.join(aleph_folder, model_filename)) as model_file:
                 if 'class_probability' in model_filename:
+                    if self.aleph_folder:
+                        print ("Error: all class_probability models must be placed in the same folder")
+                        continue
+
+                    self.aleph_folder = aleph_folder
+
                     for line in model_file.readlines():
                         schema = line.split(":-")[ 0].strip()
                         self.sk_models_per_action_schema [schema].append(model_filename)
                 elif 'good_rules' in model_filename:
-                    self.good_rules += model_file.readlines()
+                    self.good_rules +=[l.strip() for l in model_file.readlines()]
                 elif 'bad_rules' in model_filename:
-                    self.bad_rules += model_file.readlines()
+                    self.bad_rules += [l.strip() for l in model_file.readlines()]
                 else:
                     print (f"Warning: ignoring file of unknown type: {model_filename}")
 
@@ -75,7 +83,7 @@ class CandidateModels:
                     for line in probability_model.readlines():
                         schema = line.split(":-")[0].strip()
                         if schema == aschema:
-                            collected_aleph_models.append(line)
+                            collected_aleph_models.append(line.strip())
 
             else:
                 assert config[f'model_{aschema}'] == 'none'
