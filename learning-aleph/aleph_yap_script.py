@@ -3,7 +3,6 @@ import os
 
 # def run_yap_script():
 
-
 #         proc = subprocess.Popen(['bash', yap_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 #         try:

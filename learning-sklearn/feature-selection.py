@@ -333,6 +333,8 @@ def main():
         print("WARNING: no \"relevant_rules\" file in training folder")
         sys.exit(1)
 
+    print(f"Filter relevant rules based on feature selector {args.selector_type}")
+
     relevant_rules = read_relevant_rules(relevant_rules_file)
     useful_rules = defaultdict(list)
 
@@ -348,7 +350,7 @@ def main():
 
             selector = FeatureSelector(dataset, args.selector_type)
 
-            usefulness[action_schema] = sorted([(rank, i) for i, rank in enumerate(selector.get_feature_ranking())])
+            usefulness[action_schema] = sorted([(abs(rank), i) for i, rank in enumerate(selector.get_feature_ranking())])
             usefulness[action_schema].reverse()
 
             max_eval = usefulness[action_schema][0][0]
@@ -356,13 +358,10 @@ def main():
             num_useful_rules = 0
 
             for rank, i in usefulness[action_schema]:
-                print("%0.2f \t %s" % (rank, relevant_rules[action_schema][i]), end="")
-                if (rank >= 0.01 and (rank > max_eval / 10 or num_useful_rules < 5)):# or rank > fifth_eval / 2)):
+                if (rank >= 0.01 and (rank > max_eval / 10 or num_useful_rules < 5) and num_useful_rules < 50):# or rank > fifth_eval / 2)):
                     useful_rules[action_schema].append(relevant_rules[action_schema][i])
                     num_useful_rules += 1
-                    print(" is useful")
-                else:
-                    print()
+                    print(f"{round(rank, 2)} \t {relevant_rules[action_schema][i]} is useful")
 
             print()
 

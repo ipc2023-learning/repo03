@@ -148,17 +148,19 @@ def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_
                         bad_operators[schema][task_run].append(arguments)
 
 
+    if background_file_opts.prediction_type == PredictionType.bad_actions:
+        positive_examples, negative_examples = bad_operators, good_operators
+    else:
+        positive_examples, negative_examples = good_operators, bad_operators
+
+
     # write the actual files
     for schema in action_schemas:
-        num_good_operators = sum([len(x) for x in good_operators[schema.name].values()])
-        num_bad_operators = sum([len(x) for x in bad_operators[schema.name].values()])
+        num_pos_examples = sum([len(x) for x in positive_examples[schema.name].values()])
+        num_neg_examples = sum([len(x) for x in negative_examples[schema.name].values()])
 
-        if background_file_opts.prediction_type == PredictionType.bad_actions and (num_bad_operators < min_positive_instances or num_good_operators < min_negative_instances):
-            print(f"Skipping {schema.name} due to lack of training data: {num_bad_operators} positive examples and {num_good_operators} negative examples" )
-            continue
-
-        if background_file_opts.prediction_type != PredictionType.bad_actions and (num_good_operators < min_positive_instances or num_bad_operators < min_negative_instances):
-            print(f"Skipping {schema.name} due to lack of training data: {num_good_operators} positive examples and {num_bad_operators} negative examples" )
+        if num_pos_examples < min_positive_instances or num_neg_examples < min_negative_instances):
+            print(f"Skipping {schema.name} due to lack of training data: {num_pos_examples} positive examples and {num_neg_examples} negative examples" )
             continue
 
         filename = schema.name
@@ -168,14 +170,11 @@ def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_
 
         bg_file.write(filename_path + ".b", [param.type_name for param in schema.parameters])
 
-        if background_file_opts.prediction_type == PredictionType.bad_actions:
-            good_operators, bad_operators = bad_operators, good_operators
-
         if (not background_file_opts.use_class_probability()):
-            write_examples_file(filename_path + ".f", good_operators[schema.name])
-            write_examples_file(filename_path + ".n", bad_operators[schema.name])
+            write_examples_file(filename_path + ".f", positive_examples[schema.name])
+            write_examples_file(filename_path + ".n", negative_examples[schema.name])
         else:
-            write_class_probability_examples_file(filename_path + ".f", good_operators[schema.name], bad_operators[schema.name])
+            write_class_probability_examples_file(filename_path + ".f", positive_examples[schema.name], negative_examples[schema.name], background_file_opts.use_class_probability())
 
 
 if __name__ == "__main__":

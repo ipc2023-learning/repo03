@@ -42,10 +42,12 @@ class TrainingRule:
 class RuleTrainingEvaluator:
     def __init__(self, rules_text):
         self.rules = {}
+        self.num_rules = 0
         rules_per_schema = defaultdict(list)
         for l in rules_text:
             action_schema = l.split(" (")[0]
             rules_per_schema[action_schema].append(l)
+            self.num_rules += 1
 
         for schema in rules_per_schema:
             self.rules[schema] = [TrainingRule(rules_per_schema[schema])]

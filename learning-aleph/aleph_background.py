@@ -5,6 +5,7 @@ import io
 
 import sys
 import os
+import string
 
 sys.path.append(f'{os.path.dirname(__file__)}/../translate')
 import pddl
@@ -12,7 +13,7 @@ import pddl
 class PredictionType(str, Enum):
     good_actions = 'good-actions'
     bad_actions = 'bad-actions'
-    class_probability = 'class_probability'
+    class_probability = 'class-probability'
 
 class DeterminationType(str, Enum):
     all_out = 'all-out'
