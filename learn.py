@@ -24,32 +24,40 @@ from downward import suites
 # All time limits are in seconds
 FAST_TIME_LIMITS = {
     'run_experiment' : 10,
-    'train-hard-rules' : 60, # Needs to be divided across all schemas
-    'smac-optimization-hard-rules' : 300
+    'train-hard-rules' : 60, # time per schema
+    'smac-optimization-hard-rules' : 300,
+    'smac-partial-grounding-total' : 300,
+    'smac-partial-grounding-run' : 10
 }
 
 # All time limits are in seconds
 MEDIUM_TIME_LIMITS = {
     'run_experiment' : 60, # One minute
-    'train-hard-rules' : 600, # Needs to be divided across all schemas
-    'smac-optimization-hard-rules' : 300
+    'train-hard-rules' : 600, # time per schema
+    'smac-optimization-hard-rules' : 300,
+    'smac-partial-grounding-total' : 1800,
+    'smac-partial-grounding-run' : 30
 }
 
 # All time limits are in seconds
 TIME_LIMITS_IPC_SINGLE_CORE = {
     'run_experiment' : 10*60, # 10 minutes
-    'train-hard-rules' : 60*60, # 1 hour, needs to be divided across all schemas
-    'smac-optimization-hard-rules' : 60*60 # 1 hour
+    'train-hard-rules' : 60*60, # 1 hour, time per schema, TODO
+    'smac-optimization-hard-rules' : 60*60, # 1 hour
+    'smac-partial-grounding-total' : 60*60, # 1 hour
+    'smac-partial-grounding-run' : 120
 }
 
 # All time limits are in seconds
 TIME_LIMITS_IPC_MULTICORE = {
     'run_experiment' : 30*60,
     'train-hard-rules' : 60*60, # 1 hour, needs to be divided across all schemas
-    'smac-optimization-hard-rules' : 60*60 # 1 hour
+    'smac-optimization-hard-rules' : 60*60, # 1 hour
+    'smac-partial-grounding-total' : 60*60, # 1 hour
+    'smac-partial-grounding-run' : 120
 }
 
-TIME_LIMITS_SEC = FAST_TIME_LIMITS
+TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
 
 # Memory limits are in MB
 MEMORY_LIMITS_MB = {
@@ -188,8 +196,11 @@ def main():
 
     SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
     if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding'):
-        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1)
-        #TODO args.cpus
+        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
+                                   walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                                   trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                                   n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
+                                   n_workers=1) #TODO use args.cpus
         save_model.save(os.path.join(TRAINING_DIR, 'smac-partial-grounding', 'incumbent'))
     else:
         assert args.resume

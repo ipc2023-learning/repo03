@@ -22,7 +22,12 @@ class CandidateModels:
     def get_unique_model_name(self, config):
         assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
         prefix = lambda x : "sk" if x.startswith(PREFIX_SK_MODELS) else ("a" if x.endswith(SUFFIX_ALEPH_MODELS) else "")
-        return "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
+        priority_name = "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
+        bad_name = '-bad-' + ''.join(['y' if config[f"bad{i}"] else 'n'  for i, r in enumerate(self.bad_rules)])
+        good_name = '-good-' + ''.join(['y' if config[f"good{i}"] else 'n'  for i, r in enumerate(self.good_rules)])
+        return '-'.join([priority_name, bad_name, good_name])
+
+
 
     def load_sk_folder(self, sk_folder):
         self.sk_folder = sk_folder

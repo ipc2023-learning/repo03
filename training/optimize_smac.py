@@ -1,5 +1,7 @@
 from ConfigSpace import Categorical, Float, Configuration, ConfigurationSpace, InCondition
-from smac import HyperparameterOptimizationFacade, Scenario
+from smac import AlgorithmConfigurationFacade, Scenario, HyperparameterOptimizationFacade
+
+from smac.initial_design.default_design import DefaultInitialDesign
 
 from lab.calls.call import Call
 
@@ -26,10 +28,11 @@ INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
 
 
 class Eval:
-    def __init__(self, DATA_DIR, WORKING_DIR, domain_file, instances_dir, candidate_models):
+    def __init__(self, DATA_DIR, WORKING_DIR, domain_file, instances_dir, candidate_models, trial_walltime_limit):
         self.DATA_DIR = DATA_DIR
         self.MY_DIR = os.path.dirname(os.path.realpath(__file__))
         self.candidate_models=candidate_models
+        self.trial_walltime_limit=trial_walltime_limit
 
         self.SMAC_MODELS_DIR = os.path.abspath(os.path.join(WORKING_DIR, INTERMEDIATE_SMAC_MODELS))
         if os.path.exists(self.SMAC_MODELS_DIR):
@@ -56,7 +59,7 @@ class Eval:
             if 'ipc23' in config['queue_type']:
                 return 10000000
 
-        extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type']]
+        extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type'], '--incremental-grounding', '--incremental-grounding-increment-percentage', '20', '--termination-condition', config['termination-condition']]
 
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
@@ -66,7 +69,7 @@ class Eval:
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         try:
-            output, error_output = proc.communicate(timeout=300) # Timeout in seconds TODO: set externally
+            output, error_output = proc.communicate(timeout=self.trial_walltime_limit)
 
             total_time = self.regex_total_time.search(output)
             num_operators = self.regex_operators.search(output)
@@ -74,8 +77,8 @@ class Eval:
 
             if total_time and num_operators and plan_cost:
                 total_time = float(total_time.group(1))
-                num_operators = float(num_operators.group(1))
-                plan_cost = float(plan_cost.group(1))
+                num_operators = int(num_operators.group(1))
+                plan_cost = int(plan_cost.group(1))
                 print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 return num_operators
             elif self.regex_no_solution.search(output):
@@ -94,17 +97,19 @@ class Eval:
             print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
             return 10000000
 
-        except subprocess.TimeoutExpired:
+        except subprocess.TimeoutExpired as e:
             proc.kill()
             print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
+            print(e)
             return 10000000
 
         except:
             print (f"Error: Command failed: {' '.join(command)}")
 
-            print("Output: ", output.decode())
-            if error_output:
-                print("Error Output: ", error_output.decode())
+            # print("Output: ", output.decode())
+            # if error_output:
+            #     print("Error Output: ", error_output.decode())
+            return 10000000
 
 
 
@@ -112,7 +117,7 @@ class Eval:
 # Note: default configuration should solve at least 50% of the instances. Pick instances
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
-def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_features : dict, walltime_limit, n_trials, n_workers):
+def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir, instances_with_features : dict, walltime_limit, trial_walltime_limit, n_trials, n_workers):
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
 
@@ -133,7 +138,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
     ### Create model parameters
     #############################
 
-    stopping_condition = Categorical(f"stopping-condition", ['full-grounding', 'goal-relaxed-reachable'])
+    stopping_condition = Categorical(f"termination-condition", ['full', "relaxed", "relaxed5", "relaxed10", "relaxed20"])
     alias = Categorical('alias', ['lama-first'], default='lama-first')
     queue_type = Categorical("queue_type", ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='ipc23-single-queue')
     # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
@@ -148,18 +153,23 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
         conditions.append(InCondition(child=m, parent=queue_type, values=["ipc23-single-queue", "ipc23-round-robin"]))
 
     for i, r in enumerate(candidate_models.good_rules):
-        good = Categorical(f"good_{i}", [False, True])
+        good = Categorical(f"good_{i}", [False, True], default=True)
         parameters.append(good)
-        conditions.append(InCondition(child=good, parent=stopping_condition, values=["goal-relaxed-reachable"]))
+        conditions.append(InCondition(child=good, parent=stopping_condition, values=["relaxed", "relaxed5", "relaxed10", "relaxed20"]))
 
     for i, r in enumerate(candidate_models.bad_rules):
-        parameters.append(Categorical(f"bad{i}", [False, True]))
+        parameters.append(Categorical(f"bad{i}", [False, True], default=True))
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
     cs.add_hyperparameters(parameters)
     cs.add_conditions(conditions)
 
-    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models)
+    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit)
+
+    sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x]['translator_operators'])
+
+    # for a in sorted_instances:
+    #     print(a, instances_with_features[a] )
 
     scenario = Scenario(
         configspace=cs, deterministic=True,
@@ -167,12 +177,14 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
         walltime_limit=walltime_limit,
         n_trials=n_trials,
         n_workers=n_workers,
-        instances=[ins for ins in instances_with_features],
+        instances=sorted_instances,
         instance_features=instances_with_features
     )
 
     # Use SMAC to find the best configuration/hyperparameters
-    smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function)
+    #smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function) ,#initial_design=DefaultInitialDesign(scenario))
+    smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function,)
+
     incumbent_config = smac.optimize()
 
     print("Chosen configuration: ", incumbent_config)
