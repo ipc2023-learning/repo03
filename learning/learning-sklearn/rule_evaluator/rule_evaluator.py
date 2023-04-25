@@ -227,6 +227,8 @@ class RuleEval:
                 compliant_values = set([tuple ([o.name for a in arguments])
                                         for o in task.objects if o.type_name in argument_types])
 
+            elif rule_type == "true":
+                continue
             else:
                  print("Error: unknown rule ", rule_type, rule)
                  exit()
