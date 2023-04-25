@@ -181,7 +181,7 @@ def main():
 
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-sklearn'):
     #TODO: set time and memory limits
-    #TODO: train also without good operators
+    #TODO: train also with sas_plans?
         for training_data_set in instances_manager.get_training_datasets():
             run_step_partial_grounding_rules(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain)
     else:
