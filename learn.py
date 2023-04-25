@@ -189,7 +189,7 @@ def main():
     SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
     if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding'):
         run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1) #TODO args.cpus
-        save_model.save(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'))
+        save_model.save(os.path.join(TRAINING_DIR, 'smac-partial-grounding', 'incumbent'))
     else:
         assert args.resume
 
