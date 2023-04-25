@@ -127,12 +127,12 @@ class AlephExperiment:
                     try:
                         input_dir = os.path.join(WORKING_DIR, "exp", direc, rundir)
 
-                        rules = json.load(open('%s/properties' % input_dir))['rules']
+                        rule = json.load(open('%s/properties' % input_dir))['class_probability_rule']
                         runs = os.path.basename(json.load(open('%s/static-properties' % input_dir))['runs_data'])
-                        class_probability_by_dataset[runs].update(rules)
+                        class_probability_by_dataset[runs].add(rule)
 
-                    except:
-                        print ("Warning: Unknown error while gathering rules")
+                    except Exception as e:
+                        print (f"Warning: Unknown error while gathering rules {str(e)}")
 
 
         for dataset, ruleset in class_probability_by_dataset.items():

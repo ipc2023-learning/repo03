@@ -17,11 +17,9 @@ from candidate_models import CandidateModels
 # from functools import partial
 
 # Hardcoded paths that depend on the trraining part. This could be passed by parameter instead
-PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-rules'
+PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-sklearn'
 PARTIAL_GROUNDING_ALEPH_DIR  = 'partial-grounding-aleph'
 PARTIAL_GROUNDING_HARD_RULES_DIR = 'partial-grounding-hard-rules'
-SUFFIX_ALEPH_MODELS = '.rules'
-PREFIX_SK_MODELS = 'model_'
 
 # Hardcoded paths
 INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'

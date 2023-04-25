@@ -94,6 +94,8 @@ def main():
         os.mkdir(TRAINING_DIR)
 
     if args.resume and os.path.exists(BENCHMARKS_DIR):
+        if os.path.isdir(args.domain): # If the first argument is a folder instead of a domain file
+            args.domain += "/domain.pddl"
         pass # TODO: Assert that instances are the same as before
     else:
         # Copy all input benchmarks to the directory
@@ -188,10 +190,13 @@ def main():
 
 
     SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
+    if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding'):
+        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=1) #TODO args.cpus
+        save_model.save(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'))
+    else:
+        assert args.resume
 
-    run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=args.cpus)
 
-    save_model.save(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'))
 
     # RUN.run_planner(f'{TRAINING_DIR}/runs-incumbent', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = [use_config_from_incumbent])
 

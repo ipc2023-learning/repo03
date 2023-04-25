@@ -2,6 +2,9 @@ from collections import defaultdict
 import os
 import shutil
 
+SUFFIX_ALEPH_MODELS = '.rules'
+PREFIX_SK_MODELS = 'model_'
+
 
 class CandidateModels:
     def __init__(self):
