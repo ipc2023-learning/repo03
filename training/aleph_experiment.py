@@ -3,6 +3,8 @@ import shutil
 from lab.experiment import Experiment, Run
 from lab.calls.call import Call
 
+from collections import defaultdict
+
 import sys
 import os
 
@@ -22,13 +24,8 @@ class AlephExperiment:
         self.memory_limit = memory_limit
 
 
-    def run_aleph_hard_rules (self, WORKING_DIR, RUNS_DIRS, ENV):
+    def run_aleph (self, WORKING_DIR, RUNS_DIRS, ENV, aleph_configs):
         exp = Experiment(path=os.path.join(WORKING_DIR, "exp"), environment=ENV)
-
-        # TODO:  Add negated and equal predicate?
-        aleph_configs = {"good_rules" : ['--op-file', 'good_operators', '--prediction-type', 'good-actions'],
-                         "bad_rules" : ['--op-file', 'good_operators', '--prediction-type', 'bad-actions'],
-                         }
 
         for RUNS_DIR in RUNS_DIRS:
             for config_name, config in aleph_configs.items():
@@ -53,7 +50,8 @@ class AlephExperiment:
                         run.add_resource('exec', os.path.join(my_working_dir, script), symlink=True)
                         run.add_resource('bfile', os.path.join(my_working_dir, script[6:] + '.b'), symlink=True)
                         run.add_resource('ffile', os.path.join(my_working_dir, script[6:] + '.f'), symlink=True)
-                        run.add_resource('nfile', os.path.join(my_working_dir, script[6:] + '.n'), symlink=True)
+                        if os.path.exists(os.path.join(my_working_dir, script[6:] + '.n')):
+                            run.add_resource('nfile', os.path.join(my_working_dir, script[6:] + '.n'), symlink=True)
 
                         run.add_command(
                             "run-aleph",
@@ -76,6 +74,15 @@ class AlephExperiment:
         exp.add_step("start", exp.start_runs)
 
         ENV.run_steps(exp.steps)
+
+    def run_aleph_hard_rules (self, WORKING_DIR, RUNS_DIRS, ENV):
+
+        # TODO:  Add negated and equal predicate?
+        aleph_configs = {"good_rules" : ['--op-file', 'good_operators', '--prediction-type', 'good-actions'],
+                         "bad_rules" : ['--op-file', 'good_operators', '--prediction-type', 'bad-actions'],
+                         }
+
+        self.run_aleph (WORKING_DIR, RUNS_DIRS, ENV, aleph_configs)
 
         good_rules = set()
         bad_rules = set()
@@ -103,3 +110,31 @@ class AlephExperiment:
 
 
         # shutil.rmtree(path_exp+ "-exp")
+
+
+
+    def run_aleph_class_probability (self, WORKING_DIR, RUNS_DIRS, ENV):
+        aleph_configs = {
+            "class_probability" : ['--op-file', 'good_operators', '--prediction-type', 'class-probability'],
+        }
+
+        self.run_aleph (WORKING_DIR, RUNS_DIRS, ENV, aleph_configs)
+
+        class_probability_by_dataset = defaultdict(set)
+        for direc in os.listdir(os.path.join(WORKING_DIR, "exp")):
+            if direc.startswith("runs") and os.path.isdir(os.path.join(WORKING_DIR, "exp", direc)):
+                for rundir in os.listdir(os.path.join(WORKING_DIR, "exp", direc)):
+                    try:
+                        input_dir = os.path.join(WORKING_DIR, "exp", direc, rundir)
+
+                        rules = json.load(open('%s/properties' % input_dir))['rules']
+                        runs = os.path.basename(json.load(open('%s/static-properties' % input_dir))['runs_data'])
+                        class_probability_by_dataset[runs].update(rules)
+
+                    except:
+                        print ("Warning: Unknown error while gathering rules")
+
+
+        for dataset, ruleset in class_probability_by_dataset.items():
+            with open(os.path.join(WORKING_DIR,f'class_probability-{dataset}.rules'), 'w') as f:
+                f.write("\n".join(list(sorted(ruleset))))

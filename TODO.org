@@ -7,24 +7,22 @@
 ** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
 ** plan partial grounding is crashing (when instances are not solved)
 
-** Bad rules in freecell colfromfreecell (?arg0, ?arg1, ?arg2, ?arg3) :- True. -> format not suported
 
 ** Aleph not and equal do not work
 
-**   File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
-** Use h2-preprocessor in lama runs
-
+**  File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
 
 * Features
 ** [#A] Stone Soup
 ** [#B] Add BadPruning rules
 ** [#B] Add features from relaxed plans
-** [#C] Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
+** Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
 
 ** [#C] Allow SMAC to tune stopping condition -> how? Use stopping condition based percentage of operators + X%, Does it make sense to do a stopping condition based on the action schema?
 
 ** [#B] Weighted round robin
 
+** Run planners in parallel on the plan script
 
 * Nice to have
 ** Fix numpy seed in learning scripts (via parameter)

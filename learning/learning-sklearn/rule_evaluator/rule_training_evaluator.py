@@ -52,7 +52,7 @@ class RuleTrainingEvaluator:
         for schema in rules_per_schema:
             self.rules[schema] = [TrainingRule(rules_per_schema[schema])]
 
-    def init_task(self, task, max_training_examples):
+    def init_task (self, task, max_training_examples):
         for schema, rs in self.rules.items():
             for r in rs:
                 r.load(task, max_training_examples)

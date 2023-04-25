@@ -17,7 +17,7 @@ from aleph_experiment import AlephExperiment
 
 from partial_grounding_rules import run_step_partial_grounding_rules
 from partial_grounding_aleph import run_step_partial_grounding_aleph,run_step_partial_grounding_hard_rules
-from optimize_smac import run_smac
+from optimize_smac import run_smac_partial_grounding
 from instance_set import InstanceSet, select_instances_from_runs
 from utils import SaveModel
 
@@ -150,8 +150,8 @@ def main():
     #####
     ## Training of partial grounding hard rules
     #####
+    aleph_experiment = AlephExperiment(REPO_LEARNING, args.domain, time_limit=TIME_LIMITS_SEC ['train-hard-rules'], memory_limit=MEMORY_LIMITS_MB ['train-hard-rules'])
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules'):
-        aleph_experiment = AlephExperiment(REPO_LEARNING, args.domain, time_limit=TIME_LIMITS_SEC ['train-hard-rules'], memory_limit=MEMORY_LIMITS_MB ['train-hard-rules'])
         aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-hard-rules', instances_manager.get_training_datasets(), ENV)
     else:
         assert args.resume
@@ -171,14 +171,25 @@ def main():
     ####
     # Training of priority partial grounding models
     ####
+    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-aleph'):
+        aleph_experiment.run_aleph_class_probability (f'{TRAINING_DIR}/partial-grounding-aleph', instances_manager.get_training_datasets(), ENV)
+    else:
+        assert args.resume
+
+
+    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-sklearn'):
     #TODO: set time and memory limits
     #TODO: train also without good operators
-    for training_data_set in instances_manager.get_training_datasets():
-        run_step_partial_grounding_rules(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain)
-        run_step_partial_grounding_aleph(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-aleph', args.domain)
+        for training_data_set in instances_manager.get_training_datasets():
+            run_step_partial_grounding_rules(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain)
+    else:
+        assert args.resume
 
 
-    run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES_FIRST_OPTIMIZATION, walltime_limit=100, n_trials=100, n_workers=cpus)
+
+    SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
+
+    run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, walltime_limit=100, n_trials=100, n_workers=args.cpus)
 
     save_model.save(os.path.join(TRAINING_DIR, 'smac1', 'incumbent'))
 

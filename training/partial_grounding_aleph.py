@@ -48,7 +48,7 @@ def run_step_partial_grounding_aleph(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
 
     os.mkdir(WORKING_DIR)
     aleph_configs = {
-        "class_probability" : ['--op-file', 'good_operators', '--class-probability'],
+        "class_probability" : ['--op-file', 'good_operators', '--prediction-type', 'class-probability'],
     }
 
     cwd = os.getcwd()
