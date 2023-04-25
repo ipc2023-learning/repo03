@@ -17,16 +17,19 @@ class AlephParser(Parser):
         with open('static-properties') as f:
             self.static_properties = json.load(f)
 
-
         self.add_pattern('accuracy', r"Accuracy = (.+)", type=float)
         self.add_pattern('total_time', r"\[time taken\] \[(.+)\]", type=float)
 
         self.add_function(self.has_theory)
-        self.add_function(self.parse_aleph_log_file)
 
-        for f in  os.listdir():
-            if f.endswith('.h'):
-                self.add_function(self.parse_aleph_hypothesis_file, file=f)
+        if 'class_probability' not in self.static_properties['config']:
+            self.add_function(self.parse_aleph_log_file)
+
+
+        if 'class_probability' in self.static_properties['config']:
+            for f in  os.listdir():
+                if f.endswith('.h'):
+                    self.add_function(self.parse_class_probability_aleph_hypothesis_file, file=f)
 
     def transform_probability_class_rules(self, rules, class_args):
         rules_tuples = []
@@ -192,6 +195,26 @@ class AlephParser(Parser):
 
             props['rules.h'] = rules
             # props['class_args.h'] = class_args
+
+    def parse_class_probability_aleph_hypothesis_file(self, content, props):
+            lines = content.split('\n')
+
+            rules = []
+            class_args = None
+            for l in lines:
+                if l.startswith("class"):
+                    class_args = l.split(":-")[0][6:].split(",")[:-2]
+                    rules.append(l.strip())
+                else:
+                    rules[-1] += l.strip()
+
+            props['raw_rules'] = rules
+            # props['class_args.h'] = class_args
+
+
+            new_rule_tuples = self.transform_probability_class_rules(rules, class_args)
+            props['class_probability_rule'] = self.static_properties['action_schema']  + " :- " + "; ".join(["{} {:f}".format(x[0], x[1]) for x in new_rule_tuples])
+
 
     def parse_aleph_log_file(self, content, props):
         rules = []

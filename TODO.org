@@ -1,16 +1,15 @@
 * Alvaro:
 ** Curation of good/bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
 ** Incremental learning: First learn good/bad actions, then take them into  account when training models
+** Check that SMAC of bad rules works on freecell (right now, the bad rules do not work on p20, because they prune too aggresively)
 
 * Fix
 ** [#A] Set time limits for everything
 ** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
 ** plan partial grounding is crashing (when instances are not solved)
-
-
 ** Aleph not and equal do not work
-
 **  File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
+
 
 * Features
 ** [#A] Stone Soup
