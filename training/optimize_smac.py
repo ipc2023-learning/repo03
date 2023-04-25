@@ -161,9 +161,6 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
 
     evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models)
 
-
-    print ([ins for ins in instances_with_features])
-
     scenario = Scenario(
         configspace=cs, deterministic=True,
         output_directory=PosixPath(os.path.join(WORKING_DIR, 'smac')),
@@ -176,19 +173,18 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
 
     # Use SMAC to find the best configuration/hyperparameters
     smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function)
-    incumbent = smac.optimize()
+    incumbent_config = smac.optimize()
 
-    print("Chosen configuration: ", incumbent)
-    if 'ipc23' in incumbent['queue_type']:
-        candidate_models.copy_model_to_folder(incumbent, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
+    print("Chosen configuration: ", incumbent_config)
+    if 'ipc23' in incumbent_config['queue_type']:
+        candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
     else:
         os.mkdir(os.path.join(WORKING_DIR, 'incumbent'))
 
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
-        properties = {k : v for k,v in incumbent.get_dictionary().items() if not k.startswith('good') and not k.startswith('bad')}
+        properties = {k : v for k,v in incumbent_config.get_dictionary().items() if not k.startswith('good') and not k.startswith('bad')}
 
-        properties['bad-rules'] = [i for i, _ in enumerate(candidate_models.bad_rules) if [config[f"bad{i}"]]]
-        properties['good-rules'] = [i for i, _ in enumerate(candidate_models.good_rules) if [config[f"good{i}"]]]
+        properties['bad-rules'] = [i for i, _ in enumerate(candidate_models.bad_rules) if [incumbent_config[f"bad{i}"]]]
+        properties['good-rules'] = [i for i, _ in enumerate(candidate_models.good_rules) if [incumbent_config[f"good{i}"]]]
 
         json.dump(properties, config_file)
-        #config_file.write(f"--alias {incumbent['alias']} --grounding-queue {incumbent['queue_type']}")

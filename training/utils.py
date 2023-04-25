@@ -7,7 +7,7 @@ class SaveModel:
         self.knowledge_file = knowledge_file
         self.keep_copies = 1 if keep_copies else 0
 
-    def save(source_dir):
+    def save(self, source_dir):
         if not self.knowledge_file:
             return
 

@@ -93,7 +93,7 @@ class CandidateModels:
                 f.write('\n'.join(collected_relevant_rules))
 
         if collected_aleph_models:
-            with open(os.path.join(target_dir, 'probability_class.rules'), 'w') as f:
+            with open(os.path.join(target_dir, 'class_probability.rules'), 'w') as f:
                 f.write('\n'.join(collected_aleph_models))
 
         selected_bad_rules = [r for i, r in enumerate(self.bad_rules) if [config[f"bad{i}"]]]
