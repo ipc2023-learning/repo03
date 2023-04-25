@@ -61,10 +61,10 @@ class IPC23SingleQueue(PriorityQueue):
         return bool(self.good_actions)
 
     def push(self, action):
-        if self.good_bad_rule_evaluator.is_bad_action(action):
-            self.queue.push(action, -inf)
-        elif self.good_bad_rule_evaluator.is_good_action(action):
+        if self.good_bad_rule_evaluator.is_good_action(action):
             self.good_actions.append(action)
+        elif self.good_bad_rule_evaluator.is_bad_action(action):
+            self.queue.push(action, -inf)
         else:
             if self.batch_eval:
                 self.non_evaluated_actions[action.predicate.name].append(action)
@@ -148,10 +148,10 @@ class IPC23RoundRobinQueue(PriorityQueue):
 
     def push(self, action):
         self.has_actions = True
-        if self.good_bad_rule_evaluator.is_bad_action(action):
-            self.bad_actions.append(action)
-        elif self.good_bad_rule_evaluator.is_good_action(action):
+        if self.good_bad_rule_evaluator.is_good_action(action):
             self.good_actions.append(action)
+        elif self.good_bad_rule_evaluator.is_bad_action(action):
+            self.bad_actions.append(action)
         else:
             schema = action.predicate.name
             if schema not in self.schemas:
@@ -297,10 +297,10 @@ class IPC23RatioQueue(PriorityQueue):
         return bool(self.good_actions)
 
     def push(self, action):
-        if self.good_bad_rule_evaluator.is_bad_action(action):
-            self.bad_actions.append(action)
-        elif self.good_bad_rule_evaluator.is_good_action(action):
+        if self.good_bad_rule_evaluator.is_good_action(action):
             self.good_actions.append(action)
+        elif self.good_bad_rule_evaluator.is_bad_action(action):
+            self.bad_actions.append(action)
         else:
             schema = action.predicate.name
             if schema not in self.schemas:
