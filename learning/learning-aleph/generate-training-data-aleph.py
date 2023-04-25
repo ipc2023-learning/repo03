@@ -159,7 +159,7 @@ def generate_training_data_aleph(RUNS_DIR, store_training_data, background_file_
         num_pos_examples = sum([len(x) for x in positive_examples[schema.name].values()])
         num_neg_examples = sum([len(x) for x in negative_examples[schema.name].values()])
 
-        if num_pos_examples < min_positive_instances or num_neg_examples < min_negative_instances):
+        if num_pos_examples < min_positive_instances or num_neg_examples < min_negative_instances:
             print(f"Skipping {schema.name} due to lack of training data: {num_pos_examples} positive examples and {num_neg_examples} negative examples" )
             continue
 
