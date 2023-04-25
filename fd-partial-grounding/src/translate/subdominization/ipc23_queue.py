@@ -112,6 +112,11 @@ class IPC23RoundRobinQueue(PriorityQueue):
         self.has_actions = False
 
         self.good_bad_rule_evaluator = GodBadRuleEvaluator(task, args)
+        for schema in self.good_bad_rule_evaluator.get_action_schemas():
+            if schema not in self.schemas:
+                self.schemas.append(schema)
+                self.num_grounded_actions.append(0)
+                self.queues.append(FIFOQueue())
         self.good_actions = []
         self.bad_actions = []
         self.num_grounded_bad_actions = defaultdict(int)
@@ -319,7 +324,9 @@ class IPC23RatioQueue(PriorityQueue):
         if self.good_actions:
             action = self.good_actions.pop()
             self.closed.append(action)
-            self.num_grounded_actions[self.schemas.index(action.predicate.name)] += 1
+            schema = action.predicate.name
+            if schema in self.schemas:
+                self.num_grounded_actions[self.schemas.index(schema)] += 1
             return action
 
         prio, next_index = max([(self.target_ratios[i] - self.ratios[i], i)
@@ -332,7 +339,8 @@ class IPC23RatioQueue(PriorityQueue):
             self.closed.append(action)
             schema = action.predicate.name
             self.num_grounded_bad_actions[schema] += 1
-            self.num_grounded_actions[self.schemas.index(schema)] += 1
+            if schema in self.schemas:
+                self.num_grounded_actions[self.schemas.index(schema)] += 1
             return action
 
         if self.batch_eval and self.non_evaluated_actions[next_index]:

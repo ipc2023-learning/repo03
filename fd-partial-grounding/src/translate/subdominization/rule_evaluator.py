@@ -291,10 +291,13 @@ class RulesEvaluator:
         for l in rule_text:
             re = RuleEval(l, task)
             self.rules[re.action_schema].append(re)
+
+    def get_action_schemas(self):
+        return list(self.rules.keys())
              
     def evaluate(self, action):
         return [rule.evaluate(action) for rule in self.rules[action.predicate.name]]
 
     def get_all_rules(self):
-        return [rule.text for (schema, rules) in self.rules.items() for rule in rules]
+        return [rule.text for schema, rules in self.rules.items() for rule in rules]
 

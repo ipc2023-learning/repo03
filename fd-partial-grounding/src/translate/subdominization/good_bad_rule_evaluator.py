@@ -21,6 +21,14 @@ class GodBadRuleEvaluator:
         self.num_good_actions = defaultdict(int)
         self.num_bad_actions = defaultdict(int)
 
+    def get_action_schemas(self):
+        schemas = set()
+        if self.good_rule_evaluator:
+            schemas += set(self.good_rule_evaluator.get_action_schemas())
+        if self.bad_rule_evaluator:
+            schemas += set(self.bad_rule_evaluator.get_action_schemas())
+        return schemas
+
     def is_good_action(self, action):
         if self.good_rule_evaluator:
             is_good = any(e == 1 for e in self.good_rule_evaluator.evaluate(action))
