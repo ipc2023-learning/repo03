@@ -57,8 +57,8 @@ class RuleTrainingEvaluator:
             
     def evaluate(self, action):
         name, arguments = action.split("(")
-        arguments = map(lambda x: x.strip(), arguments.strip()[:-1].split(","))
-        
+        arguments = list(map(lambda x: x.strip(), arguments.strip()[:-1].split(",")))
+
         if name in self.rules:
             new_rules = [rule.evaluate(arguments) for rule in self.rules[name]]
             self.rules[name] += [r for r in new_rules if r]
