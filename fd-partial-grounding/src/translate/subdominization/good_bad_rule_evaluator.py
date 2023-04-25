@@ -24,9 +24,9 @@ class GodBadRuleEvaluator:
     def get_action_schemas(self):
         schemas = set()
         if self.good_rule_evaluator:
-            schemas += set(self.good_rule_evaluator.get_action_schemas())
+            schemas = set(self.good_rule_evaluator.get_action_schemas())
         if self.bad_rule_evaluator:
-            schemas += set(self.bad_rule_evaluator.get_action_schemas())
+            schemas = schemas.union(set(self.bad_rule_evaluator.get_action_schemas()))
         return schemas
 
     def is_good_action(self, action):

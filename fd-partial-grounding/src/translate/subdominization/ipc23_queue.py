@@ -189,7 +189,7 @@ class IPC23RoundRobinQueue(PriorityQueue):
             self.non_evaluated_actions[index] = []
 
     def _check_has_action(self):
-        self.has_actions = self.bad_actions or any(q for q in self.queues) or \
+        self.has_actions = bool(self.bad_actions) or any(q for q in self.queues) or \
                            (self.batch_eval and any(q for q in self.non_evaluated_actions))
 
     def pop(self):
