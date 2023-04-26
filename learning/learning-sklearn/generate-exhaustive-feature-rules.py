@@ -18,6 +18,8 @@ import copy
 
 import pddl
 
+import time
+
 try:
     # Python 3.x
     from builtins import open as file_open
@@ -233,6 +235,7 @@ if __name__ == "__main__":
     argparser.add_argument("--store_rules", type=argparse.FileType('w'), help="Results file")
     argparser.add_argument("--rule_size", type=int, help="Maximum rule size", default=1)
     argparser.add_argument("--num_rules", type=int, help="Maximum rule size", default=100000000)
+    argparser.add_argument("--schema_time_limit", type=int, help="Time limit in seconds per action schema")
     argparser.add_argument("--runs", help="path to the runs folders")
 
     options = argparser.parse_args()
@@ -256,6 +259,8 @@ if __name__ == "__main__":
     for a in actions:
           print ("Generate candidate rules for action %s" % a.name)
 
+          start_time = time.time()
+
           rules = get_equality_rules (type_dict, a)
           predicate_combinations = list(get_predicate_combinations(predicates, constants, type_dict, a.parameters))
 
@@ -269,7 +274,12 @@ if __name__ == "__main__":
               if len(rules) > options.num_rules or i > options.rule_size:
                   break
 
-              predicate_combinations = set([pre for p in predicate_combinations for pre in p.extend(predicates, constants, type_dict)])
+              new_predicate_combinations = set()
+              for p in predicate_combinations:
+                  if options.schema_time_limit and time.time() - start_time > options.schema_time_limit:
+                      break
+                  new_predicate_combinations.update([pre for pre in p.extend(predicates, constants, type_dict)])
+              predicate_combinations = new_predicate_combinations
 
 
           if options.store_rules:
