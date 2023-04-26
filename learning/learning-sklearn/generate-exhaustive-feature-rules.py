@@ -234,7 +234,8 @@ if __name__ == "__main__":
     argparser.add_argument("domain", type=argparse.FileType('r'), help="Domain file")
     argparser.add_argument("--store_rules", type=argparse.FileType('w'), help="Results file")
     argparser.add_argument("--rule_size", type=int, help="Maximum rule size", default=1)
-    argparser.add_argument("--num_rules", type=int, help="Maximum rule size", default=100000000)
+    argparser.add_argument("--num_rules", type=int, help="Maximum rule size, can be exceeded", default=100000000)
+    argparser.add_argument("--max_num_rules", type=int, help="Maximum rule size", default=100000000)
     argparser.add_argument("--schema_time_limit", type=int, help="Time limit in seconds per action schema")
     argparser.add_argument("--runs", help="path to the runs folders")
 
@@ -266,6 +267,15 @@ if __name__ == "__main__":
 
           i = 1
           while True:
+              new_rules = []
+              for predcom in predicate_combinations:
+                  if options.schema_time_limit and time.time() - start_time > options.schema_time_limit:
+                      break
+                  if len(new_rules) + len(rules) > options.max_num_rules:
+                      break
+
+                  new_rules += predcom.get_rules(predicates_ini, predicates_goal)
+
               new_rules = [rule for predcom in predicate_combinations for rule in predcom.get_rules(predicates_ini, predicates_goal) ]
               rules += new_rules
               print (i, len(new_rules))
@@ -277,6 +287,8 @@ if __name__ == "__main__":
               new_predicate_combinations = set()
               for p in predicate_combinations:
                   if options.schema_time_limit and time.time() - start_time > options.schema_time_limit:
+                      break
+                  if len(new_predicate_combinations) + len(rules) > options.max_num_rules:
                       break
                   new_predicate_combinations.update([pre for pre in p.extend(predicates, constants, type_dict)])
               predicate_combinations = new_predicate_combinations

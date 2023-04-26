@@ -7,7 +7,7 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
     #TODO: check time and memory limit (right now it's taken as a limit per step, and not a limit in total
 
     os.mkdir(f"{WORKING_DIR}")    # TODO: Set to 10k instead of 1k
-    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', f'{RUNS_DIR}', '--rule_size', '7', '--store_rules', f'{WORKING_DIR}/rules-exhaustive-1k', '--num_rules','1000'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', f'{RUNS_DIR}', '--rule_size', '10', '--store_rules', f'{WORKING_DIR}/rules-exhaustive-1k', '--num_rules','50000', '--max_num_rules','100000', '--schema_time_limit', '100'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
     # TODO: Check if rules have been correctly generated. Otherwise, re-generate with smaller size?
 
     Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive-1k', f'{WORKING_DIR}/rules-exhaustive-1k-filtered'], "filter-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
