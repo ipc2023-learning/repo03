@@ -10,20 +10,8 @@
 
 ** plan partial grounding is crashing (when instances are not solved)
 
-** Aleph not and equal do not work?
-
 **  File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
 
-** /home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):
-STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
-
-Increase the number of iterations (max_iter) or scale the data as shown in:
-    https://scikit-learn.org/stable/modules/preprocessing.html
-Please also refer to the documentation for alternative solver options:
-    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
-  n_iter_i = _check_optimize_result(
-/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):
-STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
 
 
 ** Traceback (most recent call last):
@@ -37,10 +25,11 @@ FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/parti
 
 
 ** In rovers: 2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
-2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
-2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
-2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
+   2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
+   2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
+   2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
 
+** log_depot:Warning: Unknown error while gathering rules
 
 * Features
 ** [#A] Stone Soup
@@ -61,3 +50,15 @@ FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/parti
 ** Open more parameters for sklearn
 ** Print warnings to std error (use some kind of logging?)
 ** Compress lab files? -> all_operators could be compressed and output could be removed
+
+** /home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):
+STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
+
+Increase the number of iterations (max_iter) or scale the data as shown in:
+    https://scikit-learn.org/stable/modules/preprocessing.html
+Please also refer to the documentation for alternative solver options:
+    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+  n_iter_i = _check_optimize_result(
+/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):
+STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
+** Aleph not and equal do not work?
