@@ -117,7 +117,6 @@ def main():
     ENV = LocalEnvironment(processes=args.cpus)
     SUITE_ALL = suites.build_suite(TRAINING_DIR, ['instances'])
 
-    # Overall time limit is 10s and 1G
     RUN = RunExperiment (TIME_LIMITS_SEC ['run_experiment'], MEMORY_LIMITS_MB['run_experiment'])
 
 
@@ -127,7 +126,6 @@ def main():
 
     if not os.path.exists(f'{TRAINING_DIR}/runs-lama'):
         # Run lama, with empty config and using the alias
-        ## TODO: enable h2 preprocessor
         RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first",
                                                                                                                    "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
                                                                                                                    "--transform-task-options", f"h2_time_limit,300"])

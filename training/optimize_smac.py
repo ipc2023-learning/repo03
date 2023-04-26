@@ -59,7 +59,9 @@ class Eval:
             if 'ipc23' in config['queue_type']:
                 return 10000000
 
-        extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type'], '--incremental-grounding', '--incremental-grounding-increment-percentage', '20', '--termination-condition', config['termination-condition']]
+        extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type'],
+                            '--incremental-grounding', '--incremental-grounding-increment-percentage', '20',
+                            '--termination-condition', config['termination-condition']]
 
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
