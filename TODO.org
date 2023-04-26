@@ -5,6 +5,7 @@
 ** Combine cost and unit-cost good operators?
 
 * Fix
+** TODO Make sure that instance_features are defined for all features!
 ** [#A] Set time limits for everything
 ** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
 ** plan partial grounding is crashing (when instances are not solved)
@@ -22,6 +23,47 @@ Please also refer to the documentation for alternative solver options:
 /home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):
 STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
 
+
+** Traceback (most recent call last):
+  File "/home/alvaro/planners/learning-ipc/./learn.py", line 235, in <module>
+    main()
+  File "/home/alvaro/planners/learning-ipc/./learn.py", line 199, in main
+    run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
+  File "/home/alvaro/planners/learning-ipc/./training/optimize_smac.py", line 190, in run_smac_partial_grounding
+    incumbent_config = smac.optimize()
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/facade/abstract_facade.py", line 289, in optimize
+    incumbents = self._optimizer.optimize()
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/main/smbo.py", line 279, in optimize
+    trial_info = self.ask()
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/main/smbo.py", line 151, in ask
+    trial_info = next(self._trial_generator)
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/intensifier/intensifier.py", line 222, in __iter__
+    config = next(self.config_generator)
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/main/config_selector.py", line 171, in __iter__
+    X, Y, X_configurations = self._collect_data()
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/main/config_selector.py", line 280, in _collect_data
+    X, Y = self._runhistory_encoder.transform(budget_subset=[b])
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/runhistory/encoder/abstract_encoder.py", line 265, in transform
+    X, Y = self._build_matrix(trials=considered_trials, store_statistics=True)
+  File "/home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/smac/runhistory/encoder/encoder.py", line 44, in _build_matrix
+    X[row, :] = np.hstack((conf_vector, feats))
+ValueError: could not broadcast input array from shape (29,) into shape (31,)
+
+
+** Traceback (most recent call last):
+  File "/home/alvaro/planners/learning-ipc/./learn.py", line 235, in <module>
+    main()
+  File "/home/alvaro/planners/learning-ipc/./learn.py", line 192, in main
+    run_step_partial_grounding_rules(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain)
+  File "/home/alvaro/planners/learning-ipc/./training/partial_grounding_rules.py", line 33, in run_step_partial_grounding_rules
+    useful_rules_files = [f for f in os.listdir(f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
+FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/partial-grounding-sklearn/training-data-good-operators-exhaustive-1k-filtered'
+
+
+** In rovers: 2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
+2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
+2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
+2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
 
 
 * Features

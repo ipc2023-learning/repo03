@@ -93,6 +93,7 @@ class Eval:
                     print("Error Output: ", error_output.decode())
                 return 10000000
         except subprocess.CalledProcessError:
+            proc.kill()
             print (f"WARNING: Command failed: {' '.join(command)}")
             print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
             return 10000000
@@ -104,6 +105,7 @@ class Eval:
             return 10000000
 
         except:
+            proc.kill()
             print (f"Error: Command failed: {' '.join(command)}")
 
             # print("Output: ", output.decode())
