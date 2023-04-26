@@ -168,10 +168,10 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
 
     evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit)
 
-    sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x]['translator_operators'])
+    sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
 
     # for a in sorted_instances:
-    #     print(a, instances_with_features[a] )
+    #      print(a, instances_with_features[a] )
 
     scenario = Scenario(
         configspace=cs, deterministic=True,
