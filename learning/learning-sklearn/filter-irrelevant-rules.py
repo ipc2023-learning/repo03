@@ -24,6 +24,7 @@ except ImportError:
     # Python 2.x
     from codecs import open as file_open
 
+import time
 
 def parse_pddl_file(type, filename):
     try:
@@ -54,8 +55,11 @@ if __name__ == "__main__":
     argparser.add_argument("--instances-relevant-rules", type=int, help="Number of instances for relevant rules", default=1000)
     argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)
     argparser.add_argument("--filter-good-rules", action="store_true", help="If enabled, it filters those rule that are good rules")
+    argparser.add_argument("--time-limit", type=int, help="Time limit")
 
     options = argparser.parse_args()
+
+    start_time = time.time()
 
     training_lines = defaultdict(list)
     relevant_rules = set()
@@ -64,7 +68,7 @@ if __name__ == "__main__":
     print(f"Filtering irrelevant rules; number rules before filtering {training_re.num_rules}")
     i = 1
     for task_run in sorted(os.listdir(options.runs_folder)):
-        if i > options.instances_relevant_rules:
+        if i > options.instances_relevant_rules or (options.time_limit and  time.time() - start_time > options.time_limit):
              break
         if not os.path.isfile('{}/{}/{}'.format(options.runs_folder, task_run, 'sas_plan')) and not os.path.isfile('{}/{}/{}'.format(options.runs_folder, task_run, 'good_operators')):
             continue

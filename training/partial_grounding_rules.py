@@ -7,18 +7,18 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
     #TODO: check time and memory limit (right now it's taken as a limit per step, and not a limit in total
 
     os.mkdir(f"{WORKING_DIR}")    # TODO: Set to 10k instead of 1k
-    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', f'{RUNS_DIR}', '--rule_size', '10', '--store_rules', f'{WORKING_DIR}/rules-exhaustive-1k', '--num_rules','50000', '--max_num_rules','100000', '--schema_time_limit', '100'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', f'{RUNS_DIR}', '--rule_size', '10', '--store_rules', f'{WORKING_DIR}/rules-exhaustive-1k', '--num_rules','10000', '--max_num_rules','20000', '--schema_time_limit', '100'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
     # TODO: Check if rules have been correctly generated. Otherwise, re-generate with smaller size?
 
-    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive-1k', f'{WORKING_DIR}/rules-exhaustive-1k-filtered'], "filter-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+    Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive-1k', f'{WORKING_DIR}/rules-exhaustive-1k-filtered', '--time-limit', time_limit], "filter-rules", time_limit=time_limit*10, memory_limit=memory_limit).wait()
 
     Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py',
                                          f'{RUNS_DIR}',
                                          f'{WORKING_DIR}/rules-exhaustive-1k-filtered',
                                          f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered',
                                          '--op-file', 'good_operators',
-                                         '--max-training-examples', '1000000' # '--num-test-instances TODO Set some test instances
-          ], "generate-training-data-1", time_limit=time_limit, memory_limit=memory_limit).wait()
+                                         '--max-training-examples', '1000000', '--time_limit', time_limit # '--num-test-instances TODO Set some test instances
+          ], "generate-training-data-1", time_limit=time_limit*10, memory_limit=memory_limit).wait()
 
 
     # TODO: Consider here more feature selection methods, possibly parameterized

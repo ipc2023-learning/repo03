@@ -34,6 +34,8 @@ def filter_training_set(REPO_LEARNING, TRAINING_SET, rules_file, output):
     # try:
         os.mkdir(output)
         for problem in os.listdir(TRAINING_SET):
+            if not os.path.exists(os.path.join(TRAINING_SET, problem, 'good_operators')):
+                continue
             output_p = os.path.join(output, problem)
             os.mkdir(output_p)
             shutil.copy(os.path.join(TRAINING_SET, problem, 'domain.pddl'), output_p)
