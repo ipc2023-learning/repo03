@@ -14,10 +14,9 @@ from run_experiment import RunExperiment
 from aleph_experiment import AlephExperiment
 
 from partial_grounding_rules import run_step_partial_grounding_rules
-from partial_grounding_aleph import run_step_partial_grounding_aleph,run_step_partial_grounding_hard_rules
 from optimize_smac import run_smac_partial_grounding
 from instance_set import InstanceSet, select_instances_from_runs
-from utils import SaveModel
+from utils import SaveModel, filter_training_set, combine_training_sets
 
 from downward import suites
 
@@ -33,7 +32,7 @@ FAST_TIME_LIMITS = {
 # All time limits are in seconds
 MEDIUM_TIME_LIMITS = {
     'run_experiment' : 60, # One minute
-    'train-hard-rules' : 600, # time per schema
+    'train-hard-rules' : 120, # time per schema
     'smac-optimization-hard-rules' : 300,
     'smac-partial-grounding-total' : 1800,
     'smac-partial-grounding-run' : 30
@@ -123,7 +122,6 @@ def main():
     ###
     # Run lama and symbolic search to gather all training data
     ###
-
     if not os.path.exists(f'{TRAINING_DIR}/runs-lama'):
         # Run lama, with empty config and using the alias
         RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first",
@@ -143,13 +141,19 @@ def main():
         assert args.resume
     instances_manager.add_training_data(f'{TRAINING_DIR}/good-operators-unit')
 
+    TRAINING_SET = f'{TRAINING_DIR}/good-operators-unit'
+
     has_action_cost = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
-    if has_action_cost:
+    has_zero_cost_actions = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['min_action_cost'] == 0)) > 0
+    if has_action_cost and not has_zero_cost_actions:
         if not os.path.exists(f'{TRAINING_DIR}/good-operators-cost'):
             RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
         else:
             assert args.resume
-        instances_manager.add_training_data(f'{TRAINING_DIR}/good-operators-cost')
+        instances_manager.add_training_data(os.path.join(TRAINING_DIR,'good-operators-cost'))
+
+        combine_training_sets([TRAINING_SET, os.path.join(TRAINING_DIR,'good-operators-cost')], os.path.join(TRAINING_DIR,'good-operators-combined'))
+        TRAINING_SET = os.path.join(TRAINING_DIR,'good-operators-combined')
 
     TRAINING_INSTANCES = instances_manager.split_training_instances()
 
@@ -157,12 +161,31 @@ def main():
     ## Training of partial grounding hard rules
     #####
     aleph_experiment = AlephExperiment(REPO_LEARNING, args.domain, time_limit=TIME_LIMITS_SEC ['train-hard-rules'], memory_limit=MEMORY_LIMITS_MB ['train-hard-rules'])
-    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules'):
-        aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-hard-rules', instances_manager.get_training_datasets(), ENV)
+    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-good-rules'):
+        aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-good-rules', TRAINING_SET, ENV, ['good_rules'])
     else:
         assert args.resume
 
-    # exit()
+    #####
+    ## Remove actions that are matched by good rules from the training data
+    #####
+    if os.path.exists(f'{TRAINING_DIR}/partial-grounding-good-rules/good_rules.rules'):
+        if not os.path.exists(f'{TRAINING_SET}-nogoodrules'):
+            filter_training_set(TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-good-rules/good_rules.rules', f'{TRAINING_SET}-nogoodrules')
+        TRAINING_SET = f'{TRAINING_SET}-nogoodrules'
+
+
+    #####
+    ## Learn bad rules
+    #####
+    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules'):
+        aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-bad-rules', TRAINING_SET, ENV, ['bad_rules'])
+    else:
+        assert args.resume
+
+    #####
+    ## Filter of bad rules
+    #####
 
     ### SMAC Optimization to select good sets of good and hard rules
     ### No incremental grounding
@@ -174,11 +197,21 @@ def main():
     # run_smac_hard_rules(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-hard-rules', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
     #                     walltime_limit=TIME_LIMITS['smac-optimization-hard-rules'], n_trials=10000, n_workers=cpus)
 
+
+    #####
+    ## Remove actions that are matched by bad rules from the training data
+    #####
+    if os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules'):
+        if not os.path.exists(f'{TRAINING_SET}-nobadrules'):
+            filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
+        TRAINING_SET = f'{TRAINING_SET}-nobadrules'
+
+
     ####
     # Training of priority partial grounding models
     ####
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-aleph'):
-        aleph_experiment.run_aleph_class_probability (f'{TRAINING_DIR}/partial-grounding-aleph', instances_manager.get_training_datasets(), ENV)
+        aleph_experiment.run_aleph_class_probability (f'{TRAINING_DIR}/partial-grounding-aleph', [TRAINING_SET], ENV)
     else:
         assert args.resume
 

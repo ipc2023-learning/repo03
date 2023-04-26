@@ -20,8 +20,7 @@ from candidate_models import CandidateModels
 
 # Hardcoded paths that depend on the trraining part. This could be passed by parameter instead
 PARTIAL_GROUNDING_RULES_DIR = 'partial-grounding-sklearn'
-PARTIAL_GROUNDING_ALEPH_DIR  = 'partial-grounding-aleph'
-PARTIAL_GROUNDING_HARD_RULES_DIR = 'partial-grounding-hard-rules'
+PARTIAL_GROUNDING_ALEPH_DIRS  = ['partial-grounding-aleph', 'partial-grounding-good-rules', 'partial-grounding-bad-rules']
 
 # Hardcoded paths
 INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
@@ -134,9 +133,8 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
     #############################
     candidate_models = CandidateModels()
     candidate_models.load_sk_folder(os.path.join(DATA_DIR,PARTIAL_GROUNDING_RULES_DIR))
-    candidate_models.load_aleph_folder(os.path.join(DATA_DIR, PARTIAL_GROUNDING_ALEPH_DIR))
-    candidate_models.load_aleph_folder(os.path.join(DATA_DIR, PARTIAL_GROUNDING_HARD_RULES_DIR))
-
+    for ALEPH_DIR in PARTIAL_GROUNDING_ALEPH_DIRS:
+        candidate_models.load_aleph_folder(os.path.join(DATA_DIR, ALEPH_DIR))
 
     ############################
     ### Create model parameters

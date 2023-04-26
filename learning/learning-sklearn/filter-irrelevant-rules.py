@@ -53,6 +53,8 @@ if __name__ == "__main__":
     argparser.add_argument("output", type=argparse.FileType('w'), help="Output file")
     argparser.add_argument("--instances-relevant-rules", type=int, help="Number of instances for relevant rules", default=1000)
     argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)
+    argparser.add_argument("--filter-good-rules", action="store_true", help="If enabled, it filters those rule that are good rules")
+
     options = argparser.parse_args()
 
     training_lines = defaultdict(list)
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     for task_run in sorted(os.listdir(options.runs_folder)):
         if i > options.instances_relevant_rules:
              break
-        if not os.path.isfile('{}/{}/{}'.format(options.runs_folder, task_run, 'sas_plan')):
+        if not os.path.isfile('{}/{}/{}'.format(options.runs_folder, task_run, 'sas_plan')) and not os.path.isfile('{}/{}/{}'.format(options.runs_folder, task_run, 'good_operators')):
             continue
 
         print(f"handling instance {i}/{len(os.listdir(options.runs_folder))}")
@@ -94,7 +96,13 @@ if __name__ == "__main__":
 
     # training_re.print_statistics()
 
-    relevant_rules = training_re.get_relevant_rules()
-    print("Relevant rules: ", len(relevant_rules))
 
-    options.output.write("\n".join(map(lambda x : x.replace('\n', ''), relevant_rules)))
+    if options.filter_good_rules:
+        good_rules = training_re.get_good_rules()
+        print("Good rules: ", len(good_rules))
+        options.output.write("\n".join(map(lambda x : x.replace('\n', ''), good_rules)))
+    else:
+        relevant_rules = training_re.get_relevant_rules()
+        print("Relevant rules: ", len(relevant_rules))
+
+        options.output.write("\n".join(map(lambda x : x.replace('\n', ''), relevant_rules)))

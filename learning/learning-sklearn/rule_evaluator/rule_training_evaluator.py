@@ -43,6 +43,7 @@ class RuleTrainingEvaluator:
     def __init__(self, rules_text):
         self.rules = {}
         self.num_rules = 0
+        self.num_tasks = 0
         rules_per_schema = defaultdict(list)
         for l in rules_text:
             action_schema = l.split(" (")[0]
@@ -53,6 +54,7 @@ class RuleTrainingEvaluator:
             self.rules[schema] = [TrainingRule(rules_per_schema[schema])]
 
     def init_task (self, task, max_training_examples):
+        self.num_tasks += 1
         for schema, rs in self.rules.items():
             for r in rs:
                 r.load(task, max_training_examples)
@@ -64,12 +66,23 @@ class RuleTrainingEvaluator:
         if name in self.rules:
             new_rules = [rule.evaluate(arguments) for rule in self.rules[name]]
             self.rules[name] += [r for r in new_rules if r]
+
         ################################# This case can happen if we do not have any rules for some schemas
         # else:
         #     print ("Error: unrecognized action name: {}".format(name))
         #     exit()
     def get_relevant_rules(self):
         return [rule.get_text() for (schema, rules)  in self.rules.items() for rule in rules if rule.evaluation_result_count_0 > 0 and rule.evaluation_result_count_1 > 0]
+
+    def is_good_rule(self, rule):
+        percentage_good = rule.evaluation_result_count_1/(rule.evaluation_result_count_1 + rule.evaluation_result_count_0)
+        print (f"Analyzing if good rule {rule.rules_text}\n   match yes {rule.evaluation_result_count_1}, no {rule.evaluation_result_count_0} \n    {percentage_good}% matches, average per task:  {rule.evaluation_result_count_1/self.num_tasks}\n   Is good rule: {percentage_good < 0.1 or rule.evaluation_result_count_1/self.num_tasks < 100}\n")
+
+        return percentage_good < 0.1 or rule.evaluation_result_count_1/self.num_tasks < 100
+
+
+    def get_good_rules(self):
+        return [rule.get_text() for (schema, rules)  in self.rules.items() for rule in rules if self.is_good_rule(rule)]
 
     def print_statistics(self):
         for schema, rs in self.rules.items():

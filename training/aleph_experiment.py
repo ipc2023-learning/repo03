@@ -15,23 +15,31 @@ from typing import List
 from pathlib import Path
 
 import json
-class AlephExperiment:
 
+
+def get_config_parameters(config):
+    # TODO:  Add negated and equal predicate?
+    CONFIGS = {"good_rules" : ['--op-file', 'good_operators', '--prediction-type', 'good-actions'],
+               "bad_rules" : ['--op-file', 'good_operators', '--prediction-type', 'bad-actions'],
+               "class_probability" : ['--op-file', 'good_operators', '--prediction-type', 'class-probability'],
+               }
+    return CONFIGS[config]
+
+class AlephExperiment:
     def __init__(self, REPO_LEARNING, domain_file, time_limit, memory_limit):
         self.REPO_LEARNING = REPO_LEARNING
         self.domain_file = domain_file
         self.time_limit = time_limit
         self.memory_limit = memory_limit
 
-
-    def run_aleph (self, WORKING_DIR, RUNS_DIRS, ENV, aleph_configs):
+    def run_aleph (self, WORKING_DIR, RUNS_DIR, ENV, aleph_configs):
         exp = Experiment(path=os.path.join(WORKING_DIR, "exp"), environment=ENV)
 
-        for RUNS_DIR in RUNS_DIRS:
-            for config_name, config in aleph_configs.items():
+        for config_name in aleph_configs:
                 my_working_dir = os.path.abspath(f'{WORKING_DIR}/{os.path.basename(RUNS_DIR)}-{config_name}')
-
                 print(f"Running: generate-training-data-aleph.py on {my_working_dir}")
+
+                config = get_config_parameters(config_name)
 
                 Call([sys.executable, os.path.join(self.REPO_LEARNING, 'learning-aleph', 'generate-training-data-aleph.py'), f'{RUNS_DIR}', my_working_dir] + config,
                      "generate-aleph-files", time_limit=self.time_limit, memory_limit=self.memory_limit).wait()
@@ -75,14 +83,8 @@ class AlephExperiment:
 
         ENV.run_steps(exp.steps)
 
-    def run_aleph_hard_rules (self, WORKING_DIR, RUNS_DIRS, ENV):
-
-        # TODO:  Add negated and equal predicate?
-        aleph_configs = {"good_rules" : ['--op-file', 'good_operators', '--prediction-type', 'good-actions'],
-                         "bad_rules" : ['--op-file', 'good_operators', '--prediction-type', 'bad-actions'],
-                         }
-
-        self.run_aleph (WORKING_DIR, RUNS_DIRS, ENV, aleph_configs)
+    def run_aleph_hard_rules (self, WORKING_DIR, RUNS_DIR, ENV, aleph_configs):
+        self.run_aleph (WORKING_DIR, RUNS_DIR, ENV, aleph_configs)
 
         good_rules = set()
         bad_rules = set()
@@ -102,23 +104,21 @@ class AlephExperiment:
                         print ("Warning: Unknown error while gathering rules")
 
 
-        with open(os.path.join(WORKING_DIR,'good_rules.rules'), 'w') as f:
-            f.write("\n".join(list(sorted(good_rules))))
+        if good_rules:
+            with open(os.path.join(WORKING_DIR,'candidate-good_rules.rules'), 'w') as f:
+                f.write("\n".join(list(sorted(good_rules))))
 
-        with open(os.path.join(WORKING_DIR,'bad_rules.rules'), 'w') as f:
-             f.write("\n".join(list(sorted(bad_rules))))
+            Call([sys.executable, f'{self.REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', f'{RUNS_DIR}', f'{WORKING_DIR}/candidate-good_rules.rules', f'{WORKING_DIR}/good_rules.rules'],
+                 "--filter-good-rules", time_limit=self.time_limit, memory_limit=self.memory_limit,stdout=os.path.join(WORKING_DIR, 'log_filter_candidate_good_rules')).wait()
+
+        if bad_rules:
+            with open(os.path.join(WORKING_DIR,'bad_rules.rules'), 'w') as f:
+                f.write("\n".join(list(sorted(bad_rules))))
 
 
-        # shutil.rmtree(path_exp+ "-exp")
 
-
-
-    def run_aleph_class_probability (self, WORKING_DIR, RUNS_DIRS, ENV):
-        aleph_configs = {
-            "class_probability" : ['--op-file', 'good_operators', '--prediction-type', 'class-probability'],
-        }
-
-        self.run_aleph (WORKING_DIR, RUNS_DIRS, ENV, aleph_configs)
+    def run_aleph_class_probability (self, WORKING_DIR, RUNS_DIR, ENV):
+        self.run_aleph (WORKING_DIR, RUNS_DIR, ENV, ['class_probability'])
 
         class_probability_by_dataset = defaultdict(set)
         for direc in os.listdir(os.path.join(WORKING_DIR, "exp")):

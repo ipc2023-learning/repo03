@@ -2,6 +2,7 @@ import os
 import sys
 from lab.calls.call import Call
 
+
 def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domain_file, time_limit=300, memory_limit = 4*1024*1024):
     #TODO: check time and memory limit (right now it's taken as a limit per step, and not a limit in total
 
