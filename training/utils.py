@@ -17,7 +17,7 @@ class SaveModel:
 
         knowledge_filename = self.knowledge_file
         if self.keep_copies:
-            kwfile += f'.{self.keep_copies}'
+            knowledge_filename += f'.{self.keep_copies}'
             self.keep_copies += 1
 
         shutil.move(self.knowledge_file + '.tmp', knowledge_filename)
