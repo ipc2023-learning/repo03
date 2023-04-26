@@ -155,12 +155,14 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
         conditions.append(InCondition(child=m, parent=queue_type, values=["ipc23-single-queue", "ipc23-round-robin"]))
 
     for i, r in enumerate(candidate_models.good_rules):
-        good = Categorical(f"good_{i}", [False, True], default=True)
+        #good = Categorical(f"good_{i}", [False, True], default=True)
+        good = Constant(f"good_{i}", True)
         parameters.append(good)
         conditions.append(InCondition(child=good, parent=stopping_condition, values=["relaxed", "relaxed5", "relaxed10", "relaxed20"]))
 
     for i, r in enumerate(candidate_models.bad_rules):
         parameters.append(Categorical(f"bad{i}", [False, True], default=True))
+        #parameters.append(Constant(f"bad{i}", True))
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
     cs.add_hyperparameters(parameters)

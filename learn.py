@@ -34,7 +34,7 @@ MEDIUM_TIME_LIMITS = {
     'run_experiment' : 60, # One minute
     'train-hard-rules' : 120, # time per schema
     'smac-optimization-hard-rules' : 300,
-    'smac-partial-grounding-total' : 1800,
+    'smac-partial-grounding-total' : 900,
     'smac-partial-grounding-run' : 30
 }
 
