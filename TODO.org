@@ -4,8 +4,6 @@
 ** Combine cost and unit-cost good operators?
 
 * Fix
-** TODO Make sure that instance_features are defined for all features!
-
 ** [#A] Set time limits for everything
 
 ** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
