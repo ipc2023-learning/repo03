@@ -6,6 +6,9 @@ import traceback
 
 from collections import defaultdict
 
+from lab.calls.call import Call
+import sys
+
 class SaveModel:
     def __init__(self, knowledge_file, keep_copies=True):
         self.knowledge_file = knowledge_file
@@ -28,7 +31,7 @@ class SaveModel:
 
 
 def filter_training_set(REPO_LEARNING, TRAINING_SET, rules_file, output):
-    try:
+    # try:
         os.mkdir(output)
         for problem in os.listdir(TRAINING_SET):
             output_p = os.path.join(output, problem)
@@ -52,9 +55,9 @@ def filter_training_set(REPO_LEARNING, TRAINING_SET, rules_file, output):
                   rules_file,
                   os.path.join(output_p, 'good_operators')], "filter-training-set").wait()
 
-    except Exception as e:
-        print ("Warning: Error while filtering training set: {e}")
-        pass
+    # except Exception as e:
+    #     print (f"Warning: Error while filtering training set: {e}")
+    #     pass
 
 def combine_training_sets(TRAINING_SETS, output):
     try:

@@ -171,7 +171,7 @@ def main():
     #####
     if os.path.exists(f'{TRAINING_DIR}/partial-grounding-good-rules/good_rules.rules'):
         if not os.path.exists(f'{TRAINING_SET}-nogoodrules'):
-            filter_training_set(TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-good-rules/good_rules.rules', f'{TRAINING_SET}-nogoodrules')
+            filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-good-rules/good_rules.rules', f'{TRAINING_SET}-nogoodrules')
         TRAINING_SET = f'{TRAINING_SET}-nogoodrules'
 
 
@@ -211,7 +211,7 @@ def main():
     # Training of priority partial grounding models
     ####
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-aleph'):
-        aleph_experiment.run_aleph_class_probability (f'{TRAINING_DIR}/partial-grounding-aleph', [TRAINING_SET], ENV)
+        aleph_experiment.run_aleph_class_probability (f'{TRAINING_DIR}/partial-grounding-aleph', TRAINING_SET, ENV)
     else:
         assert args.resume
 

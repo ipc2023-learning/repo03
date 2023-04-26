@@ -91,7 +91,7 @@ class AlephExperiment:
         for direc in os.listdir(os.path.join(WORKING_DIR, "exp")):
             if direc.startswith("runs") and os.path.isdir(os.path.join(WORKING_DIR, "exp", direc)):
                 for rundir in os.listdir(os.path.join(WORKING_DIR, "exp", direc)):
-                    try:
+                    # try:
                         input_dir = os.path.join(WORKING_DIR, "exp", direc, rundir)
 
                         rules = json.load(open('%s/properties' % input_dir))['rules']
@@ -100,16 +100,16 @@ class AlephExperiment:
                             bad_rules.update(rules)
                         else:
                             good_rules.update(rules)
-                    except:
-                        print ("Warning: Unknown error while gathering rules")
+                    # except:
+                    #     print ("Warning: Unknown error while gathering rules")
 
 
         if good_rules:
             with open(os.path.join(WORKING_DIR,'candidate-good_rules.rules'), 'w') as f:
                 f.write("\n".join(list(sorted(good_rules))))
 
-            Call([sys.executable, f'{self.REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', f'{RUNS_DIR}', f'{WORKING_DIR}/candidate-good_rules.rules', f'{WORKING_DIR}/good_rules.rules'],
-                 "--filter-good-rules", time_limit=self.time_limit, memory_limit=self.memory_limit,stdout=os.path.join(WORKING_DIR, 'log_filter_candidate_good_rules')).wait()
+            Call([sys.executable, f'{self.REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', f'{RUNS_DIR}', f'{WORKING_DIR}/candidate-good_rules.rules', f'{WORKING_DIR}/good_rules.rules', '--filter-good-rules'],
+                 "filter-good-rules", time_limit=self.time_limit, memory_limit=self.memory_limit,stdout=os.path.join(WORKING_DIR, 'log_filter_candidate_good_rules')).wait()
 
         if bad_rules:
             with open(os.path.join(WORKING_DIR,'bad_rules.rules'), 'w') as f:

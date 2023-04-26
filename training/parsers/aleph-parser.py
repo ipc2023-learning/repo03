@@ -231,9 +231,9 @@ class AlephParser(Parser):
             true_positives, false_positives, false_negatives, true_negatives = int(match[1]), int(match[2]), int(match[3]), int(match[4])
 
             props['true_positives'], props['false_positives'], props['false_negatives'], props['true_negatives'] = true_positives, false_positives, false_negatives, true_negatives
-            props['precision'] = true_positives/(true_positives + false_positives)
-            props['recall'] = true_positives/(true_positives + false_negatives)
-            props['f_value'] = 2*props['precision']*props['recall']/(props['precision'] + props['recall'] )
+            props['precision'] = true_positives/(true_positives + false_positives) if true_positives else 0
+            props['recall'] = true_positives/(true_positives + false_negatives) if true_positives else 0
+            props['f_value'] = 2*props['precision']*props['recall']/(props['precision'] + props['recall'] ) if true_positives else 0
 
         else:
             try:
