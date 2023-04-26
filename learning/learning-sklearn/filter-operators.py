@@ -50,7 +50,14 @@ if __name__ == "__main__":
     task = parsing_functions.parse_task(domain_pddl, task_pddl)
     reval = RulesEvaluator(options.rules.readlines(), task)
     for action in options.operators.readlines():
-        name, arguments = action.split("(")
-        arguments = list(map(lambda x: x.strip(), arguments.strip()[:-1].split(",")))
+        #print(action)
+        if "(" in action:
+            name, arguments = action.split("(")
+            arguments = list(map(lambda x: x.strip(), arguments.strip()[:-1].split(",")))
+        else:
+            args = action.strip().split(" ")
+            name = args[0]
+            arguments = list(map(lambda x: x.strip(), args[1:]))
+        #print(name, arguments)
         if not any(reval.evaluate(name, arguments)):
             options.output.write(action)
