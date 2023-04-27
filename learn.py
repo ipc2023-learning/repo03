@@ -35,7 +35,7 @@ MEDIUM_TIME_LIMITS = {
     'train-hard-rules' : 120, # time per schema
     'smac-optimization-hard-rules' : 300,
     'smac-partial-grounding-total' : 900,
-    'smac-partial-grounding-run' : 30
+    'smac-partial-grounding-run' : 60
 }
 
 # All time limits are in seconds

@@ -47,6 +47,7 @@ class Eval:
         if self.candidate_models.is_using_priority_model(config) and not 'ipc23' in config['queue_type']:
             return 10000000
 
+        #print (config)
         config_name = self.candidate_models.get_unique_model_name(config)
         model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
         if not os.path.exists(model_path):
@@ -57,6 +58,9 @@ class Eval:
                             '--incremental-grounding', '--incremental-grounding-increment-percentage', '20',
                             '--termination-condition', config['termination-condition']]
 
+        if "ignore-bad-actions" in config and config["ignore-bad-actions"].lower().strip() == "true":
+            extra_parameters += ["--ignore-bad-actions"]
+
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
         assert(os.path.exists(instance_file))
@@ -64,27 +68,32 @@ class Eval:
         command=[sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        # print (" ".join(command[1:]))
+
         time_limit = self.trial_walltime_limit
 
+        config_description = f"{instance} with {config['alias']}, queue {config['queue_type']}, termination {config['termination-condition']}, and model {config_name}"
         try:
             output, error_output = proc.communicate(timeout=time_limit)
 
+            num_operators = self.regex_operators.findall(output)
+            if num_operators:
+                num_operators = int(num_operators[-1].decode()) # Get the last match, as we are doing incremental grounding
+
             total_time = self.regex_total_time.search(output)
-            num_operators = self.regex_operators.search(output)
             plan_cost = self.regex_plan_cost.search(output)
 
             if total_time and num_operators and plan_cost:
                 total_time = float(total_time.group(1))
-                num_operators = int(num_operators.group(1))
                 plan_cost = int(plan_cost.group(1))
-                print (f"Ran {instance} with {config['alias']}, queue {config['queue_type']}, termination {config['termination-condition']}, and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
+                print (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 return num_operators
             elif self.regex_no_solution.search(output):
-                print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")
+                print (f"Ran {config_description}: not solved due to partial grounding")
                 #print(output.decode())
                 return 10000000
             else:
-                print (f"WARNING: Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
+                print (f"WARNING: Ran {config_description}: not solved due to unknown reasons")
 
                 print("Output: ", output.decode())
                 if error_output:
@@ -93,19 +102,19 @@ class Eval:
         except subprocess.CalledProcessError:
             proc.kill()
             print (f"WARNING: Command failed: {' '.join(command)}")
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
+            print (f"Ran {config_description}: not solved due to crash")
             return 10000000
 
         except subprocess.TimeoutExpired as e:
             proc.kill()
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
+            print (f"Ran {config_description}: not solved due to time limit")
             # print(e)
             return 10000000
 
-        except:
-            proc.kill()
-            print (f"Error: Command failed: {' '.join(command)}")
-            return 10000000
+        # except:
+        #     proc.kill()
+        #     print (f"Error: Command failed: {' '.join(command)}")
+        #     return 10000000
 
 
     def target_function_bad_rules (self, config: Configuration, instance: str, seed: int) -> float:
@@ -206,7 +215,7 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR, domain_file,
              walltime_limit, trial_walltime_limit, n_trials,
              n_workers, PARTIAL_GROUNDING_RULES_DIRS=[],
              PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-good-rules', 'partial-grounding-bad-rules'],
-             only_bad_rules=True)
+             only_bad_rules=True, optimize_search=False)
 
 
 
@@ -224,7 +233,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
              walltime_limit, trial_walltime_limit, n_trials,
              n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
              PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
-             only_bad_rules=False)
+             only_bad_rules=False, optimize_search=False)
 
 
 
@@ -233,7 +242,8 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
              instance_dir, instances_with_features : dict, instances_properties : dict,
              walltime_limit, trial_walltime_limit, n_trials,
              n_workers, PARTIAL_GROUNDING_RULES_DIRS,
-             PARTIAL_GROUNDING_ALEPH_DIRS, only_bad_rules):
+             PARTIAL_GROUNDING_ALEPH_DIRS, only_bad_rules,
+             optimize_search):
 
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
@@ -262,21 +272,24 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     if only_bad_rules:
         stopping_condition = Constant(f"termination-condition", 'full')
-        alias = Constant('alias', 'lama-first')
         queue_type = Constant("queue_type", "ipc23-single-queue")
-
     else:
-        stopping_condition = Categorical(f"termination-condition", ['full', "relaxed", "relaxed5", "relaxed10", "relaxed20"])
-        alias = Categorical('alias', ['lama-first'] + [f"seq-sat-fdss-2018-{i}" for i in range(0, 41)], default='lama-first')
+        stopping_condition = Categorical(f"termination-condition", ['full', "relaxed", "relaxed5", "relaxed10", "relaxed20"], default='relaxed10')
         queue_type = Categorical("queue_type", ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='ipc23-single-queue')
         # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
         # this requires a file "schema_ratios in the --trained-model-folder with line format: stack:0.246087
 
+
+    if not only_bad_rules and optimize_search:
+        alias = Categorical('alias', ['lama-first'] + [f"seq-sat-fdss-2018-{i}" for i in range(0, 41)], default='lama-first')
+    else:
+        alias = Constant('alias', 'lama-first')
+
     parameters = [alias, queue_type, stopping_condition]
     conditions = []
 
-    if only_bad_rules:
-        parameters.add(Constant('ignore-bad-actions'), "true")
+    # if only_bad_rules:
+    parameters.append(Constant('ignore-bad-actions', "true"))
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         assert not only_bad_rules
@@ -294,13 +307,16 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         for i, r in enumerate(candidate_models.bad_rules):
             parameters.append(Constant(f"bad{i}",1 ))
 
-    cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
+    cs = ConfigurationSpace(seed=2023)
     cs.add_hyperparameters(parameters)
     cs.add_conditions(conditions)
 
     evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties)
 
     sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
+
+    sorted_instances = sorted_instances[:5]
+    instances_with_features = {x : instances_with_features[x] for x in sorted_instances}
 
     scenario = Scenario(
         configspace=cs, deterministic=True,

@@ -136,7 +136,7 @@ if __name__ == "__main__":
     training_lines = defaultdict(list)
     testing_lines = defaultdict(list)
 
-
+    start_time  = time.time()
     all_instances = sorted([d for d in os.listdir(options.runs_folder) if os.path.isfile('{}/{}/{}'.format(options.runs_folder, d, operators_filename))])
     np.random.seed(2018)
     testing_instances = np.random.choice(all_instances, int(options.num_test_instances), replace=False)

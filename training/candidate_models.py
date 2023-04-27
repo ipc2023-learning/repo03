@@ -32,19 +32,17 @@ class CandidateModels:
             any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
 
     def get_unique_model_name(self, config):
-        assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
-
-        parts = []
-        if self.sk_models_per_action_schema:
+        parts = ["model"]
+        if self.is_using_priority_model(config):
             prefix = lambda x : "sk" if x.startswith(PREFIX_SK_MODELS) else ("a" if x.endswith(SUFFIX_ALEPH_MODELS) else "")
             priority_name = "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
             parts.append(priority_name)
 
         if self.bad_rules:
             parts.append('bad-' + ''.join(['y' if config[f"bad{i}"] else 'n'  for i, r in enumerate(self.bad_rules)]))
+
         if self.good_rules:
             parts.append('good-' + ''.join(['y' if config[f"good{i}"] else 'n'  for i, r in enumerate(self.good_rules)]))
-
 
         return '_'.join(parts)
 
