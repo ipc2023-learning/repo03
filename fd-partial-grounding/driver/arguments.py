@@ -375,7 +375,10 @@ def parse_args():
     grounding.add_argument("--incremental-grounding-increment", default=None, type=int, help="increment in number of actions")
     grounding.add_argument("--incremental-grounding-minimum", default=None, type=int, help="minimum number of actions to ground in first iteration")
     grounding.add_argument("--incremental-grounding-increment-percentage", default=None, type=int, help="increment in percentage of actions")
-    
+
+    # HACK to support how plans should be saved for IPC23
+    grounding.add_argument("--keep-first-plan-file", action="store_true",
+                           help="In case the file args.plan_file.1 already exists, it is not removed.")
 
     driver_other = parser.add_argument_group(
         title="other driver options")

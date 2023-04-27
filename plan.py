@@ -95,23 +95,28 @@ def main():
 
     config = get_options(os.path.join(dk_folder, "config"))
 
-    # TODO add time + memory limits
+    plan_file = os.path.abspath(args.plan)
+
     # TODO maybe limit time for partial grounding translator?
     subprocess.run([sys.executable, PLAN_PARTIAL_GROUNDING] +
-                   [dk_folder, args.domain, args.problem, "--plan", args.plan] +
+                   [dk_folder, args.domain, args.problem, "--plan", plan_file] +
                    config)
 
     # run standard LAMA as fallback or to improve found solution
     lama_config = ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
                    "--transform-task-options", "h2_time_limit,300",
-                   "--plan", args.plan, args.domain, args.problem]
-    if os.path.isfile(args.plan):
-        with open(args.plan) as plan_file:
-            cost_line = plan_file.readlines()[-1]
+                   "--plan", plan_file, args.domain, args.problem]
+    if os.path.isfile(plan_file):
+        with open(plan_file) as p_file:
+            cost_line = p_file.readlines()[-1]
             cost_re = re.compile(r'^; cost = (\d+)')
             bound = cost_re.match(cost_line).group(1)
 
+        os.rename(plan_file, plan_file + ".1")
+
         lama_config += get_lama(bound)
+        lama_config += ["--internal-previous-portfolio-plans", "1"]
+        lama_config = ["--keep-first-plan-file"] + lama_config
     else:
         lama_config = ["--alias", "lama"] + lama_config
 
