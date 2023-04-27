@@ -105,6 +105,9 @@ def parse_args():
     argparser.add_argument(
         "--optimized-fasttext", action="store_true",
         help="Optimized evaluation for fasttext models.")
+    argparser.add_argument(
+        "--ignore-bad-actions", action="store_true",
+        help="Completely ignore actions evaluated as bad by the GoodBadRuleEvaluator.")
 
     return argparser.parse_args()
 
