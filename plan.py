@@ -101,7 +101,6 @@ def main():
                    [dk_folder, args.domain, args.problem, "--plan", args.plan] +
                    config)
 
-    # TODO add memory limit
     # run standard LAMA as fallback or to improve found solution
     lama_config = ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
                    "--transform-task-options", "h2_time_limit,300",
@@ -115,6 +114,8 @@ def main():
         lama_config += get_lama(bound)
     else:
         lama_config = ["--alias", "lama"] + lama_config
+
+    lama_config = ["--overall-memory-limit", "8000M"] + lama_config
 
     subprocess.run([sys.executable, FD_PARTIAL_GROUNDING] + lama_config)
 
