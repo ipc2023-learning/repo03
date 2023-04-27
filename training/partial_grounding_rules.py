@@ -3,7 +3,8 @@ import sys
 from lab.calls.call import Call
 
 
-def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domain_file, time_limit=300, memory_limit = 4*1024*1024):
+def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domain_file, time_limit=300,
+                                     memory_limit = 4*1024*1024):
     #TODO: check time and memory limit (right now it's taken as a limit per step, and not a limit in total
 
     os.mkdir(f"{WORKING_DIR}")    # TODO: Set to 10k instead of 1k
@@ -17,7 +18,7 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
                                          f'{WORKING_DIR}/rules-exhaustive-1k-filtered',
                                          f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered',
                                          '--op-file', 'good_operators',
-                                         '--max-training-examples', '1000000'#, '--time-limit', str(time_limit) # '--num-test-instances TODO Set some test instances
+                                         '--max-training-examples', '1000000', '--time-limit', str(time_limit) # '--num-test-instances TODO Set some test instances
           ], "generate-training-data-1", time_limit=time_limit*10, memory_limit=memory_limit).wait()
 
 

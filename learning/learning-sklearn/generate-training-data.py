@@ -61,6 +61,7 @@ if __name__ == "__main__":
     argparser.add_argument("--op-file", default="sas_plan", help="File to store the training data by gen-subdominization-training")
     argparser.add_argument("--num-test-instances", type=int,default=0, help="Number of instances reserved for the testing set")
     argparser.add_argument("--max-training-examples", type=int, help="Maximum number of training examples for action schema", default=1000000)
+    argparser.add_argument("--time-limit", type=int, help="Soft time limit ")
 
     options = argparser.parse_args()
 
@@ -141,6 +142,9 @@ if __name__ == "__main__":
     testing_instances = np.random.choice(all_instances, int(options.num_test_instances), replace=False)
 
     for task_run in all_instances:
+        if options.time_limit and time.time() - start_time > options.time_limit:
+            print (f"Stopping before processing {task_run} due to the time limit")
+            break
         print ("Processing ", task_run)
         is_test_instance = task_run in testing_instances
         domain_filename = '{}/{}/{}'.format(options.runs_folder, task_run, "domain.pddl")

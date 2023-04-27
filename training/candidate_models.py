@@ -16,16 +16,31 @@ class CandidateModels:
         self.aleph_folder = None
 
     def is_using_model(self, config):
+        return self.is_using_priority_model(config) or self.is_using_rules(config)
+
+    def is_using_rules(self, config):
+        return any ([config[f"bad{i}"] for i, r in enumerate(self.bad_rules)] + [config[f"good{i}"] for i, r in enumerate(self.good_rules)] )
+
+    def is_using_priority_model(self, config):
         return all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
             any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
 
     def get_unique_model_name(self, config):
         assert all([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema])
-        prefix = lambda x : "sk" if x.startswith(PREFIX_SK_MODELS) else ("a" if x.endswith(SUFFIX_ALEPH_MODELS) else "")
-        priority_name = "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
-        bad_name = '-bad-' + ''.join(['y' if config[f"bad{i}"] else 'n'  for i, r in enumerate(self.bad_rules)])
-        good_name = '-good-' + ''.join(['y' if config[f"good{i}"] else 'n'  for i, r in enumerate(self.good_rules)])
-        return '-'.join([priority_name, bad_name, good_name])
+
+        parts = []
+        if self.sk_models_per_action_schema:
+            prefix = lambda x : "sk" if x.startswith(PREFIX_SK_MODELS) else ("a" if x.endswith(SUFFIX_ALEPH_MODELS) else "")
+            priority_name = "-".join([prefix(config[f'model_{aschema}']) + str(opts.index(config[f'model_{aschema}'])) for aschema, opts in self.sk_models_per_action_schema.items()])
+            parts.append(priority_name)
+
+        if self.bad_rules:
+            parts.append('bad-' + ''.join(['y' if config[f"bad{i}"] else 'n'  for i, r in enumerate(self.bad_rules)]))
+        if self.good_rules:
+            parts.append('good-' + ''.join(['y' if config[f"good{i}"] else 'n'  for i, r in enumerate(self.good_rules)]))
+
+
+        return '_'.join(parts)
 
 
 
@@ -101,12 +116,13 @@ class CandidateModels:
             with open(os.path.join(target_dir, 'class_probability.rules'), 'w') as f:
                 f.write('\n'.join(collected_aleph_models))
 
-        selected_bad_rules = [r for i, r in enumerate(self.bad_rules) if [config[f"bad{i}"]]]
+        selected_bad_rules = [r for i, r in enumerate(self.bad_rules) if config[f"bad{i}"]]
+
         if selected_bad_rules:
             with open(os.path.join(target_dir, 'bad_rules.rules'), 'w') as f:
                 f.write('\n'.join(selected_bad_rules))
 
-        selected_good_rules = [r for i, r in enumerate(self.good_rules) if [config[f"good{i}"]]]
+        selected_good_rules = [r for i, r in enumerate(self.good_rules) if config[f"good{i}"]]
         if selected_good_rules:
             with open(os.path.join(target_dir, 'good_rules.rules'), 'w') as f:
                 f.write('\n'.join(selected_good_rules))

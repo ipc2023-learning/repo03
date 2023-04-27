@@ -14,7 +14,7 @@ from run_experiment import RunExperiment
 from aleph_experiment import AlephExperiment
 
 from partial_grounding_rules import run_step_partial_grounding_rules
-from optimize_smac import run_smac_partial_grounding
+from optimize_smac import run_smac_partial_grounding, run_smac_bad_rules
 from instance_set import InstanceSet, select_instances_from_runs
 from utils import SaveModel, filter_training_set, combine_training_sets
 
@@ -192,19 +192,25 @@ def main():
     ### full grounding + bad rules
 
     # We want to fix completely the hard rules at this stage, so let's use all SMAC_INSTANCES
-    # SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
+    if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding-bad-rules'):
+        SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
+        run_smac_bad_rules(TRAINING_DIR, os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules'), args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
+                           trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                           walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                           n_trials=10000, n_workers=1)
 
-    # run_smac_hard_rules(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-hard-rules', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
-    #                     walltime_limit=TIME_LIMITS['smac-optimization-hard-rules'], n_trials=10000, n_workers=cpus)
+    else:
+        assert args.resume
 
+    exit()
 
     #####
     ## Remove actions that are matched by bad rules from the training data
     #####
-    # if os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules'):
-    #     if not os.path.exists(f'{TRAINING_SET}-nobadrules'):
-    #         filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
-    #     TRAINING_SET = f'{TRAINING_SET}-nobadrules'
+    if os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules'):
+        if not os.path.exists(f'{TRAINING_SET}-nobadrules'):
+            filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
+        TRAINING_SET = f'{TRAINING_SET}-nobadrules'
 
 
     ####
