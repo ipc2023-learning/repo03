@@ -62,7 +62,6 @@ class CandidateModels:
                 self.sk_models_per_action_schema[n[:-6]].append(model)
 
     def load_aleph_folder(self, aleph_folder):
-
         aleph_model_filenames = [name for name in os.listdir(aleph_folder) if name.endswith(SUFFIX_ALEPH_MODELS)]
         for model_filename in aleph_model_filenames:
             with open(os.path.join(aleph_folder, model_filename)) as model_file:
@@ -76,9 +75,9 @@ class CandidateModels:
                     for line in model_file.readlines():
                         schema = line.split(":-")[ 0].strip()
                         self.sk_models_per_action_schema [schema].append(model_filename)
-                elif 'good_rules' in model_filename:
+                elif model_filename.startswith('good_rules'):
                     self.good_rules +=[l.strip() for l in model_file.readlines()]
-                elif 'bad_rules' in model_filename:
+                elif model_filename.startswith('bad_rules'):
                     self.bad_rules += [l.strip() for l in model_file.readlines()]
                 else:
                     print (f"Warning: ignoring file of unknown type: {model_filename}")

@@ -199,36 +199,30 @@ def main():
         happy_with_incumbent = False
         SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
 
-        while not happy_with_incumbent:
-            run_smac_bad_rules(TRAINING_DIR, os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules'), args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
-                               trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
-                               walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
-                               n_trials=10000, n_workers=args.cpus)
+        run_smac_bad_rules(TRAINING_DIR, os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules'), args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
+                           trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                           walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                           n_trials=10000, n_workers=1)
 
             # RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first",
             #                                                                                                            "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
             #                                                                                                            "--transform-task-options", f"h2_time_limit,300"])
 
-            happy_with_incumbent = True
-            if happy_with_incumbent:
-                pass
-            else:
-                    SMAC_INSTANCES = select_new_instances
-
+        incumbent_path = os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')
+        assert os.path.exists(incumbent_path)
+        save_model.save(incumbent_path) # We save this configuration
+        shutils.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
 
     else:
         assert args.resume
 
-    exit()
-
     #####
     ## Remove actions that are matched by bad rules from the training data
     #####
-    if os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules'):
+    if os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules/bad_rules.rules'):
         if not os.path.exists(f'{TRAINING_SET}-nobadrules'):
-            filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
+            filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-hard-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
         TRAINING_SET = f'{TRAINING_SET}-nobadrules'
-
 
     ####
     # Training of priority partial grounding models

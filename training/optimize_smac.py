@@ -250,21 +250,28 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
     )
 
     # Use SMAC to find the best configuration/hyperparameters
-    smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function_bad_rules) #initial_design=DefaultInitialDesign(scenario))
+    smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function_bad_rules)#cs.get_default_configuration())
 
     #smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function_bad_rules,)
+
+    incumbent_config = smac.optimize()
+
 
     default_cost = smac.validate(cs.get_default_configuration())
     print(f"Default cost: {default_cost}")
 
-    incumbent_config = smac.optimize()
+    incumbent_cost = smac.validate(incumbent_config)
+
+    print(f"Incumbent cost: {incumbent_cost}")
+
 
     print("Chosen set of bad rules: ", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
 
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
         properties = {k : v for k,v in incumbent_config.get_dictionary().items() if not k.startswith('good') and not k.startswith('bad')}
-        properties['bad-rules'] = [i for i, _ in enumerate(candidate_models.bad_rules) if [incumbent_config[f"bad{i}"]]]
+        properties['num_bad_rules'] = sum([1 for i, _ in enumerate(candidate_models.bad_rules) if [incumbent_config[f"bad{i}"]]])
+        properties['num_good_rules'] = sum([1 for i, _ in enumerate(candidate_models.good_rules) if [incumbent_config[f"good{i}"]]])
         json.dump(properties, config_file)
 
 
@@ -311,14 +318,10 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
         conditions.append(InCondition(child=m, parent=queue_type, values=["ipc23-single-queue", "ipc23-round-robin"]))
 
     for i, r in enumerate(candidate_models.good_rules):
-        #good = Categorical(f"good_{i}", [False, True], default=True)
-        good = Constant(f"good{i}", 1)
-        parameters.append(good)
-        conditions.append(InCondition(child=good, parent=stopping_condition, values=["relaxed", "relaxed5", "relaxed10", "relaxed20"]))
+        parameters.append(Constant(f"good{i}", 1))
 
     for i, r in enumerate(candidate_models.bad_rules):
-        parameters.append(Categorical(f"bad{i}", [False, True], default=True))
-        #parameters.append(Constant(f"bad{i}", True))
+        parameters.append(Constant(f"bad{i}",1 ))
 
     cs = ConfigurationSpace(seed=2023) # Fix seed for reproducibility
     cs.add_hyperparameters(parameters)
@@ -357,7 +360,6 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
         properties = {k : v for k,v in incumbent_config.get_dictionary().items() if not k.startswith('good') and not k.startswith('bad')}
 
-        properties['bad-rules'] = [i for i, _ in enumerate(candidate_models.bad_rules) if [incumbent_config[f"bad{i}"]]]
-        properties['good-rules'] = [i for i, _ in enumerate(candidate_models.good_rules) if [incumbent_config[f"good{i}"]]]
-
+        properties['num_bad_rules'] = sum([1 for i, _ in enumerate(candidate_models.bad_rules) if [incumbent_config[f"bad{i}"]]])
+        properties['num_good_rules'] = sum([1 for i, _ in enumerate(candidate_models.good_rules) if [incumbent_config[f"good{i}"]]])
         json.dump(properties, config_file)

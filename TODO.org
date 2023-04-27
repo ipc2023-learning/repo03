@@ -1,7 +1,3 @@
-* Alvaro:
-** Curation of bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
-
-
 * Fix
 ** [#A] Set time limits for everything
 
@@ -22,7 +18,6 @@ FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/parti
 
 
 * Features
-** [#A] Stone Soup
 ** [#B] Add BadPruning rules
 ** Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
 
