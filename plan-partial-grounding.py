@@ -63,21 +63,20 @@ def main():
         driver_options += ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
                            "--transform-task-options", f"h2_time_limit,{args.h2_time_limit}"]
 
-    translate_options = []
+    translate_options = ["--translate-options"]
 
     if args.ignore_bad_actions:
         translate_options += ["--ignore-bad-actions"]
 
     if args.termination_condition != "full":
-        translate_options += ["--translate-options",
-                              "--batch-evaluation",
+        translate_options += ["--batch-evaluation",
                               "--grounding-action-queue-ordering",
                               args.grounding_queue]
         if "ipc23" in args.grounding_queue:
             translate_options += ["--trained-model-folder", args.domain_knowledge]
 
     if args.incremental_grounding:
-        if args.termination_condition in ["relaxed5", "relaxed10", "relaxed20", "full"]:
+        if args.termination_condition in ["relaxed5", "relaxed10", "relaxed20", "full"]: # TODO fix this
             print("WARNING: termination condition is ignored when running incremental grounding.")
         driver_options += ["--incremental-grounding",
                            "--incremental-grounding-search-time-limit", str(args.incremental_grounding_search_time_limit),
