@@ -17,7 +17,7 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIR, WORKING_DIR, domai
                                          f'{WORKING_DIR}/rules-exhaustive-1k-filtered',
                                          f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered',
                                          '--op-file', 'good_operators',
-                                         '--max-training-examples', '1000000', '--time_limit', str(time_limit) # '--num-test-instances TODO Set some test instances
+                                         '--max-training-examples', '1000000', '--time-limit', str(time_limit) # '--num-test-instances TODO Set some test instances
           ], "generate-training-data-1", time_limit=time_limit*10, memory_limit=memory_limit).wait()
 
 
