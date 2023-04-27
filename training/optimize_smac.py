@@ -111,10 +111,11 @@ class Eval:
             num_operators = self.instances_properties[instance]['translator_operators']
             coverage = self.instances_properties[instance]['coverage']
             print (f"Ran {instance} without bad rules: full grounding size is {num_operators}, was solved by the baseline {coverage}")
-            return num_operators if coverage else 10000000
+            return num_operators# + self.candidate_models.total_bad_rules() if coverage else 10000000
 
 
         config_name = self.candidate_models.get_unique_model_name(config)
+        num_bad_rules = self.candidate_models.num_bad_rules(config)
         model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
         if not os.path.exists(model_path):
             self.candidate_models.copy_model_to_folder(config, model_path, symlink=True)
@@ -141,7 +142,7 @@ class Eval:
                 num_operators = int(num_operators.group(1))
                 plan_cost = int(plan_cost.group(1))
                 print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
-                return num_operators + num_bad_rules
+                return num_operators #+ self.candidate_models.total_bad_rules() - num_bad_rules
 
             elif self.regex_no_solution.search(output):
                 print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")

@@ -21,6 +21,12 @@ class CandidateModels:
     def is_using_rules(self, config):
         return any ([config[f"bad{i}"] for i, r in enumerate(self.bad_rules)] + [config[f"good{i}"] for i, r in enumerate(self.good_rules)] )
 
+    def num_bad_rules(self, config):
+        return sum ([1 for i, r in enumerate(self.bad_rules) if config[f"bad{i}"]])
+
+    def total_bad_rules(self):
+        return len(self.bad_rules)
+
     def is_using_priority_model(self, config):
         return all ([f'model_{aschema}' in config for aschema in self.sk_models_per_action_schema]) and \
             any  ([config[f'model_{aschema}'] != 'none' for aschema in self.sk_models_per_action_schema])
