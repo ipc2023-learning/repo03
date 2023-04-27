@@ -90,6 +90,8 @@ class CandidateModels:
         collected_relevant_rules = []
         collected_aleph_models = []
         for aschema in self.sk_models_per_action_schema:
+            if f'model_{aschema}' not in config:
+                continue
             if config[f'model_{aschema}'].startswith(PREFIX_SK_MODELS):
                 model_file = os.path.join(self.sk_folder, config[f'model_{aschema}'], aschema + ".model")
                 target_file = os.path.join(target_dir, aschema + ".model")

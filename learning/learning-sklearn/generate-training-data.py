@@ -10,9 +10,9 @@ import numpy as np
 
 from collections import defaultdict
 
-
 import shutil
 import bz2
+import time
 
 try:
     # Python 3.x

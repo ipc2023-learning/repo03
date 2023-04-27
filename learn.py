@@ -245,7 +245,7 @@ def main():
     SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
 
     if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding'):
-        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES,
+        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
                                    walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                                    trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
                                    n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
