@@ -24,6 +24,13 @@ def parse_args():
     parser.add_argument("--h2-time-limit", type=int, default=300,
                         help="time limit for h2 preprocessor, default 5min")
 
+    parser.add_argument("--overall-time-limit", type=int, default=1800,
+                        help="Overall time limit for the planner, default 30min")
+    parser.add_argument("--translate-time-limit", type=int,
+                        help="Time limit for the translator")
+    parser.add_argument("--overall-memory-limit", type=int, default=8000,
+                        help="Overall memory limit for the planner, default 8000MiB")
+
     parser.add_argument("--incremental-grounding", action="store_true")
     parser.add_argument("--incremental-grounding-search-time-limit", type=int, default=600,
                         help="search time limit in seconds per iteration")
@@ -62,6 +69,11 @@ def main():
     if args.h2_preprocessor:
         driver_options += ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
                            "--transform-task-options", f"h2_time_limit,{args.h2_time_limit}"]
+
+    driver_options += ["--overall-time-limit", str(args.overall_time_limit),
+                       "--overall-memory-limit", str(args.overall_memory_limit)]
+    if args.translate_time_limit:
+        driver_options += ["--translate-time-limit", str(args.translate_time_limit)]
 
     translate_options = ["--translate-options"]
     translate_options += ["--grounding-action-queue-ordering",
