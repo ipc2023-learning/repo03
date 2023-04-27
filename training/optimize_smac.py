@@ -297,7 +297,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
     #############################
 
     stopping_condition = Categorical(f"termination-condition", ['full', "relaxed", "relaxed5", "relaxed10", "relaxed20"])
-    alias = Categorical('alias', ['lama-first'], default='lama-first')
+    alias = Categorical('alias', ['lama-first'] + [f"seq-sat-fdss-2018-{i}" for i in range(0, 41)], default='lama-first')
     queue_type = Categorical("queue_type", ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='ipc23-single-queue')
     # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
     # this requires a file "schema_ratios in the --trained-model-folder with line format: stack:0.246087
