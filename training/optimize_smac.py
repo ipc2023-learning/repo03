@@ -204,6 +204,7 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
     os.mkdir(WORKING_DIR)
+    cwd = os.getcwd() # Save current directory to restore it after SMAC optimization
 
     ## Configuration Space ##
     ## Define parameters to select models
@@ -257,13 +258,12 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
     incumbent_config = smac.optimize()
 
 
-    default_cost = smac.validate(cs.get_default_configuration())
-    print(f"Default cost: {default_cost}")
+    # default_cost = smac.validate(cs.get_default_configuration())
+    # print(f"Default cost: {default_cost}")
+    # incumbent_cost = smac.validate(incumbent_config)
+    # print(f"Incumbent cost: {incumbent_cost}")
 
-    incumbent_cost = smac.validate(incumbent_config)
-
-    print(f"Incumbent cost: {incumbent_cost}")
-
+    os.chdir(cwd)
 
     print("Chosen set of bad rules: ", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
@@ -287,6 +287,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
 
+    cwd = os.getcwd() # Save current directory to restore it after SMAC optimization
     ## Configuration Space ##
     ## Define parameters to select models
     os.mkdir(WORKING_DIR)
@@ -350,6 +351,9 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
     smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function,)
 
     incumbent_config = smac.optimize()
+
+    os.chdir(cwd)
+
 
     print("Chosen configuration: ", incumbent_config)
     if 'ipc23' in incumbent_config['queue_type']:

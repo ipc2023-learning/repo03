@@ -211,7 +211,7 @@ def main():
         incumbent_path = os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')
         assert os.path.exists(incumbent_path)
         save_model.save(incumbent_path) # We save this configuration
-        shutils.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
+        shutil.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
 
     else:
         assert args.resume
