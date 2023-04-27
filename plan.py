@@ -73,10 +73,11 @@ def get_options(config_file):
         config += ["--incremental-grounding"]
         # TODO add incremental grounding options to config file and include them here
 
-    if "ignore_bad_actions" in config_dict and config_dict["ignore_bad_actions"].lower() == "true":
+    if "ignore_bad_actions" in config_dict and config_dict["ignore_bad_actions"].lower().strip() == "true":
         config += ["--ignore-bad-actions"]
 
-    # TODO add termination condition
+    if "termination-condition" in config_dict:
+        config += ["--termination-condition", config_dict["termination-condition"]]
 
     return config
 
@@ -94,7 +95,6 @@ def main():
 
     config = get_options(os.path.join(dk_folder, "config"))
 
-    # TODO check if partial grounding should be run at all
     # TODO add time + memory limits
     # TODO maybe limit time for partial grounding translator?
     subprocess.run([sys.executable, PLAN_PARTIAL_GROUNDING] +
