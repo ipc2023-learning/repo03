@@ -32,9 +32,11 @@ class IPC23SingleQueue(PriorityQueue):
         self.good_actions = []
         self.num_grounded_bad_actions = defaultdict(int)
 
-        self.ignore_bad_actions = False
-        if args.ignore_bad_actions:
-            self.ignore_bad_actions = True
+        if not self.model.get_trained_schemas() and not self.good_bad_rule_evaluator.get_action_schemas():
+            # nothing to evaluate
+            self.batch_eval = False
+
+        self.ignore_bad_actions = args.ignore_bad_actions
 
     def __bool__(self):
         return bool(self.queue) or \
