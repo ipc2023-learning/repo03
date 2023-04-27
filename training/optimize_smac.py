@@ -276,7 +276,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
     conditions = []
 
     if only_bad_rules:
-        parameters.add(Constant('ignor-bad-actions'), "true")
+        parameters.add(Constant('ignore-bad-actions'), "true")
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         assert not only_bad_rules
