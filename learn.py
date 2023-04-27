@@ -201,10 +201,10 @@ def main():
     #####
     ## Remove actions that are matched by bad rules from the training data
     #####
-    if os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules'):
-        if not os.path.exists(f'{TRAINING_SET}-nobadrules'):
-            filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
-        TRAINING_SET = f'{TRAINING_SET}-nobadrules'
+    # if os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules'):
+    #     if not os.path.exists(f'{TRAINING_SET}-nobadrules'):
+    #         filter_training_set(REPO_LEARNING, TRAINING_SET, f'{TRAINING_DIR}/partial-grounding-bad-rules/bad_rules.rules', f'{TRAINING_SET}-nobadrules')
+    #     TRAINING_SET = f'{TRAINING_SET}-nobadrules'
 
 
     ####
