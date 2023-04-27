@@ -1,15 +1,13 @@
 * Alvaro:
 ** Curation of bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
 
+
 * Fix
 ** [#A] Set time limits for everything
 
 ** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
 
-** plan partial grounding is crashing (when instances are not solved)
-
 **  File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
-
 
 ** Traceback (most recent call last):
   File "/home/alvaro/planners/learning-ipc/./learn.py", line 235, in <module>
@@ -20,12 +18,7 @@
     useful_rules_files = [f for f in os.listdir(f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
 FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/partial-grounding-sklearn/training-data-good-operators-exhaustive-1k-filtered'
 
-** In rovers: 2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
-   2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
-   2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
-   2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
-
-** log_depot:Warning: Unknown error while gathering rules
+** log_depot: Warning: Unknown error while gathering rules
 
 
 * Features

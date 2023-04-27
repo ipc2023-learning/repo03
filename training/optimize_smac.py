@@ -2,7 +2,7 @@ from ConfigSpace import Constant, Categorical, Float, Configuration, Configurati
 from smac import AlgorithmConfigurationFacade, Scenario, HyperparameterOptimizationFacade
 
 from smac.initial_design.default_design import DefaultInitialDesign
-
+from smac.utils.configspace import get_config_hash
 from lab.calls.call import Call
 
 import sys
@@ -32,7 +32,9 @@ class Eval:
         if os.path.exists(self.SMAC_MODELS_DIR):
             shutil.rmtree(self.SMAC_MODELS_DIR)
         os.mkdir(self.SMAC_MODELS_DIR)
-        self.instances_dir = instances_dir
+        self.RUNNING_DIR = os.path.abspath(os.path.join(WORKING_DIR, 'runs'))
+        os.mkdir(self.RUNNING_DIR)
+        self.instances_dir = os.path.abspath(instances_dir)
         self.domain_file = domain_file
 
         self.regex_total_time = re.compile(rb"INFO\s+Planner time:\s(.+)s", re.MULTILINE)
@@ -64,8 +66,10 @@ class Eval:
         command=[sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        time_limit = self.trial_walltime_limit
+
         try:
-            output, error_output = proc.communicate(timeout=self.trial_walltime_limit)
+            output, error_output = proc.communicate(timeout=time_limit)
 
             total_time = self.regex_total_time.search(output)
             num_operators = self.regex_operators.search(output)
@@ -97,7 +101,7 @@ class Eval:
         except subprocess.TimeoutExpired as e:
             proc.kill()
             print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
-            print(e)
+            # print(e)
             return 10000000
 
         except:
@@ -113,12 +117,24 @@ class Eval:
             print (f"Ran {instance} without bad rules: full grounding size is {num_operators}, was solved by the baseline {coverage}")
             return num_operators# + self.candidate_models.total_bad_rules() if coverage else 10000000
 
+        # if self.instances_properties[instance]['coverage']:
+        #     print(f"Starting with {instance} solved by the baseline in {self.instances_properties[instance]['planner_wall_clock_time']}")
+        # else:
+        #     print(f"Starting with {instance}, not solved by the baseline")
 
         config_name = self.candidate_models.get_unique_model_name(config)
         num_bad_rules = self.candidate_models.num_bad_rules(config)
         model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
         if not os.path.exists(model_path):
             self.candidate_models.copy_model_to_folder(config, model_path, symlink=True)
+
+
+
+        config_hash = get_config_hash(config)
+        run_dir = os.path.join(self.RUNNING_DIR, "-".join([config_hash, instance]))
+
+        os.mkdir(run_dir)
+        os.chdir(run_dir)
 
         extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type'],
                             '--termination-condition', config['termination-condition'], '--ignore-bad-actions']
@@ -127,8 +143,14 @@ class Eval:
         assert(os.path.exists(instance_file))
 
         command=[sys.executable, f'{self.MY_DIR}/../plan-partial-grounding.py', model_path, self.domain_file, instance_file] + extra_parameters
-        print (" ".join(command[1:]))
+        #print (" ".join(command[1:]))
         proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+
+        time_limit = self.trial_walltime_limit
+        if self.instances_properties[instance]['coverage'] and self.instances_properties[instance]['planner_wall_clock_time'] < time_limit:
+            # Give at least 5 seconds or 3 times the amount of the baseline
+            time_limit = min(time_limit, max(self.instances_properties[instance]['planner_wall_clock_time']*3, 5 ))
 
         try:
             output, error_output = proc.communicate(timeout=self.trial_walltime_limit)
@@ -141,6 +163,7 @@ class Eval:
                 total_time = float(total_time.group(1))
                 num_operators = int(num_operators.group(1))
                 plan_cost = int(plan_cost.group(1))
+
                 print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 return num_operators #+ self.candidate_models.total_bad_rules() - num_bad_rules
 
@@ -163,7 +186,6 @@ class Eval:
         except subprocess.TimeoutExpired as e:
             proc.kill()
             print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
-            print(e)
             return 10000000
 
         except:
@@ -178,7 +200,7 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
                        instance_dir, instances_with_features : dict, instances_properties : dict,
                        walltime_limit, trial_walltime_limit, n_trials,
                        n_workers,
-                       PARTIAL_GROUNDING_ALEPH_DIRS  = ['partial-grounding-bad-rules']):
+                       PARTIAL_GROUNDING_ALEPH_DIRS  = ['partial-grounding-good-rules', 'partial-grounding-bad-rules']):
 
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
@@ -204,6 +226,9 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
     parameters = [alias, queue_type, stopping_condition]
     conditions = []
 
+    for i, r in enumerate(candidate_models.good_rules):
+        parameters.append(Constant(f"good{i}", 1))
+
     for i, r in enumerate(candidate_models.bad_rules):
         parameters.append(Categorical(f"bad{i}", [False, True], default=True))
 
@@ -226,8 +251,9 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
     )
 
     # Use SMAC to find the best configuration/hyperparameters
-    #smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function) ,#initial_design=DefaultInitialDesign(scenario))
-    smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function_bad_rules,)
+    smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function_bad_rules) #initial_design=DefaultInitialDesign(scenario))
+
+    #smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function_bad_rules,)
 
     incumbent_config = smac.optimize()
 
@@ -284,7 +310,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
 
     for i, r in enumerate(candidate_models.good_rules):
         #good = Categorical(f"good_{i}", [False, True], default=True)
-        good = Constant(f"good_{i}", True)
+        good = Constant(f"good{i}", 1)
         parameters.append(good)
         conditions.append(InCondition(child=good, parent=stopping_condition, values=["relaxed", "relaxed5", "relaxed10", "relaxed20"]))
 
@@ -310,7 +336,8 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file, instance_dir,
         n_trials=n_trials,
         n_workers=n_workers,
         instances=sorted_instances,
-        instance_features=instances_with_features
+        instance_features=instances_with_features,
+        min_budget=len(sorted_instances)
     )
 
     # Use SMAC to find the best configuration/hyperparameters
