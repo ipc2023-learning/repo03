@@ -64,20 +64,15 @@ def main():
                            "--transform-task-options", f"h2_time_limit,{args.h2_time_limit}"]
 
     translate_options = ["--translate-options"]
+    translate_options += ["--grounding-action-queue-ordering",
+                          args.grounding_queue]
 
-    if args.ignore_bad_actions:
-        translate_options += ["--ignore-bad-actions"]
-
-    if args.termination_condition != "full":
-        translate_options += ["--batch-evaluation",
-                              "--grounding-action-queue-ordering",
-                              args.grounding_queue]
-        if "ipc23" in args.grounding_queue:
-            translate_options += ["--trained-model-folder", args.domain_knowledge]
+    if "ipc23" in args.grounding_queue:
+        translate_options += ["--batch-evaluation", "--trained-model-folder", args.domain_knowledge]
+        if args.ignore_bad_actions:
+            translate_options += ["--ignore-bad-actions"]
 
     if args.incremental_grounding:
-        if args.termination_condition in ["relaxed5", "relaxed10", "relaxed20", "full"]: # TODO fix this
-            print("WARNING: termination condition is ignored when running incremental grounding.")
         driver_options += ["--incremental-grounding",
                            "--incremental-grounding-search-time-limit", str(args.incremental_grounding_search_time_limit),
                            ]
@@ -88,12 +83,12 @@ def main():
         if args.incremental_grounding_increment_percentage:
             driver_options += ["--incremental-grounding-increment-percentage",
                                str(args.incremental_grounding_increment_percentage)]
-    else:
-        tc = args.termination_condition
-        if tc != "full":
-            translate_options += ["--termination-condition", "goal-relaxed-reachable"]
-            if tc.startswith("relaxed") and len(args.termination_condition) > len("relaxed"):
-                translate_options += ["percentage", tc[len("relaxed"):]]
+
+    tc = args.termination_condition
+    if tc != "full":
+        translate_options += ["--termination-condition", "goal-relaxed-reachable"]
+        if tc.startswith("relaxed") and len(args.termination_condition) > len("relaxed"):
+            translate_options += ["percentage", tc[len("relaxed"):]]
 
     subprocess.run([sys.executable, os.path.join(FD_PARTIAL_GROUNDING, "fast-downward.py")] +
                    driver_options +
