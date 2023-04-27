@@ -129,7 +129,6 @@ class Eval:
             self.candidate_models.copy_model_to_folder(config, model_path, symlink=True)
 
 
-
         config_hash = get_config_hash(config)
         run_dir = os.path.join(self.RUNNING_DIR, "-".join([config_hash, instance]))
 
@@ -254,6 +253,9 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR,
     smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function_bad_rules) #initial_design=DefaultInitialDesign(scenario))
 
     #smac = HyperparameterOptimizationFacade(scenario, evaluator.target_function_bad_rules,)
+
+    default_cost = smac.validate(cs.get_default_configuration())
+    print(f"Default cost: {default_cost}")
 
     incumbent_config = smac.optimize()
 
