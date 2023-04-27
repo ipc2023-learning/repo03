@@ -46,6 +46,10 @@ def parse_args():
                         help="Ground until the goal is relaxed reachable, possibly add another x% of the actions"
                              "grounded up to that point; respectively full grounding.")
 
+    parser.add_argument("--ignore-bad-actions", action="store_true",
+                        help="If provided, an IPC23 queue is used, and a bad_rules.rules file is given,"
+                             "all actions evaluated as bad according to the rules will not be grounded.")
+
     return parser.parse_args()
 
 
@@ -61,8 +65,10 @@ def main():
 
     translate_options = []
 
+    if args.ignore_bad_actions:
+        translate_options += ["--ignore-bad-actions"]
+
     if args.termination_condition != "full":
-        # TODO add support for good/bad action pruning when doing "full" grounding
         translate_options += ["--translate-options",
                               "--batch-evaluation",
                               "--grounding-action-queue-ordering",

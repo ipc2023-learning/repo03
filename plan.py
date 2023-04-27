@@ -64,15 +64,19 @@ def get_options(config_file):
     with open(config_file, "r") as cfile:
         config_dict = json.load(cfile)
 
-    config = ["--alias", config_dict["alias"]]
+    config = ["--alias", config_dict["alias"], "--h2-preprocessor"]
 
     if "queue_type" in config_dict:
         config += ["--grounding-queue", config_dict["queue_type"],
-                   "--h2-preprocessor",  # TODO this is not currently set by SMAC
                    ]
 
         config += ["--incremental-grounding"]
         # TODO add incremental grounding options to config file and include them here
+
+    if "ignore_bad_actions" in config_dict and config_dict["ignore_bad_actions"].lower() == "true":
+        config += ["--ignore-bad-actions"]
+
+    # TODO add termination condition
 
     return config
 
