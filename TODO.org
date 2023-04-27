@@ -1,7 +1,5 @@
 * Alvaro:
-** Curation of good/bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
-** Incremental learning: First learn good/bad actions, then take them into  account when training models
-** Combine cost and unit-cost good operators?
+** Curation of bad actions, run LAMA and check that all instances are still solved? or run an SMAC process which uses as many rules as possible while ensuring that all problems are solved
 
 * Fix
 ** [#A] Set time limits for everything
@@ -13,7 +11,6 @@
 **  File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
 
 
-
 ** Traceback (most recent call last):
   File "/home/alvaro/planners/learning-ipc/./learn.py", line 235, in <module>
     main()
@@ -23,7 +20,6 @@
     useful_rules_files = [f for f in os.listdir(f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
 FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/partial-grounding-sklearn/training-data-good-operators-exhaustive-1k-filtered'
 
-
 ** In rovers: 2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
    2023-04-26 08:57:22,058 INFO     filter-rules wall-clock time: 300.09s
    2023-04-26 08:57:22,058 INFO     filter-rules exit code: -24
@@ -31,17 +27,14 @@ FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/parti
 
 ** log_depot:Warning: Unknown error while gathering rules
 
+
 * Features
 ** [#A] Stone Soup
 ** [#B] Add BadPruning rules
-** [#B] Add features from relaxed plans
 ** Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
-
-** [#C] Allow SMAC to tune stopping condition -> how? Use stopping condition based percentage of operators + X%, Does it make sense to do a stopping condition based on the action schema?
 
 ** [#B] Weighted round robin
 
-** Run planners in parallel on the plan script
 
 
 * Nice to have
@@ -62,3 +55,5 @@ Please also refer to the documentation for alternative solver options:
 /home/alvaro/anaconda3/envs/SMAC/lib/python3.10/site-packages/sklearn/linear_model/_logistic.py:458: ConvergenceWarning: lbfgs failed to converge (status=1):
 STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
 ** Aleph not and equal do not work?
+** [#B] Add features from relaxed plans
+** Run planners in parallel on the plan script
