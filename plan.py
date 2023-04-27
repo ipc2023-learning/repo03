@@ -73,7 +73,7 @@ def get_options(config_file):
         config += ["--incremental-grounding"]
         # TODO add incremental grounding options to config file and include them here
 
-    if "ignore_bad_actions" in config_dict and config_dict["ignore_bad_actions"].lower().strip() == "true":
+    if "ignore-bad-actions" in config_dict and config_dict["ignore-bad-actions"].lower().strip() == "true":
         config += ["--ignore-bad-actions"]
 
     if "termination-condition" in config_dict:

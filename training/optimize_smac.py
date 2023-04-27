@@ -133,8 +133,12 @@ class Eval:
         os.mkdir(run_dir)
         os.chdir(run_dir)
 
+
         extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type'],
-                            '--termination-condition', config['termination-condition'], '--ignore-bad-actions']
+                            '--termination-condition', config['termination-condition']]
+
+        if "ignore-bad-actions" in config and config["ignore-bad-actions"].lower().strip() == "true":
+            extra_parameters += ["--ignore-bad-actions"]
 
         instance_file = os.path.join(self.instances_dir, instance + ".pddl")
         assert(os.path.exists(instance_file))
@@ -270,6 +274,9 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     parameters = [alias, queue_type, stopping_condition]
     conditions = []
+
+    if only_bad_rules:
+        parameters.add(Constant('ignor-bad-actions'), "true")
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         assert not only_bad_rules
