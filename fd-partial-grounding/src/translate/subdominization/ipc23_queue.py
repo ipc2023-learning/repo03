@@ -32,9 +32,11 @@ class IPC23SingleQueue(PriorityQueue):
         self.good_actions = []
         self.num_grounded_bad_actions = defaultdict(int)
 
-        self.ignore_bad_actions = False
-        if args.ignore_bad_actions:
-            self.ignore_bad_actions = True
+        if not self.model.get_trained_schemas() and not self.good_bad_rule_evaluator.get_action_schemas():
+            # nothing to evaluate
+            self.batch_eval = False
+
+        self.ignore_bad_actions = args.ignore_bad_actions
 
     def __bool__(self):
         return bool(self.queue) or \
@@ -67,8 +69,9 @@ class IPC23SingleQueue(PriorityQueue):
     def push(self, action):
         if self.good_bad_rule_evaluator.is_good_action(action):
             self.good_actions.append(action)
-        elif not self.ignore_bad_actions and self.good_bad_rule_evaluator.is_bad_action(action):
-            self.queue.push(action, -inf)
+        elif self.good_bad_rule_evaluator.is_bad_action(action):
+            if not self.ignore_bad_actions:
+                self.queue.push(action, -inf)
         else:
             if self.batch_eval:
                 self.non_evaluated_actions[action.predicate.name].append(action)
@@ -125,9 +128,7 @@ class IPC23RoundRobinQueue(PriorityQueue):
         self.bad_actions = []
         self.num_grounded_bad_actions = defaultdict(int)
 
-        self.ignore_bad_actions = False
-        if args.ignore_bad_actions:
-            self.ignore_bad_actions = True
+        self.ignore_bad_actions = args.ignore_bad_actions
 
     def __bool__(self):
         return self.has_actions
@@ -163,8 +164,9 @@ class IPC23RoundRobinQueue(PriorityQueue):
         self.has_actions = True
         if self.good_bad_rule_evaluator.is_good_action(action):
             self.good_actions.append(action)
-        elif not self.ignore_bad_actions and self.good_bad_rule_evaluator.is_bad_action(action):
-            self.bad_actions.append(action)
+        elif self.good_bad_rule_evaluator.is_bad_action(action):
+            if not self.ignore_bad_actions:
+                self.bad_actions.append(action)
         else:
             schema = action.predicate.name
             if schema not in self.schemas:
@@ -274,9 +276,7 @@ class IPC23RatioQueue(PriorityQueue):
         self.bad_actions = []
         self.num_grounded_bad_actions = defaultdict(int)
 
-        self.ignore_bad_actions = False
-        if args.ignore_bad_actions:
-            self.ignore_bad_actions = True
+        self.ignore_bad_actions = args.ignore_bad_actions
 
     def __bool__(self):
         return any(q for q in self.queues) or \
@@ -316,8 +316,9 @@ class IPC23RatioQueue(PriorityQueue):
     def push(self, action):
         if self.good_bad_rule_evaluator.is_good_action(action):
             self.good_actions.append(action)
-        elif not self.ignore_bad_actions and self.good_bad_rule_evaluator.is_bad_action(action):
-            self.bad_actions.append(action)
+        elif self.good_bad_rule_evaluator.is_bad_action(action):
+            if not self.ignore_bad_actions:
+                self.bad_actions.append(action)
         else:
             schema = action.predicate.name
             if schema not in self.schemas:
