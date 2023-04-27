@@ -237,6 +237,22 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
 
 
 
+# Note: default configuration should solve at least 50% of the instances. Pick instances
+# with LAMA accordingly. If we run SMAC multiple times, we can use different instances
+# set, as well as changing the default configuration each time.
+def run_smac_search_configuration(DATA_DIR, WORKING_DIR, domain_file,
+                                  instance_dir, instances_with_features : dict, instances_properties : dict,
+                                  walltime_limit, trial_walltime_limit, n_trials, n_workers):
+
+    run_smac(DATA_DIR, WORKING_DIR,
+             domain_file,
+             instance_dir, instances_with_features,
+             instances_properties,
+             walltime_limit, trial_walltime_limit, n_trials,
+             n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
+             PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
+             only_bad_rules=False, optimize_search=True)
+
 
 def run_smac(DATA_DIR, WORKING_DIR, domain_file,
              instance_dir, instances_with_features : dict, instances_properties : dict,
@@ -315,8 +331,8 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
 
-    sorted_instances = sorted_instances[:5]
-    instances_with_features = {x : instances_with_features[x] for x in sorted_instances}
+    # sorted_instances = sorted_instances[:5]
+    # instances_with_features = {x : instances_with_features[x] for x in sorted_instances}
 
     scenario = Scenario(
         configspace=cs, deterministic=True,
