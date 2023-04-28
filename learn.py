@@ -28,6 +28,7 @@ FAST_TIME_LIMITS = {
     'smac-optimization-hard-rules' : 60,
     'smac-partial-grounding-total' : 10,
     'smac-partial-grounding-run' : 2,
+    'smac-partial-grounding-run-search' : 6,
     'sklearn-step' : 60,
 }
 
@@ -38,6 +39,7 @@ MEDIUM_TIME_LIMITS = {
     'smac-optimization-hard-rules' : 300,
     'smac-partial-grounding-total' : 900,
     'smac-partial-grounding-run' : 60,
+    'smac-partial-grounding-run-search' : 120,
     'sklearn-step' : 600,
 }
 
@@ -46,8 +48,9 @@ TIME_LIMITS_IPC_SINGLE_CORE = {
     'run_experiment' : 10*60, # 10 minutes
     'train-hard-rules' : 60*60, # 1 hour, time per schema, TODO
     'smac-optimization-hard-rules' : 60*60, # 1 hour
-    'smac-partial-grounding-total' : 60*60, # 1 hour
+    'smac-partial-grounding-total' : 60*60, # 1 hour per optimization
     'smac-partial-grounding-run' : 120,
+    'smac-partial-grounding-run-search' : 120,
     'sklearn-step' : 900,
 }
 
@@ -58,6 +61,7 @@ TIME_LIMITS_IPC_MULTICORE = {
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour
     'smac-partial-grounding-run' : 120,
+    'smac-partial-grounding-run-search' : 300,
     'sklearn-step' : 900,
 }
 
@@ -225,11 +229,8 @@ def main():
                            walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                            n_trials=10000, n_workers=1)
 
-            # RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first",
-            #                                                                                                            "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
-            #                                                                                                            "--transform-task-options", f"h2_time_limit,300"])
-
         incumbent_path = os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')
+
         assert os.path.exists(incumbent_path)
         shutil.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
     else:
@@ -277,22 +278,27 @@ def main():
         else:
             os.mkdir(f'{TRAINING_DIR}/smac-{index}')
 
-            run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-partial-grounding', args.domain, BENCHMARKS_DIR,
-                                       instances_manager.get_instances_smac_partial_grounding(['translator_operators', 'translator_facts', 'translator_variables']),
-                                       instances_manager.get_instance_properties(),
-                                       walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
-                                       trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
-                                       n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                       n_workers=1, seed=2023+index) #TODO use args.cpus
+            if index % 2 == 1:
+
+                _, _, best_configs = run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-partial-grounding', args.domain, BENCHMARKS_DIR,
+                                                                instances_manager.get_instances_smac_partial_grounding(['translator_operators', 'translator_facts', 'translator_variables']),
+                                                                instances_manager.get_instance_properties(),
+                                                                walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                                                                trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                                                                n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
+                                                                n_workers=1, seed=2023+index) #TODO use args.cpus
+
+            else:
+                best_configs = None # Sometimes try the full optimization
 
             ## Run a new SMAC optimization, that optimizes for search time, and that also selects search (lama or something else)
             # Continue improving the incumbent
-            incumbent_dir, incumbent_config = run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-search', args.domain, BENCHMARKS_DIR,
-                                               instances_manager.get_instances_smac_search(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
-                                               walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
-                                               trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
-                                               n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                                              n_workers=1, seed=2023+index)
+            incumbent_dir, incumbent_config, _ = run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-search', args.domain, best_configs, BENCHMARKS_DIR,
+                                                                 instances_manager.get_instances_smac_search(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
+                                                                 walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                                                                 trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run-search'],
+                                                                 n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
+                                                                 n_workers=1, seed=2023+index)
 
 
             translate_options = ["--translate-options", "--grounding-action-queue-ordering", incumbent_config['queue_type']]

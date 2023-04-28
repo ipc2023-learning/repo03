@@ -1,5 +1,4 @@
 * Fix
-** Use 10 best for smac_search
 ** Set time limits for everything
 
 

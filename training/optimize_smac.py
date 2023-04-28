@@ -48,6 +48,12 @@ class Eval:
         if self.candidate_models.is_using_priority_model(config) and not 'ipc23' in config['queue_type']:
             return 10000000
 
+        config_hash = get_config_hash(config)
+        run_dir = os.path.join(self.RUNNING_DIR, "-".join([config_hash, instance]))
+
+        os.mkdir(run_dir)
+        os.chdir(run_dir)
+
         config_name = self.candidate_models.get_unique_model_name(config)
         model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
         if not os.path.exists(model_path):
@@ -242,7 +248,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
 # Note: default configuration should solve at least 50% of the instances. Pick instances
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
-def run_smac_search(DATA_DIR, WORKING_DIR, domain_file,
+def run_smac_search(DATA_DIR, WORKING_DIR, domain_file, best_configs,
                     instance_dir, instances_with_features : dict, instances_properties : dict,
                     walltime_limit, trial_walltime_limit, n_trials, n_workers, seed=2023):
 
@@ -253,8 +259,23 @@ def run_smac_search(DATA_DIR, WORKING_DIR, domain_file,
                     walltime_limit, trial_walltime_limit, n_trials,
                     n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
                     PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
-                    only_bad_rules=False, optimize_search=True, seed=seed)
+                    only_bad_rules=False, optimize_search=True, seed=seed, best_configs=best_configs)
 
+
+
+def filter_in_best_configs(name, values, best_configs):
+    if not best_configs:
+        return values
+
+    result = []
+    for v in values:
+        for c in best_configs:
+            if c[name] == v:
+                result.append(v)
+                break
+
+    print(result)
+    return result
 
 
 def run_smac(DATA_DIR, WORKING_DIR, domain_file,
@@ -262,7 +283,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
              walltime_limit, trial_walltime_limit, n_trials,
              n_workers, PARTIAL_GROUNDING_RULES_DIRS,
              PARTIAL_GROUNDING_ALEPH_DIRS, only_bad_rules,
-             optimize_search, seed):
+             optimize_search, seed, best_configs=None ):
 
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
@@ -293,9 +314,11 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         stopping_condition = Constant(f"termination-condition", 'full')
         queue_type = Constant("queue_type", "ipc23-single-queue")
     else:
-        stopping_condition = Categorical(f"termination-condition", ['full', "relaxed10"], default='relaxed10')     # "relaxed", # "relaxed5", #"relaxed20"
+        stopping_condition = Categorical(f"termination-condition", filter_in_best_configs('termination-condition', ['full', "relaxed10"], best_configs), default='relaxed10')     # "relaxed", # "relaxed5", #"relaxed20"
 
-        queue_type = Categorical("queue_type", ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='ipc23-single-queue')
+        queue_type = Categorical("queue_type",
+                                 filter_in_best_configs('queue_type', ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], best_configs),
+                                 default='ipc23-single-queue')
         # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
         # this requires a file "schema_ratios in the --trained-model-folder with line format: stack:0.246087
 
@@ -313,9 +336,9 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         assert not only_bad_rules
-        m = Categorical(f"model_{schema}", models)
+        m = Categorical(f"model_{schema}", filter_in_best_configs(f"model_{schema}", models, best_configs))
         parameters.append(m)
-        conditions.append(InCondition(child=m, parent=queue_type, values=["ipc23-single-queue", "ipc23-round-robin"]))
+        conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", "ipc23-round-robin"], best_configs)))
 
     for i, r in enumerate(candidate_models.good_rules):
         parameters.append(Constant(f"good{i}", 1))
@@ -357,8 +380,9 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     incumbent_config = smac.optimize()
 
+    os.chdir(cwd) # Restore current directory
 
-    os.chdir(cwd)
+    best_configs = list(sorted( smac.runhistory.get_configs(), key=smac.runhistory.average_cost))[:5]
 
     print("Chosen incumbent: ", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
@@ -369,4 +393,4 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         properties['num_good_rules'] = sum([1 for i, _ in enumerate(candidate_models.good_rules) if [incumbent_config[f"good{i}"]]])
         json.dump(properties, config_file)
 
-    return os.path.join(WORKING_DIR, 'incumbent'), incumbent_config
+    return os.path.join(WORKING_DIR, 'incumbent'), incumbent_config, best_configs
