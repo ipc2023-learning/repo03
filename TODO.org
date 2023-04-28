@@ -1,28 +1,17 @@
 * Fix
 ** [#A] Set time limits for everything
 
-** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
-
 **  File "/home/alvaro/planners/learning-ipc/data-search-floortile/runs-lama-exp/runs-00001-00100/00006/../../goodops-parser.py", line 26, in main FileNotFoundError: [Errno 2] No such file or directory: 'good_operators'
 
-** Traceback (most recent call last):
-  File "/home/alvaro/planners/learning-ipc/./learn.py", line 235, in <module>
-    main()
-  File "/home/alvaro/planners/learning-ipc/./learn.py", line 192, in main
-    run_step_partial_grounding_rules(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain)
-  File "/home/alvaro/planners/learning-ipc/./training/partial_grounding_rules.py", line 33, in run_step_partial_grounding_rules
-    useful_rules_files = [f for f in os.listdir(f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered') if f.startswith('useful_rules')]
-FileNotFoundError: [Errno 2] No such file or directory: 'learn-test/rovers/partial-grounding-sklearn/training-data-good-operators-exhaustive-1k-filtered'
-
-** log_depot: Warning: Unknown error while gathering rules
-
+** Warning: Unknown error while gathering rules 'class_probability_rule'
 
 * Features
 ** [#B] Add BadPruning rules
-** Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
-
 ** [#B] Weighted round robin
 
+
+** Multiple configurations
+** Test incumbent to select best
 
 
 * Nice to have
@@ -45,3 +34,5 @@ STOP: TOTAL NO. of ITERATIONS REACHED LIMIT.
 ** Aleph not and equal do not work?
 ** [#B] Add features from relaxed plans
 ** Run planners in parallel on the plan script
+** Do not learn anything for schemas having less than X examples on the training instances. Treat them as good operators (fully ground them). The assumption is that grounding is not a problem at all for those operators.
+** ValueError(ValueError: This solver needs samples of at least 2 classes in the data, but the data contains only one class: 1
