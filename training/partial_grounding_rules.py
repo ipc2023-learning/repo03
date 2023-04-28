@@ -46,7 +46,7 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIRS, WORKING_DIR, doma
                 Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py', \
                       f'{RUNS_DIR}',\
                       f'{WORKING_DIR}/training-data-good-operators-exhaustive-1k-filtered/{useful_rules_file}',\
-                      f'{WORKING_DIR}/training-data-{op_file}-exhaustive-1k-{useful_rules_file}-{RUNS_DIR}',\
+                      f'{WORKING_DIR}/training-data-{op_file}-exhaustive-1k-{useful_rules_file}-{os.path.basename(RUNS_DIR)}',\
                       '--op-file', op_file,\
                       '--max-training-examples', '1000000'
                       ], "generate-training-data", time_limit=time_limit, memory_limit=memory_limit).wait()
