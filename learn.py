@@ -269,8 +269,10 @@ def main():
     # Final SMAC Optimization
     ####
 
-    index = 1
+    index = 0
     while True:
+        index += 1
+
         if os.path.exists(f'{TRAINING_DIR}/smac-{index}'):
             assert (args.resume)
         else:
