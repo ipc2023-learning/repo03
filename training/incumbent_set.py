@@ -27,9 +27,12 @@ class IncumbentSet:
         self.best_incumbents = [inc for inc in self.best_incumbents if not self.is_dominated(inc, incumbent_name)]
         self.best_incumbents.append(incumbent_name)
 
-        self.best_incumbents = sorted(self.best_incumbents, key = self.sort_key, reverse=True)
+        self.best_incumbents = sorted(self.best_incumbents, key = self.sort_key)
 
         print(f"New incumbent is top {1+self.best_incumbents.index(incumbent_name)}")
+
+        for x in self.best_incumbents:
+            print (x, self.sort_key(x))
 
         if incumbent_name in self.best_incumbents[:self.num_incumbents]:
             self.save_model.save([ os.path.join(self.INCUMBENTS_DIR, inc) for inc in self.best_incumbents[:self.num_incumbents]])
@@ -38,7 +41,7 @@ class IncumbentSet:
         data = self.data_incumbents[x]
         coverage = sum([props['coverage'] for _, props in data.items() if 'coverage' in props])
         planner_time = sum([props['planner_time'] for _, props in data.items() if 'planner_time' in props])
-        return (coverage, planner_time)
+        return (-coverage, planner_time)
 
     def is_dominated(self, i1, i2): # Returns true if i2 is definitively better than i1
         for ins, props in self.data_incumbents[i1].items():

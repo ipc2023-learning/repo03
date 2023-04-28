@@ -299,7 +299,7 @@ def main():
 
             if "ipc23" in incumbent_config['queue_type']:
                 translate_options += ["--batch-evaluation", "--trained-model-folder", incumbent_dir]
-                if "ignore-bad-actions" in incumbent_config and ["ignore-bad-actions"].lower().strip() == "true":
+                if "ignore-bad-actions" in incumbent_config and incumbent_config["ignore-bad-actions"].lower().strip() == "true":
                     translate_options += ["--ignore-bad-actions"]
 
 
