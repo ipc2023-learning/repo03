@@ -48,7 +48,6 @@ class Eval:
         if self.candidate_models.is_using_priority_model(config) and not 'ipc23' in config['queue_type']:
             return 10000000
 
-        #print (config)
         config_name = self.candidate_models.get_unique_model_name(config)
         model_path = os.path.join(self.SMAC_MODELS_DIR, config_name)
         if not os.path.exists(model_path):

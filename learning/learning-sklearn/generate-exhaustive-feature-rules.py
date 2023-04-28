@@ -113,7 +113,7 @@ def read_runs_folder(runs_folder):
      ini_predicates = set()
      goal_predicates = set()
      for task_run in sorted(os.listdir(runs_folder)):
-          if not os.path.isfile('{}/{}/{}'.format(runs_folder, task_run, 'sas_plan')):
+          if not os.path.isfile('{}/{}/{}'.format(runs_folder, task_run, 'sas_plan')) and not os.path.isfile('{}/{}/{}'.format(runs_folder, task_run, 'good_operators')):
                continue
 
           domain_filename = '{}/{}/{}'.format(runs_folder, task_run, "domain.pddl")
