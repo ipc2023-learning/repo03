@@ -17,6 +17,7 @@ from partial_grounding_rules import run_step_partial_grounding_rules
 from optimize_smac import run_smac_partial_grounding, run_smac_bad_rules, run_smac_search
 from instance_set import InstanceSet, select_instances_from_runs
 from utils import SaveModel, filter_training_set, combine_training_sets
+from incumbent_set import IncumbentSet
 
 from downward import suites
 
@@ -60,8 +61,6 @@ TIME_LIMITS_IPC_MULTICORE = {
     'sklearn-step' : 900,
 }
 
-TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
-
 # Memory limits are in MB
 MEMORY_LIMITS_MB = {
     'run_experiment' : 1024*4,
@@ -96,6 +95,13 @@ def main():
     REPO_PARTIAL_GROUNDING = f"{ROOT}/fd-partial-grounding"
 
     save_model = SaveModel(args.domain_knowledge_file)
+
+    if args.cpus > 1:
+        TIME_LIMITS_SEC = TIME_LIMITS_IPC_SINGLE_CORE
+    else:
+        TIME_LIMITS_SEC = TIME_LIMITS_IPC_MULTICORE
+
+    TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
 
     if not args.resume:
         if os.path.exists(TRAINING_DIR):
@@ -133,6 +139,7 @@ def main():
                                                                                                                    "--transform-task-options", f"h2_time_limit,300"])
     else:
         assert args.resume
+
     instances_manager = InstanceSet(f'{TRAINING_DIR}/runs-lama')
 
     # We run the good operators tool only on instances solved by lama in less than 30 seconds
@@ -218,9 +225,16 @@ def main():
         assert os.path.exists(incumbent_path)
         save_model.save(incumbent_path) # We save this configuration
         shutil.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
-
     else:
         assert args.resume
+
+    # Currently, our best incumbent is just lama with the bad pruning rules
+    incumbent_set = IncumbentSet(TRAINING_DIR, save_model)
+
+    if os.path.exists(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')):
+        # This is not entirely accurate, but we avoid running lama with the bad rules
+        incumbent_set.add(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent'), select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama'))
+
 
     #####
     ## Remove actions that are matched by bad rules from the training data
@@ -245,55 +259,60 @@ def main():
         assert args.resume
 
 
-
-
     ####
     # Final SMAC Optimization
     ####
 
-    best_incumbents = []
+    index = 1
+    while True:
+        if os.path.exists(f'{TRAINING_DIR}/smac-{index}'):
+            assert (args.resume)
+        else:
+            os.mkdir(f'{TRAINING_DIR}/smac-{index}')
+
+            run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-partial-grounding', args.domain, BENCHMARKS_DIR,
+                                       instances_manager.get_instances_smac_partial_grounding(['translator_operators', 'translator_facts', 'translator_variables']),
+                                       instances_manager.get_instance_properties(),
+                                       walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                                       trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                                       n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
+                                       n_workers=1) #TODO use args.cpus
+
+            ## Run a new SMAC optimization, that optimizes for search time, and that also selects search (lama or something else)
+            # Continue improving the incumbent
+            incumbent_dir, incumbent_config = run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-search', args.domain, BENCHMARKS_DIR,
+                                               instances_manager.get_instances_smac_search(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
+                                               walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                                               trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                                               n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
+                                               n_workers=1)
 
 
-    if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding'):
-        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR,
-                                   instances_manager.get_instances_smac_partial_grounding(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
-                                   walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
-                                   trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
-                                   n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                   n_workers=1) #TODO use args.cpus
-        save_model.save(os.path.join(TRAINING_DIR, 'smac-partial-grounding', 'incumbent'))
-    else:
-        assert args.resume
+            translate_options = ["--translate-options", "--grounding-action-queue-ordering", incumbent_config['queue_type']]
+
+            if "ipc23" in incumbent_config['queue_type']:
+                translate_options += ["--batch-evaluation", "--trained-model-folder", incumbent_dir]
+                if "ignore-bad-actions" in config and config["ignore-bad-actions"].lower().strip() == "true":
+                    translate_options += ["--ignore-bad-actions"]
 
 
-    ## Run a new SMAC optimization, that optimizes for search time, and that also selects search (lama or something else)
+            tc = incumbent_config['termination-condition']
+            if tc != "full":
+                translate_options += ["--termination-condition", "goal-relaxed-reachable"]
+                if tc.startswith("relaxed") and len(incumbent_config['termination-condition']) > len("relaxed"):
+                    translate_options += ["percentage", tc[len("relaxed"):]]
 
-    if not os.path.exists(f'{TRAINING_DIR}/smac-search'):
-        # Continue improving the incumbent
-        while True:
-            run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-search', args.domain, BENCHMARKS_DIR,
-                            instances_manager.get_instances_smac_search(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
-                            walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
-                            trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
-                            n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                            n_workers=1) #TODO use args.cpus
-
-            save_model.save(os.path.join(TRAINING_DIR, 'smac-partial-grounding', 'incumbent'))
-    else:
-        assert args.resume
-
-        # # Test ->
-        # RUN.run_planner(f'{TRAINING_DIR}/runs-incumbent-{i}', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL,
-        #                                                                     driver_options = ["--alias", "lama-first",
-        #                                                                     "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
-        #                                                                     "--transform-task-options", f"h2_time_limit,300"])
+            # Test current incumbent
+            RUN.run_planner(f'{TRAINING_DIR}/smac-{index}/test', REPO_PARTIAL_GROUNDING, translate_options, ENV, SUITE_ALL,
+                            driver_options = ["--alias", incumbent_config['alias'],
+                                              "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
+                                              "--transform-task-options", f"h2_time_limit,300", "--incremental-grounding",
+                                              "--incremental-grounding-search-time-limit", "600", "--incremental-grounding-increment-percentage", "20"])
 
 
-        # compare to best_incumbents
-        # if it is better, then replace
-        # solves a problem that was not solved by a configuration before
-        # sum of planner times is lower
-        save_model.save([os.path.join(TRAINING_DIR, 'smac-partial-grounding', inc) for inc in best_incumbents])
+            # compare to best_incumbents if it is better, then replace solves a problem that was not solved by a configuration before sum of planner times is lower
+            incumbent_set.add_and_save(incumbent_dir, select_instances_from_runs_with_properties(f'{TRAINING_DIR}/smac-{index}/test'))
+
 
     ###
     # Gather training data for search pruning rules

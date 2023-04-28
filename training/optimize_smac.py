@@ -211,14 +211,14 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR, domain_file,
                        instance_dir, instances_with_features : dict, instances_properties : dict,
                        walltime_limit, trial_walltime_limit, n_trials, n_workers):
 
-    run_smac(DATA_DIR, WORKING_DIR,
-             domain_file,
-             instance_dir, instances_with_features,
-             instances_properties,
-             walltime_limit, trial_walltime_limit, n_trials,
-             n_workers, PARTIAL_GROUNDING_RULES_DIRS=[],
-             PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-good-rules', 'partial-grounding-bad-rules'],
-             only_bad_rules=True, optimize_search=False)
+    return run_smac(DATA_DIR, WORKING_DIR,
+                    domain_file,
+                    instance_dir, instances_with_features,
+                    instances_properties,
+                    walltime_limit, trial_walltime_limit, n_trials,
+                    n_workers, PARTIAL_GROUNDING_RULES_DIRS=[],
+                    PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-good-rules', 'partial-grounding-bad-rules'],
+                    only_bad_rules=True, optimize_search=False)
 
 
 
@@ -229,14 +229,14 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
                                instance_dir, instances_with_features : dict, instances_properties : dict,
                                walltime_limit, trial_walltime_limit, n_trials, n_workers):
 
-    run_smac(DATA_DIR, WORKING_DIR,
-             domain_file,
-             instance_dir, instances_with_features,
-             instances_properties,
-             walltime_limit, trial_walltime_limit, n_trials,
-             n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
-             PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
-             only_bad_rules=False, optimize_search=False)
+    return run_smac(DATA_DIR, WORKING_DIR,
+                    domain_file,
+                    instance_dir, instances_with_features,
+                    instances_properties,
+                    walltime_limit, trial_walltime_limit, n_trials,
+                    n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
+                    PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
+                    only_bad_rules=False, optimize_search=False)
 
 
 
@@ -247,14 +247,15 @@ def run_smac_search(DATA_DIR, WORKING_DIR, domain_file,
                     instance_dir, instances_with_features : dict, instances_properties : dict,
                     walltime_limit, trial_walltime_limit, n_trials, n_workers):
 
-    run_smac(DATA_DIR, WORKING_DIR,
-             domain_file,
-             instance_dir, instances_with_features,
-             instances_properties,
-             walltime_limit, trial_walltime_limit, n_trials,
-             n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
-             PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
-             only_bad_rules=False, optimize_search=True)
+    return run_smac(DATA_DIR, WORKING_DIR,
+                    domain_file,
+                    instance_dir, instances_with_features,
+                    instances_properties,
+                    walltime_limit, trial_walltime_limit, n_trials,
+                    n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
+                    PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
+                    only_bad_rules=False, optimize_search=True)
+
 
 
 def run_smac(DATA_DIR, WORKING_DIR, domain_file,
@@ -368,3 +369,5 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         properties['num_bad_rules'] = sum([1 for i, _ in enumerate(candidate_models.bad_rules) if [incumbent_config[f"bad{i}"]]])
         properties['num_good_rules'] = sum([1 for i, _ in enumerate(candidate_models.good_rules) if [incumbent_config[f"good{i}"]]])
         json.dump(properties, config_file)
+
+    return os.path.join(WORKING_DIR, 'incumbent'), incumbent_config
