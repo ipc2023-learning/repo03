@@ -10,6 +10,7 @@ class IncumbentSet:
         if os.path.exists(self.INCUMBENTS_DIR):
             shutil.rmtree(self.INCUMBENTS_DIR)
         os.mkdir(self.INCUMBENTS_DIR)
+        self.num_incumbents=num_incumbents
 
         self.incumbent_id = 1
 
@@ -30,8 +31,8 @@ class IncumbentSet:
 
         print(f"New incumbent is top {1+self.best_incumbents.index(incumbent_name)}")
 
-        if incumbent_name in self.best_incumbents[:num_incumbents]:
-            self.save_model.save([ os.path.join(self.INCUMBENTS_DIR, inc) for inc in self.best_incumbents[:num_incumbents]])
+        if incumbent_name in self.best_incumbents[:self.num_incumbents]:
+            self.save_model.save([ os.path.join(self.INCUMBENTS_DIR, inc) for inc in self.best_incumbents[:self.num_incumbents]])
 
     def sort_key(self, x):
         data = self.data_incumbents[x]
