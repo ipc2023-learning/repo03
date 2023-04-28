@@ -50,7 +50,7 @@ TIME_LIMITS_IPC_SINGLE_CORE = {
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour per optimization
     'smac-partial-grounding-run' : 120,
-    'smac-partial-grounding-run-search' : 120,
+    'smac-partial-grounding-run-search' : 200,
     'sklearn-step' : 900,
 }
 
