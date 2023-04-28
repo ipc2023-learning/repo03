@@ -14,7 +14,7 @@ from run_experiment import RunExperiment
 from aleph_experiment import AlephExperiment
 
 from partial_grounding_rules import run_step_partial_grounding_rules
-from optimize_smac import run_smac_partial_grounding, run_smac_bad_rules
+from optimize_smac import run_smac_partial_grounding, run_smac_bad_rules, run_smac_search
 from instance_set import InstanceSet, select_instances_from_runs
 from utils import SaveModel, filter_training_set, combine_training_sets
 
@@ -37,7 +37,7 @@ MEDIUM_TIME_LIMITS = {
     'smac-optimization-hard-rules' : 300,
     'smac-partial-grounding-total' : 900,
     'smac-partial-grounding-run' : 60,
-    'sklearn' : 600,
+    'sklearn-step' : 600,
 }
 
 # All time limits are in seconds
@@ -47,7 +47,7 @@ TIME_LIMITS_IPC_SINGLE_CORE = {
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour
     'smac-partial-grounding-run' : 120,
-    'sklearn' : 900,
+    'sklearn-step' : 900,
 }
 
 # All time limits are in seconds
@@ -57,7 +57,7 @@ TIME_LIMITS_IPC_MULTICORE = {
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour
     'smac-partial-grounding-run' : 120,
-    'sklearn' : 900,
+    'sklearn-step' : 900,
 }
 
 TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
@@ -240,19 +240,34 @@ def main():
 
 
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-sklearn'):
-            run_step_partial_grounding_rules(REPO_LEARNING, instances_manager.get_training_datasets(), f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain, time_limit=TIME_LIMITS['sklearn-step'])
+            run_step_partial_grounding_rules(REPO_LEARNING, instances_manager.get_training_datasets(), f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain, time_limit=TIME_LIMITS_SEC['sklearn-step'])
     else:
         assert args.resume
 
 
-    SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
-
     if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding'):
-        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
+        run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-partial-grounding', args.domain, BENCHMARKS_DIR,
+                                   instances_manager.get_instances_smac_partial_grounding(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
                                    walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                                    trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
                                    n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
                                    n_workers=1) #TODO use args.cpus
+        save_model.save(os.path.join(TRAINING_DIR, 'smac-partial-grounding', 'incumbent'))
+    else:
+        assert args.resume
+
+
+
+    if not os.path.exists(f'{TRAINING_DIR}/smac-search'):
+        # Continue improving the incumbent
+        while True:
+            run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-search', args.domain, BENCHMARKS_DIR,
+                            instances_manager.get_instances_smac_search(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
+                            walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
+                            trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
+                            n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
+                            n_workers=1) #TODO use args.cpus
+
         save_model.save(os.path.join(TRAINING_DIR, 'smac-partial-grounding', 'incumbent'))
     else:
         assert args.resume

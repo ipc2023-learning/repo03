@@ -240,9 +240,9 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
 # Note: default configuration should solve at least 50% of the instances. Pick instances
 # with LAMA accordingly. If we run SMAC multiple times, we can use different instances
 # set, as well as changing the default configuration each time.
-def run_smac_search_configuration(DATA_DIR, WORKING_DIR, domain_file,
-                                  instance_dir, instances_with_features : dict, instances_properties : dict,
-                                  walltime_limit, trial_walltime_limit, n_trials, n_workers):
+def run_smac_search(DATA_DIR, WORKING_DIR, domain_file,
+                    instance_dir, instances_with_features : dict, instances_properties : dict,
+                    walltime_limit, trial_walltime_limit, n_trials, n_workers):
 
     run_smac(DATA_DIR, WORKING_DIR,
              domain_file,

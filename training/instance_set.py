@@ -136,20 +136,95 @@ class InstanceSet:
         return self.INSTANCES_WITH_TRAINING_DATA
 
 
-    def get_smac_instances(self, properties):
-        selected_instances = []
-        for ins in self.SMAC_INSTANCES:
-            selected_instances.append(ins)
 
+    def add_properties(self, selected_instances, properties):
         max_value = {}
         for p in properties:
             max_value [p] = max([self.instances_with_properties[ins][p] for ins in self.SMAC_INSTANCES if p in self.instances_with_properties[ins]])
 
         selected_smac_instances = {}
-        for ins in self.SMAC_INSTANCES:
+        for ins in selected_instances:
             selected_smac_instances [ins] = [self.instances_with_properties[ins][p] if p in self.instances_with_properties[ins] else max_value[p]*10 for p in properties]
 
         return selected_smac_instances
+
+    def get_smac_instances(self, properties):
+        return self.add_properties(self.SMAC_INSTANCES, properties)
+
+    def get_instances_smac_partial_grounding(self, properties):
+        selected_instances = []
+        num_to_select = 10
+        minimum_necessary = 5
+
+        # We want: 1) at least 5 instances; preferably 10
+        #          2) solvable by lama in the least amount of time possible, preferably less than 60 seconds
+        #          3) with a reasonable number of translator operators, preferably greater than 1000
+
+        instances_less_than_60  = [ins for ins in self.SMAC_INSTANCES if 'planner_time' in self.instances_with_properties[ins] and self.instances_with_properties[ins]['planner_time'] < 60]
+        sorted_by_runtime = sorted([ins for ins in self.SMAC_INSTANCES], key = lambda x : self.instances_with_properties[x]['planner_time'] if 'planner_time' in self.instances_with_properties[x] else 10000)
+
+        if len(instances_less_than_60) < num_to_select:
+            if len(instances_less_than_60) < minimum_necessary:
+                selected_instances = sorted_by_runtime[:5]
+            else:
+                selected_instances = instances_less_than_60
+        else:
+            # Now select among instances_less_than_60
+            sorted_by_operators = sorted([ins for ins in self.SMAC_INSTANCES], key = lambda x : -self.instances_with_properties[x]['translator_operators'])
+
+            min_runtime = 60
+            for ins in sorted_by_operators:
+                if len(selected_instances) >= num_to_select:
+                    break
+                if ins in selected_instances:
+                    continue
+                if self.instances_with_properties[ins]['planner_time'] < min_runtime:
+                    selected_instances.append(ins)
+                    min_runtime = min_runtime/1.5
+
+
+            for ins in sorted_by_runtime:
+                if len(selected_instances) >= num_to_select:
+                    break
+                if ins in selected_instances:
+                    continue
+                selected_instances.append(ins)
+
+        return self.add_properties(selected_instances, properties)
+
+
+    def get_instances_smac_search(self, properties):
+        selected_instances = []
+        num_to_select = 10
+        minimum_necessary = 5
+
+        # We want: 1) instances that are solvable under 300 seconds
+        #          2) they take at least 60 seconds by the baseline
+
+        instances_more_than_60  = [ins for ins in self.SMAC_INSTANCES if 'planner_time' in self.instances_with_properties[ins] and self.instances_with_properties[ins]['planner_time'] > 60]
+        sorted_by_runtime = sorted([ins for ins in self.SMAC_INSTANCES], key = lambda x : self.instances_with_properties[x]['planner_time'] if 'planner_time' in self.instances_with_properties[x] else 10000)
+
+        if len(instances_more_than_60) < num_to_select:
+            if len(instances_more_than_60) < minimum_necessary:
+                selected_instances = sorted_by_runtime[-5:]
+            else:
+                selected_instances = instances_more_than_60
+        else:
+            instances_less_than_300  = [ins for ins in instances_more_than_60 if 'planner_time' in self.instances_with_properties[ins] and self.instances_with_properties[ins]['planner_time'] < 300]
+            sorted_by_runtime = sorted([ins for ins in instances_more_than_60], key = lambda x : self.instances_with_properties[x]['planner_time'] if 'planner_time' in self.instances_with_properties[x] else 10000)
+            # Now select among instances_more_than_60
+            if len(instances_less_than_300) < num_to_select:
+                if len(instances_less_than_300) < minimum_necessary:
+                    selected_instances = instances_more_than_60[:minimum_necessary]
+                else:
+                    selected_instances = instances_less_than_300
+            else:
+                selected_instances = instances_less_than_300[-num_to_select:]
+
+
+        return self.add_properties(selected_instances, properties)
+
+
 
     def get_instance_properties(self):
         return self.instances_with_properties
