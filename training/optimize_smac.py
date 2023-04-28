@@ -87,7 +87,7 @@ class Eval:
                 total_time = float(total_time.group(1))
                 plan_cost = int(plan_cost.group(1))
                 print (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
-                if optimize_search:
+                if self.optimize_search:
                     return total_time
                 else:
                     return num_operators
