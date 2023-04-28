@@ -1,7 +1,5 @@
 * Fix
 ** Use 10 best for smac_search
-** Test incumbent to select best
-** Multiple configurations
 ** Set time limits for everything
 
 

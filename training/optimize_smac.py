@@ -53,7 +53,6 @@ class Eval:
         if not os.path.exists(model_path):
             self.candidate_models.copy_model_to_folder(config, model_path, symlink=True)
 
-
         extra_parameters = ['--h2-preprocessor', '--alias', config['alias'], '--grounding-queue', config['queue_type'],
                             '--incremental-grounding', '--incremental-grounding-increment-percentage', '20',
                             '--termination-condition', config['termination-condition']]

@@ -25,9 +25,9 @@ from downward import suites
 FAST_TIME_LIMITS = {
     'run_experiment' : 10,
     'train-hard-rules' : 60, # time per schema
-    'smac-optimization-hard-rules' : 300,
-    'smac-partial-grounding-total' : 300,
-    'smac-partial-grounding-run' : 10,
+    'smac-optimization-hard-rules' : 60,
+    'smac-partial-grounding-total' : 60,
+    'smac-partial-grounding-run' : 5,
     'sklearn-step' : 60,
 }
 
@@ -107,7 +107,7 @@ def main():
     else:
         TIME_LIMITS_SEC = TIME_LIMITS_IPC_MULTICORE
 
-    TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
+    TIME_LIMITS_SEC = FAST_TIME_LIMITS #TODO: REMOVE THIS, just for testing!
 
     if not args.resume:
         if os.path.exists(TRAINING_DIR):
@@ -266,7 +266,6 @@ def main():
     ####
     # Final SMAC Optimization
     ####
-
     index = 0
     while True:
         index += 1
