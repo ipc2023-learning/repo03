@@ -238,7 +238,7 @@ def main():
 
     if os.path.exists(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')):
         # This is not entirely accurate, but we avoid running lama with the bad rules
-        incumbent_set.add(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent'), select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama'))
+        incumbent_set.add_and_save(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent'), select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama'))
 
     #####
     ## Remove actions that are matched by bad rules from the training data
