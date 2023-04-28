@@ -70,14 +70,15 @@ def get_options(config_file):
         config += ["--grounding-queue", config_dict["queue_type"],
                    ]
 
-        config += ["--incremental-grounding"]
-        # TODO add incremental grounding options to config file and include them here
-
     if "ignore-bad-actions" in config_dict and config_dict["ignore-bad-actions"].lower().strip() == "true":
         config += ["--ignore-bad-actions"]
 
     if "termination-condition" in config_dict:
         config += ["--termination-condition", config_dict["termination-condition"]]
+
+    if "termination-condition" not in config_dict or config_dict["termination-condition"] != "full":
+        # TODO add incremental grounding options to config file and include them here
+        config += ["--incremental-grounding"]
 
     return config
 
