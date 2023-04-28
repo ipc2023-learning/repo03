@@ -44,6 +44,11 @@ class CandidateModels:
         if self.good_rules:
             parts.append('good-' + ''.join(['y' if config[f"good{i}"] else 'n'  for i, r in enumerate(self.good_rules)]))
 
+        schema_ratio_parameters = list(sorted([p for p in config if p.startswith('schema_ratio')]))
+        if schema_ratio_parameters:
+            parts.append('ratio-' + '-'.join([config[p] for p in schema_ratio_parameters]))
+
+
         return '_'.join(parts)
 
 
@@ -132,4 +137,8 @@ class CandidateModels:
             with open(os.path.join(target_dir, 'good_rules.rules'), 'w') as f:
                 f.write('\n'.join(selected_good_rules))
 
-        ## TODO: Write schema_ratios file
+        schema_ratio_parameters = [p for p in config if p.startswith('schema_ratio')]
+        if schema_ratio_parameters:
+            with open(os.path.join(target_dir, 'schema_ratios'), 'w') as f:
+                for p in schema_ratio_parameters:
+                    f.write(f'{schema}:{config[p]}\n')

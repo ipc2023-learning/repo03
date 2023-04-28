@@ -317,7 +317,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         stopping_condition = Categorical(f"termination-condition", filter_in_best_configs('termination-condition', ['full', "relaxed10"], best_configs), default='relaxed10')     # "relaxed", # "relaxed5", #"relaxed20"
 
         queue_type = Categorical("queue_type",
-                                 filter_in_best_configs('queue_type', ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], best_configs),
+                                 filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], best_configs),
                                  default='ipc23-single-queue')
         # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
         # this requires a file "schema_ratios in the --trained-model-folder with line format: stack:0.246087
@@ -338,7 +338,12 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         assert not only_bad_rules
         m = Categorical(f"model_{schema}", filter_in_best_configs(f"model_{schema}", models, best_configs))
         parameters.append(m)
-        conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", "ipc23-round-robin"], best_configs)))
+        conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin"], best_configs)))
+
+        if len(filter_in_best_configs('queue_type', ['ipc23-ratio'], best_configs)) > 0:
+            ratio =  Float(f"schema_ratio_{schema}", bounds=(0.01, 0.99))
+            parameters.append(ratio)
+            conditions.append(InCondition(child=ratio, parent=queue_type, values=['ipc23-ratio']))
 
     for i, r in enumerate(candidate_models.good_rules):
         parameters.append(Constant(f"good{i}", 1))
