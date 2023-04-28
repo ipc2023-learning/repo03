@@ -229,7 +229,6 @@ def main():
 
         incumbent_path = os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')
         assert os.path.exists(incumbent_path)
-        save_model.save(incumbent_path) # We save this configuration
         shutil.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
     else:
         assert args.resume
@@ -240,7 +239,6 @@ def main():
     if os.path.exists(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')):
         # This is not entirely accurate, but we avoid running lama with the bad rules
         incumbent_set.add(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent'), select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama'))
-
 
     #####
     ## Remove actions that are matched by bad rules from the training data
