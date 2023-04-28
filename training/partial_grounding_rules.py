@@ -2,6 +2,10 @@ import os
 import sys
 from lab.calls.call import Call
 
+def is_non_zero_file(fpath):
+    return os.path.isfile(fpath) and os.path.getsize(fpath) > 0
+
+
 def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIRS, WORKING_DIR, domain_file, time_limit=300,
                                      memory_limit = 4*1024*1024):
     #TODO: check time and memory limit (right now it's taken as a limit per step, and not a limit in total
@@ -19,12 +23,21 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIRS, WORKING_DIR, doma
 
 
     # Check if rules have been correctly generated. Otherwise, re-generate with smaller size
-    if not os.path.exists(f'{WORKING_DIR}/rules-exhaustive-filtered'):
+    if not is_non_zero_file(f'{WORKING_DIR}/rules-exhaustive-filtered'):
         Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', RUNS_DIR, '--rule_size', '5', '--store_rules', f'{WORKING_DIR}/rules-exhaustive', '--num_rules','1000', '--max_num_rules','2000', '--schema_time_limit', '100'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
 
         Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive', f'{WORKING_DIR}/rules-exhaustive-filtered', '--time-limit', str(time_limit)], "filter-rules", time_limit=time_limit*10, memory_limit=memory_limit).wait()
 
 
+
+    if not is_non_zero_file(f'{WORKING_DIR}/rules-exhaustive-filtered'):
+        Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', RUNS_DIR, '--rule_size', '5', '--store_rules', f'{WORKING_DIR}/rules-exhaustive', '--num_rules','100', '--max_num_rules','200', '--schema_time_limit', '100'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
+
+        Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive', f'{WORKING_DIR}/rules-exhaustive-filtered', '--time-limit', str(time_limit)], "filter-rules", time_limit=time_limit*10, memory_limit=memory_limit).wait()
+
+
+    if not is_non_zero_file(f'{WORKING_DIR}/rules-exhaustive-filtered'):
+        return
 
     # This step depends on the set of good operators, but performing it for all data-sets gives too many combinations
     Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-training-data.py',

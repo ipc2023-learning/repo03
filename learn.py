@@ -314,7 +314,7 @@ def main():
                             driver_options = ["--alias", incumbent_config['alias'],
                                               "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
                                               "--transform-task-options", f"h2_time_limit,300", "--incremental-grounding",
-                                              "--incremental-grounding-search-time-limit", "600", "--incremental-grounding-increment-percentage", "20"])
+                                              "--incremental-grounding-search-time-limit", "300", "--incremental-grounding-increment-percentage", "20"])
 
 
             # compare to best_incumbents if it is better, then replace solves a problem that was not solved by a configuration before sum of planner times is lower
