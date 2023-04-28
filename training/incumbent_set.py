@@ -6,9 +6,10 @@ class IncumbentSet:
         self.data_incumbents = {}
         self.best_incumbents = []
         self.save_model = save_model
-        if os.path.exists(os.path.join(TRAINING_DIR, 'incumbents')):
-            shutil.rmtree(TRAINING_DIR)
         self.INCUMBENTS_DIR = os.path.join(TRAINING_DIR, 'incumbents')
+        if os.path.exists(self.INCUMBENTS_DIR):
+            shutil.rmtree(self.INCUMBENTS_DIR)
+        os.mkdir(self.INCUMBENTS_DIR)
 
         self.incumbent_id = 1
 
@@ -22,7 +23,7 @@ class IncumbentSet:
             return
 
         self.best_incumbents = [inc for inc in self.best_incumbents if not self.is_dominated(inc, incumbent_name)]
-        self.best_incumbents.append(incumbent)
+        self.best_incumbents.append(incumbent_name)
         self.data_incumbents [incumbent_name] = data
 
         self.best_incumbents = sorted(self.best_incumbents, key = self.sort_key, reverse=True)

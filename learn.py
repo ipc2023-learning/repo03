@@ -15,7 +15,7 @@ from aleph_experiment import AlephExperiment
 
 from partial_grounding_rules import run_step_partial_grounding_rules
 from optimize_smac import run_smac_partial_grounding, run_smac_bad_rules, run_smac_search
-from instance_set import InstanceSet, select_instances_from_runs
+from instance_set import InstanceSet, select_instances_from_runs,select_instances_from_runs_with_properties
 from utils import SaveModel, filter_training_set, combine_training_sets
 from incumbent_set import IncumbentSet
 
