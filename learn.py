@@ -26,7 +26,8 @@ FAST_TIME_LIMITS = {
     'train-hard-rules' : 60, # time per schema
     'smac-optimization-hard-rules' : 300,
     'smac-partial-grounding-total' : 300,
-    'smac-partial-grounding-run' : 10
+    'smac-partial-grounding-run' : 10,
+    'sklearn-step' : 60,
 }
 
 # All time limits are in seconds
@@ -35,7 +36,8 @@ MEDIUM_TIME_LIMITS = {
     'train-hard-rules' : 120, # time per schema
     'smac-optimization-hard-rules' : 300,
     'smac-partial-grounding-total' : 900,
-    'smac-partial-grounding-run' : 60
+    'smac-partial-grounding-run' : 60,
+    'sklearn' : 600,
 }
 
 # All time limits are in seconds
@@ -44,7 +46,8 @@ TIME_LIMITS_IPC_SINGLE_CORE = {
     'train-hard-rules' : 60*60, # 1 hour, time per schema, TODO
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour
-    'smac-partial-grounding-run' : 120
+    'smac-partial-grounding-run' : 120,
+    'sklearn' : 900,
 }
 
 # All time limits are in seconds
@@ -53,7 +56,8 @@ TIME_LIMITS_IPC_MULTICORE = {
     'train-hard-rules' : 60*60, # 1 hour, needs to be divided across all schemas
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour
-    'smac-partial-grounding-run' : 120
+    'smac-partial-grounding-run' : 120,
+    'sklearn' : 900,
 }
 
 TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS
@@ -143,20 +147,22 @@ def main():
 
     TRAINING_SET = f'{TRAINING_DIR}/good-operators-unit'
 
-    has_action_cost = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric'])) > 0
+    has_action_cost = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric']  and p['max_action_cost'] > 1)) > 0
     has_zero_cost_actions = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['min_action_cost'] == 0)) > 0
     if has_action_cost and not has_zero_cost_actions:
         if not os.path.exists(f'{TRAINING_DIR}/good-operators-cost'):
             RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
         else:
             assert args.resume
-        instances_manager.add_training_data(os.path.join(TRAINING_DIR,'good-operators-cost'))
 
         if not os.path.exists(f'{TRAINING_DIR}/good-operators-combined'):
             combine_training_sets([TRAINING_SET, os.path.join(TRAINING_DIR,'good-operators-cost')], os.path.join(TRAINING_DIR,'good-operators-combined'))
         else:
             assert args.resume
+
         TRAINING_SET = os.path.join(TRAINING_DIR,'good-operators-combined')
+        instances_manager.add_training_data(os.path.join(TRAINING_DIR,'good-operators-combined'))
+
 
     TRAINING_INSTANCES = instances_manager.split_training_instances()
 
@@ -234,10 +240,7 @@ def main():
 
 
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-sklearn'):
-    #TODO: set time and memory limits
-    #TODO: train also with sas_plans?
-        for training_data_set in instances_manager.get_training_datasets():
-            run_step_partial_grounding_rules(REPO_LEARNING, training_data_set, f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain)
+            run_step_partial_grounding_rules(REPO_LEARNING, instances_manager.get_training_datasets(), f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain, time_limit=TIME_LIMITS['sklearn-step'])
     else:
         assert args.resume
 
