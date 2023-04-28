@@ -84,6 +84,8 @@ def parse_args():
 
     args.domain = os.path.abspath(args.domain)
     args.problem = [os.path.abspath(p) for p in args.problem]
+    if args.domain_knowledge_file:
+        args.domain_knowledge_file = os.path.abspath(args.domain_knowledge_file)
 
     return args
 
