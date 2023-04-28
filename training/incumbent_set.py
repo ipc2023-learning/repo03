@@ -37,7 +37,7 @@ class IncumbentSet:
         data = self.data_incumbents[x]
         coverage = sum([props['coverage'] for _, props in data.items() if 'coverage' in props])
         planner_time = sum([props['planner_time'] for _, props in data.items() if 'planner_time' in props])
-        return (coverage, total_time)
+        return (coverage, planner_time)
 
     def is_dominated(self, i1, i2): # Returns true if i2 is definitively better than i1
         for ins, props in self.data_incumbents[i1].items():
