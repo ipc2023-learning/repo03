@@ -113,7 +113,7 @@ def main():
     else:
         TIME_LIMITS_SEC = TIME_LIMITS_IPC_MULTICORE
 
-    TIME_LIMITS_SEC = FAST_TIME_LIMITS #TODO: REMOVE THIS, just for testing!
+    #    TIME_LIMITS_SEC = FAST_TIME_LIMITS #TODO: REMOVE THIS, just for testing!
 
     if not args.resume:
         if os.path.exists(TRAINING_DIR):
@@ -227,7 +227,7 @@ def main():
         run_smac_bad_rules(TRAINING_DIR, os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules'), args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
                            trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
                            walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
-                           n_trials=10000, n_workers=1)
+                           n_trials=10000, n_workers=args.cpus)
 
         incumbent_path = os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')
 
@@ -286,7 +286,7 @@ def main():
                                                                 walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                                                                 trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
                                                                 n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                                                n_workers=1, seed=2023+index) #TODO use args.cpus
+                                                                n_workers=args.cpus, seed=2023+index) #TODO use args.cpus
 
             else:
                 best_configs = None # Sometimes try the full optimization
@@ -298,7 +298,7 @@ def main():
                                                                  walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                                                                  trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run-search'],
                                                                  n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                                                 n_workers=1, seed=2023+index)
+                                                                 n_workers=args.cpus, seed=2023+index)
 
 
             translate_options = ["--translate-options", "--grounding-action-queue-ordering", incumbent_config['queue_type']]
