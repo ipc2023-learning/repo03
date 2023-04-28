@@ -80,7 +80,13 @@ def parse_args():
     parser.add_argument("--total_memory_limit", default=7*1024, help="memory limit")
     parser.add_argument("--resume", action="store_true", help="if true, do not delete intermediate files (not recommended for final runs)")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    args.domain = os.path.abspath(args.domain)
+    args.problem = [os.path.abspath(p) for p in args.problem]
+
+    return args
+
 
 def main():
     args = parse_args()
