@@ -87,20 +87,36 @@ def main():
 
     dk_folder = f"{os.path.basename(args.domain_knowledge)}-extracted"
 
+    plan_file = os.path.abspath(args.plan)
+
     # uncompress domain knowledge file
     with tarfile.open(args.domain_knowledge, "r:gz") as tar:
         if os.path.exists(dk_folder):
             shutil.rmtree(dk_folder)
         tar.extractall(dk_folder)
 
-    config = get_options(os.path.join(dk_folder, "config"))
+    model_folders = []
+    for file in os.listdir(dk_folder):
+        if os.path.isdir(file):
+            if os.path.isfile(os.path.join(dk_folder, file, "config")):
+                model_folders.append(os.path.join(dk_folder, file))
 
-    plan_file = os.path.abspath(args.plan)
+    if not model_folders:
+        # if there are no appropriate sub-folders, assume that the model is on the top level
+        model_folders.append(dk_folder)
 
-    # TODO maybe limit time for partial grounding translator?
-    subprocess.run([sys.executable, PLAN_PARTIAL_GROUNDING] +
-                   [dk_folder, args.domain, args.problem, "--plan", plan_file] +
-                   config)
+    for model_folder in model_folders:
+        config = get_options(os.path.join(model_folder, "config"))
+
+        # TODO maybe limit time for partial grounding translator?
+        # split 25min evenly across all models, reserve 5min for final LAMA config
+        subprocess.run([sys.executable, PLAN_PARTIAL_GROUNDING] +
+                       [model_folder, args.domain, args.problem, "--plan", plan_file,
+                        "--overall-time-limit", str(int(25 * 60 / len(model_folders)))] +
+                       config)
+
+        if os.path.isfile(plan_file):
+            break
 
     # run standard LAMA as fallback or to improve found solution
     lama_config = ["--transform-task", f"{ROOT}/fd-partial-grounding/builds/release/bin/preprocess-h2",
