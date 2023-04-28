@@ -29,7 +29,6 @@ def run_step_partial_grounding_rules(REPO_LEARNING, RUNS_DIRS, WORKING_DIR, doma
         Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/filter-irrelevant-rules.py', '--instances-relevant-rules', '10', f'{RUNS_DIR}', f'{WORKING_DIR}/rules-exhaustive', f'{WORKING_DIR}/rules-exhaustive-filtered', '--time-limit', str(time_limit)], "filter-rules", time_limit=time_limit*10, memory_limit=memory_limit).wait()
 
 
-
     if not is_non_zero_file(f'{WORKING_DIR}/rules-exhaustive-filtered'):
         Call([sys.executable, f'{REPO_LEARNING}/learning-sklearn/generate-exhaustive-feature-rules.py', domain_file, '--runs', RUNS_DIR, '--rule_size', '5', '--store_rules', f'{WORKING_DIR}/rules-exhaustive', '--num_rules','100', '--max_num_rules','200', '--schema_time_limit', '100'], "generate-rules", time_limit=time_limit, memory_limit=memory_limit).wait()
 

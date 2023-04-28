@@ -26,8 +26,8 @@ FAST_TIME_LIMITS = {
     'run_experiment' : 10,
     'train-hard-rules' : 60, # time per schema
     'smac-optimization-hard-rules' : 60,
-    'smac-partial-grounding-total' : 60,
-    'smac-partial-grounding-run' : 5,
+    'smac-partial-grounding-total' : 10,
+    'smac-partial-grounding-run' : 2,
     'sklearn-step' : 60,
 }
 
@@ -283,23 +283,23 @@ def main():
                                        walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                                        trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
                                        n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                       n_workers=1) #TODO use args.cpus
+                                       n_workers=1, seed=2023+index) #TODO use args.cpus
 
             ## Run a new SMAC optimization, that optimizes for search time, and that also selects search (lama or something else)
             # Continue improving the incumbent
-            incumbent_dir, incumbent_config = run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-search', args.domain, BENCHMARKS_DIR,
+            incumbent_dir, incumbent_config = run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-search', args.domain, BENCHMARKS_DIR,
                                                instances_manager.get_instances_smac_search(['translator_operators', 'translator_facts', 'translator_variables']), instances_manager.get_instance_properties(),
                                                walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-total'],
                                                trial_walltime_limit=TIME_LIMITS_SEC['smac-partial-grounding-run'],
                                                n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
-                                               n_workers=1)
+                                                              n_workers=1, seed=2023+index)
 
 
             translate_options = ["--translate-options", "--grounding-action-queue-ordering", incumbent_config['queue_type']]
 
             if "ipc23" in incumbent_config['queue_type']:
                 translate_options += ["--batch-evaluation", "--trained-model-folder", incumbent_dir]
-                if "ignore-bad-actions" in config and config["ignore-bad-actions"].lower().strip() == "true":
+                if "ignore-bad-actions" in incumbent_config and ["ignore-bad-actions"].lower().strip() == "true":
                     translate_options += ["--ignore-bad-actions"]
 
 

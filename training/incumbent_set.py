@@ -18,6 +18,7 @@ class IncumbentSet:
         incumbent_name = f'incumbent-{self.incumbent_id}'
         self.incumbent_id += 1
         shutil.copytree(incumbent, os.path.join(self.INCUMBENTS_DIR, incumbent_name))
+        self.data_incumbents [incumbent_name] = data
 
         if any([self.is_dominated(incumbent_name, inc) for inc in self.best_incumbents]):
             print(f"New incumbent candidate {incumbent_name} was rejected because it is dominated")
@@ -25,7 +26,6 @@ class IncumbentSet:
 
         self.best_incumbents = [inc for inc in self.best_incumbents if not self.is_dominated(inc, incumbent_name)]
         self.best_incumbents.append(incumbent_name)
-        self.data_incumbents [incumbent_name] = data
 
         self.best_incumbents = sorted(self.best_incumbents, key = self.sort_key, reverse=True)
 

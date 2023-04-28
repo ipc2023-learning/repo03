@@ -208,7 +208,7 @@ class Eval:
 
 def run_smac_bad_rules(DATA_DIR, WORKING_DIR, domain_file,
                        instance_dir, instances_with_features : dict, instances_properties : dict,
-                       walltime_limit, trial_walltime_limit, n_trials, n_workers):
+                       walltime_limit, trial_walltime_limit, n_trials, n_workers, seed=2023):
 
     return run_smac(DATA_DIR, WORKING_DIR,
                     domain_file,
@@ -217,7 +217,7 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR, domain_file,
                     walltime_limit, trial_walltime_limit, n_trials,
                     n_workers, PARTIAL_GROUNDING_RULES_DIRS=[],
                     PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-good-rules', 'partial-grounding-bad-rules'],
-                    only_bad_rules=True, optimize_search=False)
+                    only_bad_rules=True, optimize_search=False, seed=seed)
 
 
 
@@ -226,7 +226,7 @@ def run_smac_bad_rules(DATA_DIR, WORKING_DIR, domain_file,
 # set, as well as changing the default configuration each time.
 def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
                                instance_dir, instances_with_features : dict, instances_properties : dict,
-                               walltime_limit, trial_walltime_limit, n_trials, n_workers):
+                               walltime_limit, trial_walltime_limit, n_trials, n_workers, seed=2023):
 
     return run_smac(DATA_DIR, WORKING_DIR,
                     domain_file,
@@ -235,7 +235,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
                     walltime_limit, trial_walltime_limit, n_trials,
                     n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
                     PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
-                    only_bad_rules=False, optimize_search=False)
+                    only_bad_rules=False, optimize_search=False, seed=seed)
 
 
 
@@ -244,7 +244,7 @@ def run_smac_partial_grounding(DATA_DIR, WORKING_DIR, domain_file,
 # set, as well as changing the default configuration each time.
 def run_smac_search(DATA_DIR, WORKING_DIR, domain_file,
                     instance_dir, instances_with_features : dict, instances_properties : dict,
-                    walltime_limit, trial_walltime_limit, n_trials, n_workers):
+                    walltime_limit, trial_walltime_limit, n_trials, n_workers, seed=2023):
 
     return run_smac(DATA_DIR, WORKING_DIR,
                     domain_file,
@@ -253,7 +253,7 @@ def run_smac_search(DATA_DIR, WORKING_DIR, domain_file,
                     walltime_limit, trial_walltime_limit, n_trials,
                     n_workers, PARTIAL_GROUNDING_RULES_DIRS=['partial-grounding-sklearn'],
                     PARTIAL_GROUNDING_ALEPH_DIRS=['partial-grounding-hard-rules', 'partial-grounding-aleph'],
-                    only_bad_rules=False, optimize_search=True)
+                    only_bad_rules=False, optimize_search=True, seed=seed)
 
 
 
@@ -262,7 +262,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
              walltime_limit, trial_walltime_limit, n_trials,
              n_workers, PARTIAL_GROUNDING_RULES_DIRS,
              PARTIAL_GROUNDING_ALEPH_DIRS, only_bad_rules,
-             optimize_search):
+             optimize_search, seed):
 
     DATA_DIR = os.path.abspath(DATA_DIR) # Make sure path is absolute so that symlinks work
     WORKING_DIR = os.path.abspath(WORKING_DIR) # Making path absolute for using SMAC with multiple cores
@@ -327,7 +327,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         for i, r in enumerate(candidate_models.bad_rules):
             parameters.append(Constant(f"bad{i}",1 ))
 
-    cs = ConfigurationSpace(seed=2023)
+    cs = ConfigurationSpace(seed=seed)
     cs.add_hyperparameters(parameters)
     cs.add_conditions(conditions)
 
