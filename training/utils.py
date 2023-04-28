@@ -14,13 +14,19 @@ class SaveModel:
         self.knowledge_file = knowledge_file
         self.keep_copies = 1 if keep_copies else 0
 
-    def save(self, source_dir):
+    def save(self, source_dirs):
         if not self.knowledge_file:
             return
 
+        assert isinstance(source_dirs, list)
+
         with tarfile.open(self.knowledge_file + '.tmp', "w:gz", dereference=True) as tar:
-            for f in os.listdir(source_dir):
-                tar.add(os.path.join(source_dir, f), arcname=f)
+            id = 0
+            for source_dir in source_dirs:
+                for f in os.listdir(source_dir):
+                    arcname = os.path.join(os.path.basename(os.path.normpath(source_dir)) + f"_{id}", f)
+                    tar.add(os.path.join(source_dir, f), arcname=arcname)
+                id += 1
 
         knowledge_filename = self.knowledge_file
         if self.keep_copies:

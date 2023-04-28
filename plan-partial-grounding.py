@@ -32,7 +32,7 @@ def parse_args():
                         help="Overall memory limit for the planner, default 8000MiB")
 
     parser.add_argument("--incremental-grounding", action="store_true")
-    parser.add_argument("--incremental-grounding-search-time-limit", type=int, default=600,
+    parser.add_argument("--incremental-grounding-search-time-limit", type=int, default=300,
                         help="search time limit in seconds per iteration")
     parser.add_argument("--incremental-grounding-minimum", type=int,
                         help="minimum number of actions grounded in the first iteration")
