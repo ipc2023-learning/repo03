@@ -46,7 +46,7 @@ MEDIUM_TIME_LIMITS = {
 # All time limits are in seconds
 TIME_LIMITS_IPC_SINGLE_CORE = {
     'run_experiment' : 10*60, # 10 minutes
-    'train-hard-rules' : 60*60, # 1 hour, time per schema, TODO
+    'train-hard-rules' : 30*60, # 30 minutes, time per schema
     'smac-optimization-hard-rules' : 60*60, # 1 hour
     'smac-partial-grounding-total' : 60*60, # 1 hour per optimization
     'smac-partial-grounding-run' : 120,
