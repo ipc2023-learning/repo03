@@ -22,7 +22,7 @@ from candidate_models import CandidateModels
 INTERMEDIATE_SMAC_MODELS = 'intermediate-smac-models'
 
 class Eval:
-    def __init__(self, DATA_DIR, WORKING_DIR, domain_file, instances_dir, candidate_models, trial_walltime_limit, instances_properties):
+    def __init__(self, DATA_DIR, WORKING_DIR, domain_file, instances_dir, candidate_models, trial_walltime_limit, instances_properties, optimize_search):
         self.DATA_DIR = DATA_DIR
         self.MY_DIR = os.path.dirname(os.path.realpath(__file__))
         self.candidate_models=candidate_models
@@ -42,6 +42,7 @@ class Eval:
         self.regex_plan_cost = re.compile(rb"\[t=.*s, .* KB\] Plan cost:\s(.+)\n", re.MULTILINE)
         self.regex_no_solution = re.compile(rb"\[t=.*KB\] Completely explored state space.*no solution.*", re.MULTILINE)
         self.instances_properties = instances_properties
+        self.optimize_search = optimize_search
 
     def target_function (self, config: Configuration, instance: str, seed: int) -> float:
         if self.candidate_models.is_using_priority_model(config) and not 'ipc23' in config['queue_type']:
@@ -87,7 +88,10 @@ class Eval:
                 total_time = float(total_time.group(1))
                 plan_cost = int(plan_cost.group(1))
                 print (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
-                return num_operators
+                if optimize_search:
+                    return total_time
+                else:
+                    return num_operators
             elif self.regex_no_solution.search(output):
                 print (f"Ran {config_description}: not solved due to partial grounding")
                 #print(output.decode())
@@ -290,7 +294,8 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         stopping_condition = Constant(f"termination-condition", 'full')
         queue_type = Constant("queue_type", "ipc23-single-queue")
     else:
-        stopping_condition = Categorical(f"termination-condition", ['full', "relaxed", "relaxed5", "relaxed10", "relaxed20"], default='relaxed10')
+        stopping_condition = Categorical(f"termination-condition", ['full', "relaxed10"], default='relaxed10')     # "relaxed", # "relaxed5", #"relaxed20"
+
         queue_type = Categorical("queue_type", ["ipc23-single-queue", "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], default='ipc23-single-queue')
         # TODO if we get proportions of action schemas, we can also add the ipc23-ratio queue;
         # this requires a file "schema_ratios in the --trained-model-folder with line format: stack:0.246087
@@ -327,7 +332,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
     cs.add_hyperparameters(parameters)
     cs.add_conditions(conditions)
 
-    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties)
+    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties, optimize)
 
     sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
 
@@ -353,10 +358,6 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     incumbent_config = smac.optimize()
 
-    # default_cost = smac.validate(cs.get_default_configuration())
-    # print(f"Default cost: {default_cost}")
-    # incumbent_cost = smac.validate(incumbent_config)
-    # print(f"Incumbent cost: {incumbent_cost}")
 
     os.chdir(cwd)
 
