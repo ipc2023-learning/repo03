@@ -332,7 +332,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
     cs.add_hyperparameters(parameters)
     cs.add_conditions(conditions)
 
-    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties, optimize)
+    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties, optimize_search)
 
     sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
 
