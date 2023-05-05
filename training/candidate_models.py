@@ -141,4 +141,5 @@ class CandidateModels:
         if schema_ratio_parameters:
             with open(os.path.join(target_dir, 'schema_ratios'), 'w') as f:
                 for p in schema_ratio_parameters:
+                    schema = p.replace('schema_ratio_', '')
                     f.write(f'{schema}:{config[p]}\n')
