@@ -104,16 +104,16 @@ class LearnRules:
             # separate in features an target
             X, y = dataset.iloc[:,:-1], list(dataset.iloc[:, -1])
 
-            if y.count(y[0]) == len(y):
-                # only one output class
-                self.model = ConstantEstimator(y[0])
-                return
-
             # if we want to separate into train and test sets
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=testSize, random_state=0)
 
             X=X_train
             y=y_train
+
+            if y.count(y[0]) == len(y):
+                # only one output class
+                self.model = ConstantEstimator(y[0])
+                return
 
             # Standarize features
             scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
