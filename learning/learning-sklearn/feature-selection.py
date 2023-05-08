@@ -90,6 +90,12 @@ class FeatureSelector():
         X=X_train
         y=y_train
 
+        if y.count(y[0]) == len(y):
+            # only one output class
+            self.selector_type = "None"
+            self.num_features = len(X[0])
+            return
+
         # Standarize features
         scaler = StandardScaler(copy=True, with_mean=True, with_std=True)
 
@@ -238,7 +244,9 @@ class FeatureSelector():
             SyntaxError("Error in modelType = 'LRCV', 'LG', 'RF', 'SVM', 'SVMCV', 'NBB', 'NBG' , 'DT'; \nLogistic Regression, Logistic Regression with Cross Validation, \nRandom Forest or Support Vector Machine with CV, \n DT  is decision Tree ")
 
     def get_feature_ranking(self):
-        if (self.selector_type in ["LOGR", "LOGRCV", "SVR", "SVC"]):
+        if self.selector_type == "None":
+            return [0.0] * self.num_features
+        elif (self.selector_type in ["LOGR", "LOGRCV", "SVR", "SVC"]):
             return self.model.coef_.tolist()[0]
         elif (self.selector_type in ["LINR"]):
             return self.model.coef_.tolist()
