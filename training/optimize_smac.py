@@ -314,7 +314,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         stopping_condition = Constant(f"termination-condition", 'full')
         queue_type = Constant("queue_type", "ipc23-single-queue")
     else:
-        stopping_condition = Categorical(f"termination-condition", filter_in_best_configs('termination-condition', ['full', "relaxed10"], best_configs), default='relaxed10')     # "relaxed", # "relaxed5", #"relaxed20"
+        stopping_condition = Categorical(f"termination-condition", filter_in_best_configs('termination-condition', ["relaxed10", 'full'], best_configs))     # "relaxed", # "relaxed5", #"relaxed20"
 
         queue_type = Categorical("queue_type",
                                  filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin", "fifo", "lifo", 'noveltyfifo', 'roundrobinnovelty', 'roundrobin'], best_configs))
