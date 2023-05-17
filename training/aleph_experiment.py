@@ -34,6 +34,7 @@ class AlephExperiment:
 
     def run_aleph (self, WORKING_DIR, RUNS_DIR, ENV, aleph_configs):
         exp = Experiment(path=os.path.join(WORKING_DIR, "exp"), environment=ENV)
+        num_runs = 0
 
         for config_name in aleph_configs:
                 my_working_dir = os.path.abspath(f'{WORKING_DIR}/{os.path.basename(RUNS_DIR)}-{config_name}')
@@ -52,6 +53,7 @@ class AlephExperiment:
                     pass
 
                 for script in aleph_scripts:
+                        num_runs += 1
                         run = exp.add_run()
 
                         run.add_resource('aleph', os.path.join(my_working_dir, 'aleph.pl'), symlink=True)
@@ -76,12 +78,14 @@ class AlephExperiment:
                         run.set_property("config", config_name)
                         run.set_property("runs_data", RUNS_DIR)
 
-        exp.add_parser(f"{os.path.dirname(__file__)}/parsers/aleph-parser.py")
+        if num_runs > 0:
+            exp.add_parser(f"{os.path.dirname(__file__)}/parsers/aleph-parser.py")
 
-        exp.add_step("build", exp.build)
-        exp.add_step("start", exp.start_runs)
+            exp.add_step("build", exp.build)
+            exp.add_step("start", exp.start_runs)
 
-        ENV.run_steps(exp.steps)
+            ENV.run_steps(exp.steps)
+
 
     def run_aleph_hard_rules (self, WORKING_DIR, RUNS_DIR, ENV, aleph_configs):
         self.run_aleph (WORKING_DIR, RUNS_DIR, ENV, aleph_configs)

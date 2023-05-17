@@ -46,7 +46,7 @@ class CandidateModels:
 
         schema_ratio_parameters = list(sorted([p for p in config if p.startswith('schema_ratio')]))
         if schema_ratio_parameters:
-            parts.append('ratio-' + '-'.join([config[p] for p in schema_ratio_parameters]))
+            parts.append('ratio-' + '-'.join([str(config[p]) for p in schema_ratio_parameters]))
 
 
         return '_'.join(parts)
@@ -141,4 +141,5 @@ class CandidateModels:
         if schema_ratio_parameters:
             with open(os.path.join(target_dir, 'schema_ratios'), 'w') as f:
                 for p in schema_ratio_parameters:
+                    schema = p.replace('schema_ratio_', '')
                     f.write(f'{schema}:{config[p]}\n')
