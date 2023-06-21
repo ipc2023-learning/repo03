@@ -132,6 +132,9 @@ class InstanceSet:
         print (f"After the split, we have {len(self.INSTANCES_WITH_TRAINING_DATA)} instances for training, {len(self.SMAC_INSTANCES)} for hyperparameter optimization, out of which {num_smac_instances_overlap} have overlap and {num_smac_instances_unsolved} are not solved by lama and {num_smac_instances_under_2m} are solved under 2 minutes)")
         print ("Instances for the training phase: ", self.INSTANCES_WITH_TRAINING_DATA)
         print ("Instances for SMAC optimization: ", self.SMAC_INSTANCES)
+        if not self.INSTANCES_WITH_TRAINING_DATA:
+            print ("ERROR: failed to generate any training data, so no training was possible")
+            exit(-1)
 
         return self.INSTANCES_WITH_TRAINING_DATA
 
