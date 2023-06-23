@@ -180,7 +180,12 @@ def main():
 
     has_action_cost = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric']  and p['max_action_cost'] > 1)) > 0
     has_zero_cost_actions = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['min_action_cost'] == 0)) > 0
-    if has_action_cost and not has_zero_cost_actions:
+
+    # Skip this step if we have less than 18 hours (added due to the time
+    #  restriction of 24h instead of 72 for the IPC. If we spent more than 8h
+    #  generating the training data, we cannot afford spending more time on
+    #  obtaining the training data).
+    if has_action_cost and not has_zero_cost_actions and float(timer.remaining_seconds())/float(args.total_time_limit) > 0.66:
         if not os.path.exists(f'{TRAINING_DIR}/good-operators-cost'):
             logging.info("Running good operators with unit cost on %d traning instances (remaining time %s)", len(instances_to_run_good_operators), timer)
 
