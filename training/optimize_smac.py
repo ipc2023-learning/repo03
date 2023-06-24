@@ -11,6 +11,9 @@ import json
 import subprocess
 import re
 import shutil
+import logging
+
+#import numpy
 
 from pathlib import PosixPath
 
@@ -91,13 +94,13 @@ class Eval:
             if total_time and num_operators and plan_cost:
                 total_time = float(total_time.group(1))
                 plan_cost = int(plan_cost.group(1))
-                print (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
+                logging.info (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 if self.optimize_search:
                     return total_time
                 else:
-                    return num_operators
+                    return num_operators #TODO: + total_time # Add total time as a tie-breaker in case all configurations are grounding the same amount of operators
             elif self.regex_no_solution.search(output):
-                print (f"Ran {config_description}: not solved due to partial grounding")
+                logging.info (f"Ran {config_description}: not solved due to partial grounding")
                 #print(output.decode())
                 return 10000000
             else:
@@ -115,7 +118,7 @@ class Eval:
 
         except subprocess.TimeoutExpired as e:
             proc.kill()
-            print (f"Ran {config_description}: not solved due to time limit")
+            logging.info (f"Ran {config_description}: not solved due to time limit")
             # print(e)
             return 10000000
 
@@ -129,7 +132,7 @@ class Eval:
         if not self.candidate_models.is_using_model(config):
             num_operators = self.instances_properties[instance]['translator_operators']
             coverage = self.instances_properties[instance]['coverage']
-            print (f"Ran {instance} without bad rules: full grounding size is {num_operators}, was solved by the baseline {coverage}")
+            logging.info (f"Ran {instance} without bad rules: full grounding size is {num_operators}, was solved by the baseline {coverage}")
             return num_operators# + self.candidate_models.total_bad_rules() if coverage else 10000000
 
         # if self.instances_properties[instance]['coverage']:
@@ -182,33 +185,33 @@ class Eval:
                 num_operators = int(num_operators.group(1))
                 plan_cost = int(plan_cost.group(1))
 
-                print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
+                logging.info (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 return num_operators #+ self.candidate_models.total_bad_rules() - num_bad_rules
 
             elif self.regex_no_solution.search(output):
-                print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")
+                logging.info (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")
                 return 10000000
             else:
-                print (f"WARNING: Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
-                print("Output: ", output.decode())
+                logging.warning (f"WARNING: Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
+                logging.warning ("Output: %s", output.decode())
                 if error_output:
-                    print("Error Output: ", error_output.decode())
+                    logging.error("Error Output: %s", error_output.decode())
                 return 10000000
 
         except subprocess.CalledProcessError:
             proc.kill()
-            print (f"WARNING: Command failed: {' '.join(command)}")
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
+            logging.warning (f"WARNING: Command failed: {' '.join(command)}")
+            logging.warning (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
             return 10000000
 
         except subprocess.TimeoutExpired as e:
             proc.kill()
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
+            logging.info (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
             return 10000000
 
         except:
             proc.kill()
-            print (f"Error: Command failed: {' '.join(command)}")
+            logging.error (f"Error: Command failed: {' '.join(command)}")
             return 10000000
 
 
@@ -274,7 +277,7 @@ def filter_in_best_configs(name, values, best_configs):
                 result.append(v)
                 break
 
-    print(result)
+    logging.info("Using %d/%d values for parameter %s: %s" ,len(result), len(values), name, str(result))
     return result
 
 
@@ -386,9 +389,13 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     os.chdir(cwd) # Restore current directory
 
-    best_configs = list(sorted( smac.runhistory.get_configs(), key=smac.runhistory.average_cost))[:5]
+    # Double check that we actually have an average cost for all configurations we consider
+    logging.info("Retrieve candidate configs from SMAC")
+    candidate_configs = [c for c in smac.runhistory.get_configs()] # if not numpy.isnan(smac.runhistory.average_cost) ]
+    logging.info("We have %d candidate configs", len(candidate_configs))
+    best_configs = list(sorted( candidate_configs, key=smac.runhistory.average_cost))[:5]
 
-    print("Chosen incumbent: ", incumbent_config)
+    logging.info("Chosen incumbent: ", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
 
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:

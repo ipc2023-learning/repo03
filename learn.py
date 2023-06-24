@@ -242,7 +242,7 @@ def main():
     ### full grounding + bad rules
 
     # We want to fix completely the hard rules at this stage, so let's use all SMAC_INSTANCES
-    if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding-bad-rules'):
+    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules'):
         logging.info("Running SMAC to select good and bad rules (remaining time %s)", timer)
 
         SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
@@ -297,6 +297,7 @@ def main():
     # Final SMAC Optimization
     ####
     index = 0
+    attempted_configs = set()
     while True:
         index += 1
 
@@ -332,7 +333,13 @@ def main():
                                                                  n_workers=args.cpus, seed=2023+index)
 
 
-            logging.info("Test current incumbent (remaining time %s)", timer)
+            # Trying and/or adding the same config multiple times is silly, so skip this
+            if incumbent_config in attempted_configs:
+                logging.info("Skipping config chosen by SMAC because it has already been attempted (remaining time %s)")
+                continue
+            attempted_configs.add(incumbent_config)
+
+            logging.info("Test config chosen by SMAC (remaining time %s)", timer)
 
             translate_options = ["--translate-options", "--grounding-action-queue-ordering", incumbent_config['queue_type']]
 
