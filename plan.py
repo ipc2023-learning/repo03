@@ -97,10 +97,10 @@ def main():
         tar.extractall(dk_folder)
 
     model_folders = []
-    for file in os.listdir(dk_folder):
-        if os.path.isdir(file):
-            if os.path.isfile(os.path.join(dk_folder, file, "config")):
-                model_folders.append(os.path.join(dk_folder, file))
+    for direc in os.listdir(dk_folder):
+        if os.path.isdir(os.path.join(dk_folder, direc)):
+            if os.path.isfile(os.path.join(dk_folder, direc, "config")):
+                model_folders.append(os.path.join(dk_folder, direc))
 
     if not model_folders:
         # if there are no appropriate sub-folders, assume that the model is on the top level
