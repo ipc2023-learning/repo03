@@ -391,7 +391,10 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     # Double check that we actually have an average cost for all configurations we consider
     logging.info("Retrieve candidate configs from SMAC")
+    ## TODO: Here "cost" may refer to different instances, so one should more carefully select which are the best configurations
     best_configs = smac.runhistory.get_configs(sort_by="cost")[:5]
+    if incumbent_config not in best_configs:
+        best_configs.append(incumbent_config)
 
     logging.info("Chosen incumbent: %s", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
