@@ -357,47 +357,41 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
         for i, r in enumerate(candidate_models.bad_rules):
             parameters.append(Constant(f"bad{i}",1 ))
 
+    cs = ConfigurationSpace(seed=seed)
+    cs.add_hyperparameters(parameters)
+    cs.add_conditions(conditions)
 
-    if all([isinstance(p, Constant) for p in parameters]) and False:
-        logging.info("Skipping SMAC optimizations because we did not select any parameter to optimize")
-        incumbent_config = {p.name : p.value for p in parameters}
-        best_configs = [incumbent_config]
+    evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties, optimize_search)
+
+    sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
+
+    # sorted_instances = sorted_instances[:5]
+    # instances_with_features = {x : instances_with_features[x] for x in sorted_instances}
+
+    scenario = Scenario(
+        configspace=cs, deterministic=True,
+        output_directory=PosixPath(os.path.join(WORKING_DIR, 'smac')),
+        walltime_limit=walltime_limit,
+        n_trials=n_trials,
+        n_workers=n_workers,
+        instances=sorted_instances,
+        instance_features=instances_with_features,
+        min_budget=len(sorted_instances)
+    )
+
+    # Use SMAC to find the best configuration/hyperparameters
+    if only_bad_rules:
+        smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function_bad_rules)
     else:
-        cs = ConfigurationSpace(seed=seed)
-        cs.add_hyperparameters(parameters)
-        cs.add_conditions(conditions)
+        smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function)
 
-        evaluator = Eval (DATA_DIR, WORKING_DIR, domain_file, instance_dir, candidate_models, trial_walltime_limit, instances_properties, optimize_search)
+    incumbent_config = smac.optimize()
 
-        sorted_instances = sorted ([ins for ins in instances_with_features], key=lambda x : instances_with_features[x])
+    os.chdir(cwd) # Restore current directory
 
-        # sorted_instances = sorted_instances[:5]
-        # instances_with_features = {x : instances_with_features[x] for x in sorted_instances}
-
-        scenario = Scenario(
-            configspace=cs, deterministic=True,
-            output_directory=PosixPath(os.path.join(WORKING_DIR, 'smac')),
-            walltime_limit=walltime_limit,
-            n_trials=n_trials,
-            n_workers=n_workers,
-            instances=sorted_instances,
-            instance_features=instances_with_features,
-            min_budget=len(sorted_instances)
-        )
-
-        # Use SMAC to find the best configuration/hyperparameters
-        if only_bad_rules:
-            smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function_bad_rules)
-        else:
-            smac = AlgorithmConfigurationFacade(scenario, evaluator.target_function)
-
-        incumbent_config = smac.optimize()
-
-        os.chdir(cwd) # Restore current directory
-
-        # Double check that we actually have an average cost for all configurations we consider
-        logging.info("Retrieve candidate configs from SMAC")
-        best_configs = smac.runhistory.get_configs(sort_by="cost")[:5]
+    # Double check that we actually have an average cost for all configurations we consider
+    logging.info("Retrieve candidate configs from SMAC")
+    best_configs = smac.runhistory.get_configs(sort_by="cost")[:5]
 
     logging.info("Chosen incumbent: %s", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
