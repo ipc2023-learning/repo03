@@ -257,7 +257,7 @@ def main():
         assert os.path.exists(incumbent_path)
         shutil.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
     else:
-        assert args.resume
+        assert args.resume, "Partial grounding hard rules existed, but no --resume option was provided"
 
     # Currently, our best incumbent is just lama with the bad pruning rules
     incumbent_set = IncumbentSet(TRAINING_DIR, save_model)

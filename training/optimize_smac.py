@@ -395,7 +395,7 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
     logging.info("We have %d candidate configs", len(candidate_configs))
     best_configs = list(sorted( candidate_configs, key=smac.runhistory.average_cost))[:5]
 
-    logging.info("Chosen incumbent: ", incumbent_config)
+    logging.info("Chosen incumbent: %s", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
 
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:
