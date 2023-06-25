@@ -266,7 +266,7 @@ def run_smac_search(DATA_DIR, WORKING_DIR, domain_file, best_configs,
 
 
 
-def filter_in_best_configs(name, values, best_configs):
+def filter_in_best_configs(name, values, best_configs, allow_no_values = False):
     if not best_configs:
         return values
 
@@ -276,6 +276,9 @@ def filter_in_best_configs(name, values, best_configs):
             if c[name] == v:
                 result.append(v)
                 break
+
+    if allow_no_values == False and len(result) == 0:
+        result = values
 
     logging.info("Using %d/%d values for parameter %s: %s" ,len(result), len(values), name, str(result))
     return result
@@ -338,11 +341,13 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         assert not only_bad_rules
-        m = Categorical(f"model_{schema}", filter_in_best_configs(f"model_{schema}", models, best_configs))
-        parameters.append(m)
-        conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin"], best_configs)))
+        option_values = filter_in_best_configs(f"model_{schema}", models, best_configs, allow_no_values = True)
+        if option_values:
+            m = Categorical(f"model_{schema}", option_values)
+            parameters.append(m)
+            conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin"], best_configs)))
 
-        if len(filter_in_best_configs('queue_type', ['ipc23-ratio'], best_configs)) > 0:
+        if len(filter_in_best_configs('queue_type', ['ipc23-ratio'], best_configs, allow_no_values = True)) > 0:
             ratio =  Float(f"schema_ratio_{schema}", bounds=(0.01, 0.99))
             parameters.append(ratio)
             conditions.append(InCondition(child=ratio, parent=queue_type, values=['ipc23-ratio']))
