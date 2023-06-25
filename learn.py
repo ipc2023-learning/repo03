@@ -335,7 +335,7 @@ def main():
 
             # Trying and/or adding the same config multiple times is silly, so skip this
             if incumbent_config in attempted_configs:
-                logging.info("Skipping config chosen by SMAC because it has already been attempted (remaining time %s)")
+                logging.info("Skipping config chosen by SMAC because it has already been attempted (remaining time %s)", timer)
                 continue
             attempted_configs.add(incumbent_config)
 
