@@ -1,5 +1,6 @@
 import os
 import shutil
+import logging
 
 class IncumbentSet:
     def __init__(self, TRAINING_DIR, save_model, num_incumbents=3):
@@ -21,7 +22,7 @@ class IncumbentSet:
         self.data_incumbents [incumbent_name] = data
 
         if any([self.is_dominated(incumbent_name, inc) for inc in self.best_incumbents]):
-            print(f"New incumbent candidate {incumbent_name} was rejected because it is dominated")
+            logging.info(f"New incumbent candidate {incumbent_name} was rejected because it is dominated")
             return
 
         self.best_incumbents = [inc for inc in self.best_incumbents if not self.is_dominated(inc, incumbent_name)]
@@ -29,10 +30,9 @@ class IncumbentSet:
 
         self.best_incumbents = sorted(self.best_incumbents, key = self.sort_key)
 
-        print(f"New incumbent is top {1+self.best_incumbents.index(incumbent_name)}")
-
+        logging.info(f"New incumbent is top {1+self.best_incumbents.index(incumbent_name)}")
         for x in self.best_incumbents:
-            print (x, self.sort_key(x))
+            logging.info ("%s %s", x, self.sort_key(x))
 
         if incumbent_name in self.best_incumbents[:self.num_incumbents]:
             self.save_model.save([ os.path.join(self.INCUMBENTS_DIR, inc) for inc in self.best_incumbents[:self.num_incumbents]])
@@ -44,7 +44,8 @@ class IncumbentSet:
         return (-coverage, planner_time)
 
     def is_dominated(self, i1, i2): # Returns true if i2 is definitively better than i1
-        for ins, props in self.data_incumbents[i1].items():
-            return False # TODO: Implement this
+        return False # TODO: This is not implemented so it should always return false
+        # for ins, props in self.data_incumbents[i1].items():
+        #     return False # TODO: Implement this
 
-        return True # Didn't find any instance where i1 is better than i2
+        # return True # Didn't find any instance where i1 is better than i2

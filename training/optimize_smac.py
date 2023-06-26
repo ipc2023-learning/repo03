@@ -11,6 +11,9 @@ import json
 import subprocess
 import re
 import shutil
+import logging
+
+#import numpy
 
 from pathlib import PosixPath
 
@@ -91,13 +94,13 @@ class Eval:
             if total_time and num_operators and plan_cost:
                 total_time = float(total_time.group(1))
                 plan_cost = int(plan_cost.group(1))
-                print (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
+                logging.info (f"Ran {config_description}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 if self.optimize_search:
                     return total_time
                 else:
-                    return num_operators
+                    return num_operators #TODO: + total_time # Add total time as a tie-breaker in case all configurations are grounding the same amount of operators
             elif self.regex_no_solution.search(output):
-                print (f"Ran {config_description}: not solved due to partial grounding")
+                logging.info (f"Ran {config_description}: not solved due to partial grounding")
                 #print(output.decode())
                 return 10000000
             else:
@@ -115,7 +118,7 @@ class Eval:
 
         except subprocess.TimeoutExpired as e:
             proc.kill()
-            print (f"Ran {config_description}: not solved due to time limit")
+            logging.info (f"Ran {config_description}: not solved due to time limit")
             # print(e)
             return 10000000
 
@@ -129,7 +132,7 @@ class Eval:
         if not self.candidate_models.is_using_model(config):
             num_operators = self.instances_properties[instance]['translator_operators']
             coverage = self.instances_properties[instance]['coverage']
-            print (f"Ran {instance} without bad rules: full grounding size is {num_operators}, was solved by the baseline {coverage}")
+            logging.info (f"Ran {instance} without bad rules: full grounding size is {num_operators}, was solved by the baseline {coverage}")
             return num_operators# + self.candidate_models.total_bad_rules() if coverage else 10000000
 
         # if self.instances_properties[instance]['coverage']:
@@ -182,33 +185,33 @@ class Eval:
                 num_operators = int(num_operators.group(1))
                 plan_cost = int(plan_cost.group(1))
 
-                print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
+                logging.info (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: time {total_time}, operators {num_operators}, cost {plan_cost}")
                 return num_operators #+ self.candidate_models.total_bad_rules() - num_bad_rules
 
             elif self.regex_no_solution.search(output):
-                print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")
+                logging.info (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to partial grounding")
                 return 10000000
             else:
-                print (f"WARNING: Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
-                print("Output: ", output.decode())
+                logging.warning (f"WARNING: Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to unknown reasons")
+                logging.warning ("Output: %s", output.decode())
                 if error_output:
-                    print("Error Output: ", error_output.decode())
+                    logging.error("Error Output: %s", error_output.decode())
                 return 10000000
 
         except subprocess.CalledProcessError:
             proc.kill()
-            print (f"WARNING: Command failed: {' '.join(command)}")
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
+            logging.warning (f"WARNING: Command failed: {' '.join(command)}")
+            logging.warning (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to crash")
             return 10000000
 
         except subprocess.TimeoutExpired as e:
             proc.kill()
-            print (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
+            logging.info (f"Ran {instance} with queue {config['queue_type']} and model {config_name}: not solved due to time limit")
             return 10000000
 
         except:
             proc.kill()
-            print (f"Error: Command failed: {' '.join(command)}")
+            logging.error (f"Error: Command failed: {' '.join(command)}")
             return 10000000
 
 
@@ -263,7 +266,7 @@ def run_smac_search(DATA_DIR, WORKING_DIR, domain_file, best_configs,
 
 
 
-def filter_in_best_configs(name, values, best_configs):
+def filter_in_best_configs(name, values, best_configs, allow_no_values = False):
     if not best_configs:
         return values
 
@@ -274,7 +277,10 @@ def filter_in_best_configs(name, values, best_configs):
                 result.append(v)
                 break
 
-    print(result)
+    if allow_no_values == False and len(result) == 0:
+        result = values
+
+    logging.info("Using %d/%d values for parameter %s: %s" ,len(result), len(values), name, str(result))
     return result
 
 
@@ -335,11 +341,13 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     for schema, models in candidate_models.sk_models_per_action_schema.items():
         assert not only_bad_rules
-        m = Categorical(f"model_{schema}", filter_in_best_configs(f"model_{schema}", models, best_configs))
-        parameters.append(m)
-        conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin"], best_configs)))
+        option_values = filter_in_best_configs(f"model_{schema}", models, best_configs, allow_no_values = True)
+        if option_values:
+            m = Categorical(f"model_{schema}", option_values)
+            parameters.append(m)
+            conditions.append(InCondition(child=m, parent=queue_type, values=filter_in_best_configs('queue_type', ["ipc23-single-queue", 'ipc23-ratio', "ipc23-round-robin"], best_configs)))
 
-        if len(filter_in_best_configs('queue_type', ['ipc23-ratio'], best_configs)) > 0:
+        if len(filter_in_best_configs('queue_type', ['ipc23-ratio'], best_configs, allow_no_values = True)) > 0:
             ratio =  Float(f"schema_ratio_{schema}", bounds=(0.01, 0.99))
             parameters.append(ratio)
             conditions.append(InCondition(child=ratio, parent=queue_type, values=['ipc23-ratio']))
@@ -386,9 +394,14 @@ def run_smac(DATA_DIR, WORKING_DIR, domain_file,
 
     os.chdir(cwd) # Restore current directory
 
-    best_configs = list(sorted( smac.runhistory.get_configs(), key=smac.runhistory.average_cost))[:5]
+    # Double check that we actually have an average cost for all configurations we consider
+    logging.info("Retrieve candidate configs from SMAC")
+    ## TODO: Here "cost" may refer to different instances, so one should more carefully select which are the best configurations
+    best_configs = smac.runhistory.get_configs(sort_by="cost")[:5]
+    if incumbent_config not in best_configs:
+        best_configs.append(incumbent_config)
 
-    print("Chosen incumbent: ", incumbent_config)
+    logging.info("Chosen incumbent: %s", incumbent_config)
     candidate_models.copy_model_to_folder(incumbent_config, os.path.join(WORKING_DIR, 'incumbent'), symlink=False )
 
     with open(os.path.join(WORKING_DIR, 'incumbent', 'config'), 'w') as config_file:

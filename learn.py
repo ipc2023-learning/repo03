@@ -5,13 +5,18 @@ import os
 import os.path
 import shutil
 import sys
-
+import logging
 from lab.environments import  LocalEnvironment
+import lab.tools
+lab.tools.configure_logging()
+
 
 sys.path.append(f'{os.path.dirname(__file__)}/training')
 import training
 from run_experiment import RunExperiment
 from aleph_experiment import AlephExperiment
+
+from timer import CountdownWCTimer
 
 from partial_grounding_rules import run_step_partial_grounding_rules
 from optimize_smac import run_smac_partial_grounding, run_smac_bad_rules, run_smac_search
@@ -97,6 +102,7 @@ def parse_args():
 def main():
     args = parse_args()
 
+
     ROOT = os.path.dirname(os.path.abspath(__file__))
 
     TRAINING_DIR=args.path
@@ -108,12 +114,16 @@ def main():
 
     save_model = SaveModel(args.domain_knowledge_file)
 
-    if args.cpus > 1:
+
+    timer = CountdownWCTimer(args.total_time_limit)
+
+
+    if args.cpus == 1:
         TIME_LIMITS_SEC = TIME_LIMITS_IPC_SINGLE_CORE
     else:
         TIME_LIMITS_SEC = TIME_LIMITS_IPC_MULTICORE
 
-    #    TIME_LIMITS_SEC = FAST_TIME_LIMITS #TODO: REMOVE THIS, just for testing!
+    # TIME_LIMITS_SEC = MEDIUM_TIME_LIMITS #TODO: REMOVE THIS, just for testing!
 
     if not args.resume:
         if os.path.exists(TRAINING_DIR):
@@ -145,6 +155,7 @@ def main():
     # Run lama and symbolic search to gather all training data
     ###
     if not os.path.exists(f'{TRAINING_DIR}/runs-lama'):
+        logging.info("Running LAMA on all traning instances (remaining time %s)", timer)
         # Run lama, with empty config and using the alias
         RUN.run_planner(f'{TRAINING_DIR}/runs-lama', REPO_PARTIAL_GROUNDING, [], ENV, SUITE_ALL, driver_options = ["--alias", "lama-first",
                                                                                                                    "--transform-task", f"{REPO_PARTIAL_GROUNDING}/builds/release/bin/preprocess-h2",
@@ -159,6 +170,7 @@ def main():
 
     SUITE_GOOD_OPERATORS = suites.build_suite(TRAINING_DIR, [f'instances:{name}.pddl' for name in instances_to_run_good_operators])
     if not os.path.exists(f'{TRAINING_DIR}/good-operators-unit'):
+        logging.info("Running good operators with unit cost on %d traning instances (remaining time %s)", len(instances_to_run_good_operators), timer)
         RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-unit', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true, cost_type=1)"], ENV, SUITE_GOOD_OPERATORS)
     else:
         assert args.resume
@@ -168,8 +180,15 @@ def main():
 
     has_action_cost = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['use_metric']  and p['max_action_cost'] > 1)) > 0
     has_zero_cost_actions = len(select_instances_from_runs(f'{TRAINING_DIR}/good-operators-unit', lambda p : p['min_action_cost'] == 0)) > 0
-    if has_action_cost and not has_zero_cost_actions:
+
+    # Skip this step if we have less than 18 hours (added due to the time
+    #  restriction of 24h instead of 72 for the IPC. If we spent more than 8h
+    #  generating the training data, we cannot afford spending more time on
+    #  obtaining the training data).
+    if has_action_cost and not has_zero_cost_actions and float(timer.remaining_seconds())/float(args.total_time_limit) > 0.66:
         if not os.path.exists(f'{TRAINING_DIR}/good-operators-cost'):
+            logging.info("Running good operators with unit cost on %d traning instances (remaining time %s)", len(instances_to_run_good_operators), timer)
+
             RUN.run_good_operators(f'{TRAINING_DIR}/good-operators-cost', REPO_GOOD_OPERATORS, ['--search', "sbd(store_operators_in_optimal_plan=true)"], ENV, SUITE_GOOD_OPERATORS)
         else:
             assert args.resume
@@ -190,6 +209,8 @@ def main():
     #####
     aleph_experiment = AlephExperiment(REPO_LEARNING, args.domain, time_limit=TIME_LIMITS_SEC ['train-hard-rules'], memory_limit=MEMORY_LIMITS_MB ['train-hard-rules'])
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-good-rules'):
+        logging.info("Learning Aleph good rules (remaining time %s)", timer)
+
         aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-good-rules', TRAINING_SET, ENV, ['good_rules'])
     else:
         assert args.resume
@@ -207,6 +228,7 @@ def main():
     ## Learn bad rules
     #####
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-bad-rules'):
+        logging.info("Learning Aleph bad rules (remaining time %s)", timer)
         aleph_experiment.run_aleph_hard_rules (f'{TRAINING_DIR}/partial-grounding-bad-rules', TRAINING_SET, ENV, ['bad_rules'])
     else:
         assert args.resume
@@ -220,8 +242,9 @@ def main():
     ### full grounding + bad rules
 
     # We want to fix completely the hard rules at this stage, so let's use all SMAC_INSTANCES
-    if not os.path.exists(f'{TRAINING_DIR}/smac-partial-grounding-bad-rules'):
-        happy_with_incumbent = False
+    if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-hard-rules'):
+        logging.info("Running SMAC to select good and bad rules (remaining time %s)", timer)
+
         SMAC_INSTANCES = instances_manager.get_smac_instances(['translator_operators', 'translator_facts', 'translator_variables'])
 
         run_smac_bad_rules(TRAINING_DIR, os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules'), args.domain, BENCHMARKS_DIR, SMAC_INSTANCES, instances_manager.get_instance_properties(),
@@ -234,12 +257,14 @@ def main():
         assert os.path.exists(incumbent_path)
         shutil.copytree(incumbent_path, f'{TRAINING_DIR}/partial-grounding-hard-rules') # Now, this hard rules are set in stone
     else:
-        assert args.resume
+        assert args.resume, "Partial grounding hard rules existed, but no --resume option was provided"
 
     # Currently, our best incumbent is just lama with the bad pruning rules
     incumbent_set = IncumbentSet(TRAINING_DIR, save_model)
 
     if os.path.exists(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent')):
+        logging.info("Model with hard rules is completed. Saving as incumbent model (remaining time %s)", timer)
+
         # This is not entirely accurate, but we avoid running lama with the bad rules
         incumbent_set.add_and_save(os.path.join(TRAINING_DIR, 'smac-partial-grounding-bad-rules', 'incumbent'), select_instances_from_runs_with_properties(f'{TRAINING_DIR}/runs-lama'))
 
@@ -255,13 +280,15 @@ def main():
     # Training of priority partial grounding models
     ####
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-aleph'):
+        logging.info("Learning Aleph probability model (remaining time %s)", timer)
         aleph_experiment.run_aleph_class_probability (f'{TRAINING_DIR}/partial-grounding-aleph', TRAINING_SET, ENV)
     else:
         assert args.resume
 
 
     if not os.path.exists(f'{TRAINING_DIR}/partial-grounding-sklearn'):
-            run_step_partial_grounding_rules(REPO_LEARNING, instances_manager.get_training_datasets(), f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain, time_limit=TIME_LIMITS_SEC['sklearn-step'])
+        logging.info("Learning sklearn models (remaining time %s)", timer)
+        run_step_partial_grounding_rules(REPO_LEARNING, instances_manager.get_training_datasets(), f'{TRAINING_DIR}/partial-grounding-sklearn', args.domain, time_limit=TIME_LIMITS_SEC['sklearn-step'])
     else:
         assert args.resume
 
@@ -270,15 +297,18 @@ def main():
     # Final SMAC Optimization
     ####
     index = 0
+    attempted_configs = set()
     while True:
         index += 1
 
         if os.path.exists(f'{TRAINING_DIR}/smac-{index}'):
             assert (args.resume)
         else:
+            logging.info("Starting SMAC optimization round %d (remaining time %s)", index, timer)
             os.mkdir(f'{TRAINING_DIR}/smac-{index}')
 
             if index % 2 == 1:
+                logging.info("SMAC optimization minimizing operators (remaining time %s)", timer)
 
                 _, _, best_configs = run_smac_partial_grounding(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-partial-grounding', args.domain, BENCHMARKS_DIR,
                                                                 instances_manager.get_instances_smac_partial_grounding(['translator_operators', 'translator_facts', 'translator_variables']),
@@ -291,6 +321,8 @@ def main():
             else:
                 best_configs = None # Sometimes try the full optimization
 
+            logging.info("SMAC optimization minimizing running time (remaining time %s)", timer)
+
             ## Run a new SMAC optimization, that optimizes for search time, and that also selects search (lama or something else)
             # Continue improving the incumbent
             incumbent_dir, incumbent_config, _ = run_smac_search(f'{TRAINING_DIR}', f'{TRAINING_DIR}/smac-{index}/smac-search', args.domain, best_configs, BENCHMARKS_DIR,
@@ -300,6 +332,14 @@ def main():
                                                                  n_trials=TIME_LIMITS_SEC['smac-partial-grounding-total'], # Limit the number of rounds, as if we did one run per second
                                                                  n_workers=args.cpus, seed=2023+index)
 
+
+            # Trying and/or adding the same config multiple times is silly, so skip this
+            if incumbent_config in attempted_configs:
+                logging.info("Skipping config chosen by SMAC because it has already been attempted (remaining time %s)", timer)
+                continue
+            attempted_configs.add(incumbent_config)
+
+            logging.info("Test config chosen by SMAC (remaining time %s)", timer)
 
             translate_options = ["--translate-options", "--grounding-action-queue-ordering", incumbent_config['queue_type']]
 

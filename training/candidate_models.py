@@ -1,6 +1,7 @@
 from collections import defaultdict
 import os
 import shutil
+import logging
 
 SUFFIX_ALEPH_MODELS = '.rules'
 PREFIX_SK_MODELS = 'model_'
@@ -67,6 +68,7 @@ class CandidateModels:
     def load_aleph_folder(self, aleph_folder):
         aleph_model_filenames = [name for name in os.listdir(aleph_folder) if name.endswith(SUFFIX_ALEPH_MODELS)]
         for model_filename in aleph_model_filenames:
+            logging.info("Loading aleph model from %s ", model_filename)
             with open(os.path.join(aleph_folder, model_filename)) as model_file:
                 if 'class_probability' in model_filename:
                     if self.aleph_folder:
