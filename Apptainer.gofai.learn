@@ -9,6 +9,7 @@ Stage: build
     learning/yap
 
 %post
+    sed -i 's|http://\(.*\).ubuntu.com/ubuntu|http://old-releases.ubuntu.com/ubuntu|g' /etc/apt/sources.list
     apt-get update
     apt-get -y install --no-install-recommends cmake make g++ python3 automake pkg-config libgmp10 libgmp-dev libreadline-dev  libsqlite3-dev sqlite3
 
@@ -78,6 +79,7 @@ Stage: run
 
 
 %post
+    sed -i 's|http://\(.*\).ubuntu.com/ubuntu|http://old-releases.ubuntu.com/ubuntu|g' /etc/apt/sources.list
     apt-get update
     apt-get -y install --no-install-recommends python3 python3-pip
     apt-get clean
